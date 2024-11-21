@@ -1,38 +1,123 @@
-.App {
-  text-align: center;
+/* Hide Excalidraw’s default toolbar */
+.excalidraw .App-menu.App-menu_top {
+  display: none !important;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* Style and position the custom toolbar */
+.custom-toolbar {
+  position: fixed;
+  right: 10px;
+  top: 50px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  gap: 10px;
+  background: #f8f9fa;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
 }
 
-.App-link {
-  color: #61dafb;
+.custom-toolbar button {
+  padding: 8px;
+  border: 1px solid #ccc;
+  background-color: #ffffff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  text-align: center;
+  width: 80px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.custom-toolbar button:hover {
+  background-color: #e0e0e0;
+}
+
+.main-toolbar {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px 20px;
+  border-radius: 8px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  display: flex;
+  gap: 10px;
+}
+
+.main-toolbar button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #1976d2;
+  color: #ffffff;
+  font-size: 14px;
+}
+.main-toolbar button {
+  padding: 8px 12px;
+  border: none;
+  background-color: #1976d2;
+  color: #ffffff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 10px;
+}
+
+
+
+
+
+
+
+
+.tool-config-menu {
+  position: absolute;
+  top: 60px; /* Adjust this to position the menu below the button */
+  right: 20px; /* Or adjust based on the button's position */
+  background: rgba(255, 255, 255, 0.95);
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  width: 150px; /* Make it compact */
+}
+
+.color-options {
+  display: flex;
+  gap: 5px;
+}
+
+.color-options button {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.tool-config-menu h4 {
+  margin: 0 0 5px;
+  font-size: 14px;
+}
+
+.pdf-upload-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  padding: 10px 15px;
+  font-size: 14px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 10; /* Add a high z-index to ensure it appears above the canvas */
+}
+
+.pdf-upload-button:hover {
+  background-color: #0056b3;
 }
