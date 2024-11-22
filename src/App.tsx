@@ -6,6 +6,7 @@ import MainToolbar from './MainToolbar';
 import ToolConfigMenu from './ToolConfigMenu';
 import WebcamDisplay from './WebcamDisplay';
 import PDFViewer from './PDFViewer';
+import DiagramSidebar from './DiagramSidebar'; // Import the DiagramSidebar component
 import './App.css';
 import { usePageNavigation } from './hooks/usePageNavigation';
 
@@ -35,6 +36,7 @@ function TutorTool() {
   const [isPdfScrollMode, setIsPdfScrollMode] = useState(false);
   const [pdfCurrentPage, setPdfCurrentPage] = useState(1); // PDF starts at page 1
   const [pdfTotalPages, setPdfTotalPages] = useState(0); // Total pages in the PDF
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State to manage DiagramSidebar
 
   const lockedScroll = useRef<{ x: number; y: number } | null>(null);
   const pdfViewerRef = useRef<HTMLDivElement>(null);
@@ -191,15 +193,15 @@ function TutorTool() {
         />
         <CustomToolbar excalidrawAPI={excalidrawAPI} onToolSelect={openConfigMenu} />
         <PageNavigation
-            savePage={savePage}
-            loadPage={loadPage}
-            currentPage={currentPage}
-            setCurrentPage={(page) => {
-                setPdfCurrentPage(page); // Sync with PDF
-                setCurrentPage(page); // Always update Excalidraw
-            }}
-            overlayVisible={overlayVisible}
-            pdfTotalPages={pdfTotalPages}
+          savePage={savePage}
+          loadPage={loadPage}
+          currentPage={currentPage}
+          setCurrentPage={(page) => {
+            setPdfCurrentPage(page); // Sync with PDF
+            setCurrentPage(page); // Always update Excalidraw
+          }}
+          overlayVisible={overlayVisible}
+          pdfTotalPages={pdfTotalPages}
         />
 
         <Excalidraw
@@ -210,6 +212,12 @@ function TutorTool() {
           }}
         />
       </div>
+
+      {/* Diagram Sidebar */}
+      <DiagramSidebar
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+      />
     </div>
   );
 }

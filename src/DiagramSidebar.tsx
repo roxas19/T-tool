@@ -1,84 +1,116 @@
-import React, { useEffect, useState } from 'react';
-import { Excalidraw } from '@excalidraw/excalidraw';
-import { parseMermaidToExcalidraw } from '@excalidraw/mermaid-to-excalidraw';
+import React, { useEffect, useState } from "react";
+import mermaid from "mermaid";
+import { initializeMermaid } from "./utils/mermaidConfig";
 
-type DiagramSidebarProps = {
-  mermaidSyntaxList: string[];
-};
+interface DiagramSidebarProps {
+  isSidebarOpen: boolean;
+  setIsSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
 
-const DiagramSidebar: React.FC<DiagramSidebarProps> = ({ mermaidSyntaxList }) => {
-  const [renderedDiagrams, setRenderedDiagrams] = useState<any[]>([]);
+const DiagramSidebar: React.FC<DiagramSidebarProps> = ({
+  isSidebarOpen,
+  setIsSidebarOpen,
+}) => {
+  const [diagrams, setDiagrams] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const renderDiagrams = async () => {
-      const diagrams = [];
+    initializeMermaid(); // Initialize Mermaid globally once
+
+    const loadDiagrams = async () => {
+      const mermaidSyntaxList = [
+        "graph TD; A-->B; A-->C; B-->D; C-->D;",
+        "sequenceDiagram; participant A; participant B; A->>B: Hello;",
+      ];
+
+      setLoading(true);
+      setError(null);
+      const renderedDiagrams: string[] = [];
+
       for (const syntax of mermaidSyntaxList) {
         try {
-          // Use parseMermaidToExcalidraw to convert Mermaid syntax to Excalidraw elements
-          const elements = await parseMermaidToExcalidraw(syntax);
-          diagrams.push(elements);
-        } catch (error) {
-          console.error(`Error rendering Mermaid syntax: ${syntax}`, error);
+          // Render the diagram
+          const { svg } = await mermaid.render(
+            `diagram-${Math.random().toString(36).substring(7)}`, // Unique ID
+            syntax
+          );
+          renderedDiagrams.push(svg);
+        } catch (err) {
+          console.error(`Error rendering Mermaid syntax: ${syntax}`, err);
+          setError(`Error processing syntax: ${syntax}`);
         }
       }
-      setRenderedDiagrams(diagrams);
+
+      setDiagrams(renderedDiagrams);
+      setLoading(false);
     };
 
-    renderDiagrams();
-  }, [mermaidSyntaxList]);
+    loadDiagrams();
+  }, []);
 
   return (
-    <div
-      style={{
-        position: 'absolute',
-        right: 0,
-        top: 0,
-        height: '100%',
-        width: '25%',
-        backgroundColor: '#f9f9f9',
-        overflowY: 'auto',
-        borderLeft: '1px solid #ddd',
-        padding: '10px',
-      }}
-    >
-      <h3>Diagrams</h3>
-      {renderedDiagrams.map((diagram, index) => (
+    <>
+      {/* Sidebar Toggle Button */}
+      <button
+        onClick={() => setIsSidebarOpen((prev) => !prev)}
+        style={{
+          position: "absolute",
+          top: 10,
+          left: 10,
+          padding: "10px",
+          backgroundColor: isSidebarOpen ? "#ff0000" : "#007bff",
+          color: "white",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+          zIndex: 1000,
+        }}
+      >
+        {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+      </button>
+
+      {/* Sidebar */}
+      {isSidebarOpen && (
         <div
-          key={index}
           style={{
-            marginBottom: '20px',
-            padding: '10px',
-            backgroundColor: '#fff',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
+            position: "absolute",
+            top: 0,
+            right: 0,
+            width: "300px",
+            height: "100%",
+            backgroundColor: "#f0f0f0",
+            boxShadow: "0 0 10px rgba(0, 0, 0, 0.2)",
+            zIndex: 10,
+            padding: "20px",
+            overflowY: "auto",
           }}
         >
-          <Excalidraw
-            initialData={{
-              elements: diagram.elements,
-              appState: {
-                viewBackgroundColor: 'transparent',
-                gridSize: null,
-                editingGroupId: null,
-                activeTool: {
-                  type: "custom",
-                  customType: "diagram-sidebar",
-                  lastActiveTool: null,
-                  locked: false,
-                },
-                cursorButton: undefined,
-              },
-            }}
-            onPointerDown={() => {
-              console.log('Pointer down event suppressed');
-            }}
-            onChange={() => {
-              console.log('Changes suppressed');
-            }}
-          />
+          <h2>Diagram Sidebar</h2>
+          {loading ? (
+            <p>Loading diagrams...</p>
+          ) : error ? (
+            <p style={{ color: "red" }}>{error}</p>
+          ) : diagrams.length === 0 ? (
+            <p>No diagrams to display.</p>
+          ) : (
+            diagrams.map((diagramSvg, index) => (
+              <div
+                key={index}
+                style={{
+                  marginBottom: "20px",
+                  padding: "10px",
+                  border: "1px solid #ccc",
+                  borderRadius: "5px",
+                  backgroundColor: "#ffffff",
+                }}
+                dangerouslySetInnerHTML={{ __html: diagramSvg }} // Render the SVG
+              ></div>
+            ))
+          )}
         </div>
-      ))}
-    </div>
+      )}
+    </>
   );
 };
 
