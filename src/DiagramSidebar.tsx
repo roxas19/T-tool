@@ -1,53 +1,97 @@
 import React, { useEffect, useState } from "react";
-import mermaid from "mermaid";
-import { initializeMermaid } from "./utils/mermaidConfig";
+import { parseMermaidToExcalidraw } from "@excalidraw/mermaid-to-excalidraw";
 
 interface DiagramSidebarProps {
   isSidebarOpen: boolean;
   setIsSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  excalidrawAPI?: any; // Excalidraw API for interacting with the main canvas
 }
+
+// Type for Diagram Elements
+type DiagramElement = { type: string; data?: string }; // Excalidraw elements or fallback SVGs
 
 const DiagramSidebar: React.FC<DiagramSidebarProps> = ({
   isSidebarOpen,
   setIsSidebarOpen,
+  excalidrawAPI,
 }) => {
-  const [diagrams, setDiagrams] = useState<string[]>([]);
+  const [diagrams, setDiagrams] = useState<DiagramElement[][]>([]); // Array of arrays for Excalidraw elements or SVG fallbacks
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    initializeMermaid(); // Initialize Mermaid globally once
-
     const loadDiagrams = async () => {
       const mermaidSyntaxList = [
-        "graph TD; A-->B; A-->C; B-->D; C-->D;",
-        "sequenceDiagram; participant A; participant B; A->>B: Hello;",
+        // Example 1
+        `flowchart TD
+          Start[Start] -->|Click| Login[Login Page]
+          Login -->|Success| Dashboard[Dashboard]
+          Login -->|Failure| Error[Error Page]
+          Dashboard -->|Logout| Start`,
+        // Example 2
+        `flowchart LR
+          A[Order Placed] -->|Payment Received| B[Processing]
+          B -->|Shipment Scheduled| C[Dispatched]
+          C --> D[Out for Delivery]
+          D --> E[Delivered]
+          C --> F[Return Requested]`,
       ];
 
       setLoading(true);
       setError(null);
-      const renderedDiagrams: string[] = [];
+      const loadedDiagrams: any[] = [];
 
       for (const syntax of mermaidSyntaxList) {
         try {
-          // Render the diagram
-          const { svg } = await mermaid.render(
-            `diagram-${Math.random().toString(36).substring(7)}`, // Unique ID
-            syntax
-          );
-          renderedDiagrams.push(svg);
+          // Dynamically import Mermaid
+          const { default: mermaid } = await import("mermaid");
+
+          // Reset Mermaid state to avoid "already registered" error
+          if (mermaid.mermaidAPI?.reset) {
+            console.log("Resetting Mermaid state...");
+            mermaid.mermaidAPI.reset();
+          }
+
+          // Initialize Mermaid with default configuration
+          mermaid.initialize({ startOnLoad: false, theme: "default" });
+
+          console.log(`Processing syntax: ${syntax}`);
+          const parsedResult = await parseMermaidToExcalidraw(syntax);
+          if (parsedResult?.elements) {
+            loadedDiagrams.push(parsedResult.elements);
+          } else {
+            throw new Error("Parsed result is undefined or malformed.");
+          }
         } catch (err) {
           console.error(`Error rendering Mermaid syntax: ${syntax}`, err);
-          setError(`Error processing syntax: ${syntax}`);
+
+          // Fallback: Render as SVG image
+          try {
+            const { default: mermaid } = await import("mermaid");
+            const { svg } = await mermaid.render(
+              `diagram-${Math.random().toString(36).substring(7)}`,
+              syntax
+            );
+            loadedDiagrams.push([{ type: "image", data: svg }]);
+          } catch (fallbackErr) {
+            console.error(`Fallback rendering failed for: ${syntax}`, fallbackErr);
+            setError(`Error processing syntax: ${syntax}`);
+          }
         }
       }
 
-      setDiagrams(renderedDiagrams);
+      setDiagrams(loadedDiagrams);
       setLoading(false);
     };
 
     loadDiagrams();
   }, []);
+
+  const addDiagramToCanvas = (diagramElements: DiagramElement[]) => {
+    if (excalidrawAPI) {
+      excalidrawAPI.updateScene({ elements: diagramElements });
+    }
+  };
 
   return (
     <>
@@ -94,7 +138,7 @@ const DiagramSidebar: React.FC<DiagramSidebarProps> = ({
           ) : diagrams.length === 0 ? (
             <p>No diagrams to display.</p>
           ) : (
-            diagrams.map((diagramSvg, index) => (
+            diagrams.map((diagramElements, index) => (
               <div
                 key={index}
                 style={{
@@ -103,9 +147,24 @@ const DiagramSidebar: React.FC<DiagramSidebarProps> = ({
                   border: "1px solid #ccc",
                   borderRadius: "5px",
                   backgroundColor: "#ffffff",
+                  cursor: "pointer",
                 }}
-                dangerouslySetInnerHTML={{ __html: diagramSvg }} // Render the SVG
-              ></div>
+                onClick={() =>
+                  diagramElements.some((el: DiagramElement) => el.type === "image")
+                    ? console.warn("Cannot add SVG fallback to Excalidraw")
+                    : addDiagramToCanvas(diagramElements)
+                }
+              >
+                {diagramElements.some((el: DiagramElement) => el.type === "image") ? (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: diagramElements[0].data || "",
+                    }}
+                  />
+                ) : (
+                  <p>Diagram {index + 1}</p>
+                )}
+              </div>
             ))
           )}
         </div>

@@ -23,7 +23,7 @@ export const initializeMermaid = () => {
  */
 export const resetMermaidState = () => {
   try {
-    mermaid.mermaidAPI.reset(); // Reset Mermaid's state
+    mermaid.mermaidAPI?.reset(); // Reset Mermaid's state
     console.log("Mermaid state reset.");
   } catch (error) {
     console.error("Error resetting Mermaid state:", error);
