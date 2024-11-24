@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useDrag } from "react-dnd";
 import mermaid from "mermaid";
 import { initializeMermaid } from "./utils/mermaidConfig";
 
@@ -7,37 +8,56 @@ interface DiagramSidebarProps {
   setIsSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+type DiagramData = {
+  id: string;
+  svg: string;
+  syntax: string;
+};
+
 const DiagramSidebar: React.FC<DiagramSidebarProps> = ({
   isSidebarOpen,
   setIsSidebarOpen,
 }) => {
-  const [diagrams, setDiagrams] = useState<string[]>([]);
+  const [diagrams, setDiagrams] = useState<DiagramData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    initializeMermaid(); // Initialize Mermaid globally once
+    initializeMermaid();
 
     const loadDiagrams = async () => {
       const mermaidSyntaxList = [
-        "graph TD; A-->B; A-->C; B-->D; C-->D;",
-        "sequenceDiagram; participant A; participant B; A->>B: Hello;",
+        `flowchart TD
+          A[Start] -->|Step 1| B{Decision?}
+          B -->|Yes| C[Do Something]
+          B -->|No| D[Do Something Else]
+          C --> E[End]
+          D --> E[End]`,
+        `sequenceDiagram
+          participant Alice
+          participant Bob
+          Alice->>Bob: Hello Bob, how are you?
+          Bob-->>Alice: I'm good thanks!
+          Bob->>Charlie: Hi Charlie, want to grab lunch?
+          Charlie-->>Bob: Sure, let's go!`,
       ];
 
       setLoading(true);
       setError(null);
-      const renderedDiagrams: string[] = [];
+      const renderedDiagrams: DiagramData[] = [];
 
       for (const syntax of mermaidSyntaxList) {
         try {
-          // Render the diagram
           const { svg } = await mermaid.render(
-            `diagram-${Math.random().toString(36).substring(7)}`, // Unique ID
+            `diagram-${Math.random().toString(36).substring(7)}`,
             syntax
           );
-          renderedDiagrams.push(svg);
+          renderedDiagrams.push({
+            id: `diagram-${Math.random().toString(36).substring(7)}`,
+            svg,
+            syntax,
+          });
         } catch (err) {
-          console.error(`Error rendering Mermaid syntax: ${syntax}`, err);
           setError(`Error processing syntax: ${syntax}`);
         }
       }
@@ -49,9 +69,39 @@ const DiagramSidebar: React.FC<DiagramSidebarProps> = ({
     loadDiagrams();
   }, []);
 
+  const DraggableDiagram: React.FC<{ diagram: DiagramData }> = ({ diagram }) => {
+    const [{ isDragging }, dragRef] = useDrag(() => ({
+      type: "DIAGRAM",
+      item: { id: diagram.id, svg: diagram.svg },
+      collect: (monitor) => ({
+        isDragging: monitor.isDragging(),
+      }),
+    }));
+
+    useEffect(() => {
+      if (isDragging) {
+        console.log(`Diagram with ID ${diagram.id} is being dragged`);
+      }
+    }, [isDragging, diagram.id]);
+
+    return (
+      <div
+        ref={dragRef}
+        style={{
+          marginBottom: "20px",
+          padding: "10px",
+          border: isDragging ? "2px dashed #007bff" : "1px solid #ccc",
+          borderRadius: "5px",
+          backgroundColor: "#ffffff",
+          cursor: "move",
+        }}
+        dangerouslySetInnerHTML={{ __html: diagram.svg }}
+      ></div>
+    );
+  };
+
   return (
     <>
-      {/* Sidebar Toggle Button */}
       <button
         onClick={() => setIsSidebarOpen((prev) => !prev)}
         style={{
@@ -70,7 +120,6 @@ const DiagramSidebar: React.FC<DiagramSidebarProps> = ({
         {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
       </button>
 
-      {/* Sidebar */}
       {isSidebarOpen && (
         <div
           style={{
@@ -94,18 +143,8 @@ const DiagramSidebar: React.FC<DiagramSidebarProps> = ({
           ) : diagrams.length === 0 ? (
             <p>No diagrams to display.</p>
           ) : (
-            diagrams.map((diagramSvg, index) => (
-              <div
-                key={index}
-                style={{
-                  marginBottom: "20px",
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "5px",
-                  backgroundColor: "#ffffff",
-                }}
-                dangerouslySetInnerHTML={{ __html: diagramSvg }} // Render the SVG
-              ></div>
+            diagrams.map((diagram) => (
+              <DraggableDiagram key={diagram.id} diagram={diagram} />
             ))
           )}
         </div>
