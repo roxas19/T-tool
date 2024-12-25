@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
 import CustomToolbar from "./CustomToolbar";
 import PageNavigation from "./PageNavigation";
@@ -8,6 +8,8 @@ import PDFViewer from "./PDFViewer";
 import DiagramSidebar from "./DiagramSidebar";
 import "./App.css";
 import { usePageNavigation } from "./hooks/usePageNavigation";
+import { usePDFHandler } from "./hooks/usePDFHandler";
+import { useWebcamManager } from "./hooks/useWebcamManager";
 import { convertToExcalidrawElements } from "@excalidraw/excalidraw";
 
 type CustomExcalidrawAPI = {
@@ -42,69 +44,34 @@ function TutorTool() {
   );
   const { savePage, loadPage, currentPage, setCurrentPage } =
     usePageNavigation(excalidrawAPI);
-  const [selectedTool, setSelectedTool] = useState<string | null>(null);
-  const [webcamOn, setWebcamOn] = useState(false); // Determines if the webcam feed is active
-  const [isStreamMode, setIsStreamMode] = useState(false); // Fullscreen Stream Mode
-  const [isWebcamOverlayVisible, setWebcamOverlayVisible] = useState(false); // Overlay Mode
+  const {
+    pdfFile,
+    isPdfScrollMode,
+    pdfCurrentPage,
+    pdfTotalPages,
+    setPdfCurrentPage,
+    setPdfTotalPages,
+    handlePdfUpload,
+    handlePdfClose,
+    enablePdfScrollMode,
+    disablePdfScrollMode,
+  } = usePDFHandler();
+  const {
+    webcamOn,
+    isStreamMode,
+    isWebcamOverlayVisible,
+    setIsStreamMode,
+    toggleWebcam,
+    setWebcamOn,
+    setWebcamOverlayVisible,
+  } = useWebcamManager();
 
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [overlayVisible, setOverlayVisible] = useState(false);
-  const [isPdfScrollMode, setIsPdfScrollMode] = useState(false);
-  const [pdfCurrentPage, setPdfCurrentPage] = useState(1);
-  const [pdfTotalPages, setPdfTotalPages] = useState(0);
+  const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [diagramToPlace, setDiagramToPlace] = useState<any[] | null>(null);
 
-  const lockedScroll = useRef<{ x: number; y: number } | null>(null);
-  const pdfViewerRef = useRef<HTMLDivElement>(null);
-
-  const openConfigMenu = (toolType: string) => setSelectedTool(toolType);
-  const closeConfigMenu = () => setSelectedTool(null);
-
-  const toggleWebcam = () => {
-    if (webcamOn) {
-      setWebcamOn(false); // Stop the webcam feed
-      setWebcamOverlayVisible(false); // Hide the overlay
-    } else {
-      setWebcamOn(true); // Start the webcam feed
-      setWebcamOverlayVisible(true); // Show the overlay
-    }
-  };
-
-  const handlePdfUpload = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "application/pdf";
-    input.onchange = (event: Event) => {
-      const file = (event.target as HTMLInputElement)?.files?.[0];
-      if (file) {
-        setPdfFile(file);
-        setOverlayVisible(true);
-      }
-    };
-    input.click();
-  };
-
-  const handlePdfClose = () => {
-    setOverlayVisible(false);
-    setPdfFile(null);
-    setIsPdfScrollMode(false);
-    lockedScroll.current = null;
-    setPdfCurrentPage(1);
-  };
-
-  const enablePdfScrollMode = () => setIsPdfScrollMode(true);
-  const disablePdfScrollMode = () => setIsPdfScrollMode(false);
-
-  const lockScroll = (x: number, y: number) => {
-    excalidrawAPI?.updateScene(
-      { appState: { scrollX: x, scrollY: y } },
-      { commitToStore: false }
-    );
-  };
-
   const handleDiagramSelect = (elements: any[]) => {
-    setDiagramToPlace(elements); // Store the diagram for placement
+    setDiagramToPlace(elements);
   };
 
   const handleCanvasDrop = (event: React.DragEvent) => {
@@ -130,149 +97,105 @@ function TutorTool() {
       elements: [...excalidrawAPI.getSceneElements(), ...qualifiedElements],
     });
 
-    setDiagramToPlace(null); // Clear the diagram after placement
+    setDiagramToPlace(null);
   };
 
   const handleDragOver = (event: React.DragEvent) => {
-    event.preventDefault(); // Allow dropping
+    event.preventDefault();
   };
 
-  useEffect(() => {
-    // Synchronize isWebcamOverlayVisible with webcamOn and isStreamMode
-    if (!webcamOn) {
-      setWebcamOverlayVisible(false); // If webcam is off, hide the overlay
-    } else if (!isStreamMode) {
-      setWebcamOverlayVisible(true); // If not in Stream Mode, show the overlay
+  const handleWebcamClose = () => {
+    if (isStreamMode) {
+      // Exit fullscreen and show the overlay if webcam is on
+      setIsStreamMode(false);
+      if (webcamOn) {
+        setWebcamOverlayVisible(true);
+      }
+    } else {
+      // Turn off the webcam and hide the overlay
+      setWebcamOn(false);
+      setWebcamOverlayVisible(false);
     }
-  }, [webcamOn, isStreamMode]);
+  };
 
   return (
     <div
       style={{ height: "100vh", position: "relative", overflow: "hidden" }}
-      onDrop={handleCanvasDrop} // Handle drop event
-      onDragOver={handleDragOver} // Allow dragging over canvas
+      onDrop={handleCanvasDrop}
+      onDragOver={handleDragOver}
     >
-      {isStreamMode ? (
-        <WebcamDisplay
-          onClose={() => {
-            setIsStreamMode(false); // Exit Stream Mode
-            if (webcamOn) {
-              setWebcamOverlayVisible(true); // Show the overlay if webcam is active
-            }
-          }}
-          fullscreen={true}
+      <WebcamDisplay
+        onClose={handleWebcamClose}
+        fullscreen={isStreamMode}
+        webcamOn={webcamOn}
+        isWebcamOverlayVisible={isWebcamOverlayVisible}
+        setWebcamOverlayVisible={setWebcamOverlayVisible}
+      />
+
+      <PDFViewer
+        pdfFile={pdfFile}
+        currentPage={pdfCurrentPage}
+        setTotalPages={setPdfTotalPages}
+        isPdfScrollMode={isPdfScrollMode}
+        enablePdfScrollMode={enablePdfScrollMode}
+        disablePdfScrollMode={disablePdfScrollMode}
+        handlePdfClose={handlePdfClose}
+      />
+
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 1,
+          pointerEvents: isPdfScrollMode ? "none" : "auto",
+        }}
+      >
+        <MainToolbar
+          excalidrawAPI={excalidrawAPI}
+          onUploadPDF={handlePdfUpload}
+          onToggleWebcam={toggleWebcam}
+          setIsStreamMode={setIsStreamMode}
+          setWebcamOn={setWebcamOn}
+          webcamOn={webcamOn}
         />
-      ) : (
-        <>
-          {overlayVisible && pdfFile && (
-            <div
-              ref={pdfViewerRef}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                zIndex: 0,
-                overflow: isPdfScrollMode ? "auto" : "hidden",
-              }}
-            >
-              <PDFViewer
-                pdfFile={pdfFile}
-                currentPage={pdfCurrentPage}
-                setTotalPages={setPdfTotalPages}
-              />
-            </div>
-          )}
+        <CustomToolbar
+          excalidrawAPI={excalidrawAPI}
+          onToolSelect={(toolType: string) => setSelectedTool(toolType)}
+        />
 
-          {overlayVisible && (
-            <div
-              style={{
-                position: "absolute",
-                top: 10,
-                right: 10,
-                zIndex: 3,
-                display: "flex",
-                gap: "10px",
-              }}
-            >
-              <button
-                onClick={isPdfScrollMode ? disablePdfScrollMode : enablePdfScrollMode}
-              >
-                {isPdfScrollMode ? "Back to Drawing" : "Scroll PDF"}
-              </button>
-              <button onClick={handlePdfClose}>Close PDF</button>
-            </div>
-          )}
+        <PageNavigation
+          savePage={savePage}
+          loadPage={loadPage}
+          currentPage={currentPage}
+          setCurrentPage={(page) => {
+            setPdfCurrentPage(page);
+            setCurrentPage(page);
+          }}
+          overlayVisible={!!pdfFile}
+          pdfTotalPages={pdfTotalPages}
+        />
 
-          {webcamOn && isWebcamOverlayVisible && (
-            <div
-              style={{
-                position: "absolute",
-                top: "10px",
-                right: "10px",
-                zIndex: 3,
-              }}
-            >
-              <WebcamDisplay
-                onClose={() => setWebcamOverlayVisible(false)} // Hides the small webcam overlay
-                fullscreen={false}
-              />
-            </div>
-          )}
+        <Excalidraw
+          onChange={(elements, state) =>
+            console.log("Canvas Updated", elements, state)
+          }
+          excalidrawAPI={(api) =>
+            setExcalidrawAPI(api as unknown as CustomExcalidrawAPI)
+          }
+          initialData={{
+            appState: { viewBackgroundColor: "transparent", gridSize: null },
+          }}
+        />
+      </div>
 
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 1,
-              pointerEvents: isPdfScrollMode ? "none" : "auto",
-            }}
-          >
-            <MainToolbar
-              excalidrawAPI={excalidrawAPI}
-              onUploadPDF={handlePdfUpload}
-              onToggleWebcam={toggleWebcam}
-              setIsStreamMode={setIsStreamMode}
-              setWebcamOn={setWebcamOn} // Pass setter for webcamOn
-              webcamOn={webcamOn} // Pass current webcam state
-            />
-            <CustomToolbar excalidrawAPI={excalidrawAPI} onToolSelect={openConfigMenu} />
-            <PageNavigation
-              savePage={savePage}
-              loadPage={loadPage}
-              currentPage={currentPage}
-              setCurrentPage={(page) => {
-                setPdfCurrentPage(page);
-                setCurrentPage(page);
-              }}
-              overlayVisible={overlayVisible}
-              pdfTotalPages={pdfTotalPages}
-            />
-
-            <Excalidraw
-              onChange={(elements, state) =>
-                console.log("Canvas Updated", elements, state)
-              }
-              excalidrawAPI={(api) =>
-                setExcalidrawAPI(api as unknown as CustomExcalidrawAPI)
-              }
-              initialData={{
-                appState: { viewBackgroundColor: "transparent", gridSize: null },
-              }}
-            />
-          </div>
-
-          <DiagramSidebar
-            isSidebarOpen={isSidebarOpen}
-            setIsSidebarOpen={setIsSidebarOpen}
-            onDiagramSelect={handleDiagramSelect}
-          />
-        </>
-      )}
+      <DiagramSidebar
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+        onDiagramSelect={handleDiagramSelect}
+      />
     </div>
   );
 }

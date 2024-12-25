@@ -9,18 +9,20 @@
     overflow: hidden;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     z-index: 10;
+    background-color: black;
   }
   
   .webcam-container.fullscreen {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1000; /* Ensure it appears above other elements */
+    width: 100vw;
+    height: 100vh;
+    z-index: 1000;
     border: none;
     border-radius: 0;
     box-shadow: none;
+    background-color: black;
   }
   
   .webcam-video {
@@ -35,6 +37,7 @@
     left: 10px;
     display: flex;
     gap: 10px;
+    z-index: 1010;
   }
   
   .webcam-controls button {
@@ -44,6 +47,7 @@
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    font-size: 14px;
   }
   
   .webcam-controls button:hover {

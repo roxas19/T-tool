@@ -1,48 +1,65 @@
-import React, { useEffect, useRef } from 'react';
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+import React, { useEffect, useRef } from "react";
+import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 
 // Set the worker source path, assuming you have pdf.worker.min.mjs in the public folder
 GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.mjs`;
 
 type PDFViewerProps = {
-  pdfFile: File;
+  pdfFile: File | null; // Null if no file is loaded
   currentPage: number; // Assumes 1-based indexing
   setTotalPages: (totalPages: number) => void;
+  isPdfScrollMode: boolean;
+  enablePdfScrollMode: () => void;
+  disablePdfScrollMode: () => void;
+  handlePdfClose: () => void;
 };
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ pdfFile, currentPage, setTotalPages }) => {
+const PDFViewer: React.FC<PDFViewerProps> = ({
+  pdfFile,
+  currentPage,
+  setTotalPages,
+  isPdfScrollMode,
+  enablePdfScrollMode,
+  disablePdfScrollMode,
+  handlePdfClose,
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Function to send the current page data to the backend
   const sendPageToBackend = async (blob: Blob | null, pageNumber: number) => {
     if (!blob) {
-      console.error('No blob data available to send');
+      console.error("No blob data available to send");
       return;
     }
 
     try {
       const formData = new FormData();
-      formData.append('page', blob, `page-${pageNumber}.png`);
-      formData.append('pageNumber', pageNumber.toString());
+      formData.append("page", blob, `page-${pageNumber}.png`);
+      formData.append("pageNumber", pageNumber.toString());
 
       // Mock endpoint for testing
-      const response = await fetch('http://localhost:8000/api/upload-pdf-page/', {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await fetch(
+        "http://localhost:8000/api/upload-pdf-page/",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to send page data: ${response.statusText}`);
       }
 
       const result = await response.json();
-      console.log('Page data sent successfully:', result);
+      console.log("Page data sent successfully:", result);
     } catch (error) {
-      console.error('Error sending page data to backend:', error);
+      console.error("Error sending page data to backend:", error);
     }
   };
 
   useEffect(() => {
+    if (!pdfFile) return;
+
     let renderTask: any; // To keep track of the current render task
 
     const loadPDFPage = async () => {
@@ -59,7 +76,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfFile, currentPage, setTotalPag
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const context = canvas.getContext('2d');
+        const context = canvas.getContext("2d");
         canvas.width = viewport.width;
         canvas.height = viewport.height;
 
@@ -79,7 +96,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfFile, currentPage, setTotalPag
           });
         }
       } catch (error) {
-        console.error('Error loading or rendering PDF page:', error);
+        console.error("Error loading or rendering PDF page:", error);
       }
     };
 
@@ -93,18 +110,52 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfFile, currentPage, setTotalPag
     };
   }, [pdfFile, currentPage, setTotalPages]);
 
+  if (!pdfFile) return null;
+
   return (
     <div
       style={{
-        width: '100%',
-        height: '100%',
-        overflow: 'hidden',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        zIndex: 0,
+        overflow: isPdfScrollMode ? "auto" : "hidden",
       }}
     >
-      <canvas ref={canvasRef} />
+      {/* PDF Rendering */}
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          overflow: "hidden",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <canvas ref={canvasRef} />
+      </div>
+
+      {/* Overlay Controls */}
+      <div
+        style={{
+          position: "absolute",
+          top: 10,
+          right: 10,
+          zIndex: 3,
+          display: "flex",
+          gap: "10px",
+        }}
+      >
+        <button
+          onClick={isPdfScrollMode ? disablePdfScrollMode : enablePdfScrollMode}
+        >
+          {isPdfScrollMode ? "Back to Drawing" : "Scroll PDF"}
+        </button>
+        <button onClick={handlePdfClose}>Close PDF</button>
+      </div>
     </div>
   );
 };
