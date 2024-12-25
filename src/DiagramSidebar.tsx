@@ -1,46 +1,49 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import mermaid from "mermaid";
-import { initializeMermaid } from "./utils/mermaidConfig";
+import { parseMermaidToExcalidraw } from "@excalidraw/mermaid-to-excalidraw";
+import { convertToExcalidrawElements } from "@excalidraw/excalidraw";
 
 interface DiagramSidebarProps {
   isSidebarOpen: boolean;
   setIsSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  onDiagramSelect?: (elements: any[]) => void; // Add this optional callback
+  onDragStart: (elements: any[]) => void; // Callback to notify App.tsx during drag
 }
 
 const DiagramSidebar: React.FC<DiagramSidebarProps> = ({
   isSidebarOpen,
   setIsSidebarOpen,
-  onDiagramSelect,
+  onDragStart,
 }) => {
-  const [diagrams, setDiagrams] = useState<string[]>([]);
+  const [diagrams, setDiagrams] = useState<{ syntax: string; svg: string }[]>(
+    []
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    initializeMermaid(); // Initialize Mermaid globally once
-
     const loadDiagrams = async () => {
-      const mermaidSyntaxList = [
-        "graph TD; A-->B; A-->C; B-->D; C-->D;",
-        "sequenceDiagram; participant A; participant B; A->>B: Hello;",
+      const syntaxList = [
+        `flowchart TD
+          A[Start] --> B{Is it working?}
+          B -->|Yes| C[Great!]
+          B -->|No| D[Try again]`,
+        `flowchart LR
+          A --> B`,
       ];
 
       setLoading(true);
       setError(null);
-      const renderedDiagrams: string[] = [];
+      const renderedDiagrams: { syntax: string; svg: string }[] = [];
 
-      for (const syntax of mermaidSyntaxList) {
+      for (const syntax of syntaxList) {
         try {
-          // Render the diagram
           const { svg } = await mermaid.render(
-            `diagram-${Math.random().toString(36).substring(7)}`, // Unique ID
+            `diagram-${Math.random().toString(36).substring(7)}`,
             syntax
           );
-          renderedDiagrams.push(svg);
+          renderedDiagrams.push({ syntax, svg });
         } catch (err) {
           console.error(`Error rendering Mermaid syntax: ${syntax}`, err);
-          setError(`Error processing syntax: ${syntax}`);
         }
       }
 
@@ -51,18 +54,24 @@ const DiagramSidebar: React.FC<DiagramSidebarProps> = ({
     loadDiagrams();
   }, []);
 
-  // Handle diagram selection
-  const handleDiagramClick = (diagramSvg: string) => {
-    if (onDiagramSelect) {
-      // Convert SVG into an array of elements for Excalidraw
-      const elements = [{ type: "customSvg", svg: diagramSvg }];
-      onDiagramSelect(elements);
+  const handleDragStart = async (syntax: string, event: React.DragEvent) => {
+    try {
+      console.log(`Converting diagram syntax: ${syntax}`);
+      const { elements: skeletonElements } = await parseMermaidToExcalidraw(
+        syntax
+      );
+      const qualifiedElements = convertToExcalidrawElements(skeletonElements);
+
+      onDragStart(qualifiedElements); // Notify App.tsx
+      event.dataTransfer.setData("application/json", JSON.stringify(qualifiedElements));
+      event.dataTransfer.effectAllowed = "move";
+    } catch (err) {
+      console.error("Error converting diagram during drag:", err);
     }
   };
 
   return (
     <>
-      {/* Sidebar Toggle Button */}
       <button
         onClick={() => setIsSidebarOpen((prev) => !prev)}
         style={{
@@ -81,7 +90,6 @@ const DiagramSidebar: React.FC<DiagramSidebarProps> = ({
         {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
       </button>
 
-      {/* Sidebar */}
       {isSidebarOpen && (
         <div
           style={{
@@ -105,19 +113,20 @@ const DiagramSidebar: React.FC<DiagramSidebarProps> = ({
           ) : diagrams.length === 0 ? (
             <p>No diagrams to display.</p>
           ) : (
-            diagrams.map((diagramSvg, index) => (
+            diagrams.map((diagram, index) => (
               <div
                 key={index}
+                draggable
+                onDragStart={(event) => handleDragStart(diagram.syntax, event)}
                 style={{
                   marginBottom: "20px",
                   padding: "10px",
                   border: "1px solid #ccc",
                   borderRadius: "5px",
                   backgroundColor: "#ffffff",
-                  cursor: "pointer", // Add hover indication
+                  cursor: "grab",
                 }}
-                dangerouslySetInnerHTML={{ __html: diagramSvg }} // Render the SVG
-                onClick={() => handleDiagramClick(diagramSvg)} // Trigger diagram selection
+                dangerouslySetInnerHTML={{ __html: diagram.svg }}
               ></div>
             ))
           )}

@@ -6,11 +6,19 @@ import MainToolbar from "./MainToolbar";
 import WebcamDisplay from "./WebcamDisplay";
 import PDFViewer from "./PDFViewer";
 import DiagramSidebar from "./DiagramSidebar";
+import VideoPlayer from "./VideoPlayer";
 import "./App.css";
 import { usePageNavigation } from "./hooks/usePageNavigation";
 import { usePDFHandler } from "./hooks/usePDFHandler";
 import { useWebcamManager } from "./hooks/useWebcamManager";
-import { convertToExcalidrawElements } from "@excalidraw/excalidraw";
+
+type ExcalidrawElement = {
+  id: string;
+  type: string;
+  x: number;
+  y: number;
+  [key: string]: any;
+};
 
 type CustomExcalidrawAPI = {
   updateScene: (sceneData: any, opts?: { commitToStore?: boolean }) => void;
@@ -68,14 +76,18 @@ function TutorTool() {
 
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [diagramToPlace, setDiagramToPlace] = useState<any[] | null>(null);
+  const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
+  const [draggedDiagramElements, setDraggedDiagramElements] = useState<
+    ExcalidrawElement[] | null
+  >(null);
 
-  const handleDiagramSelect = (elements: any[]) => {
-    setDiagramToPlace(elements);
+  const toggleVideoPlayer = () => {
+    setIsVideoPlayerVisible((prev) => !prev);
+    console.log("VideoPlayer visibility toggled:", !isVideoPlayerVisible);
   };
 
   const handleCanvasDrop = (event: React.DragEvent) => {
-    if (!diagramToPlace || !excalidrawAPI) return;
+    if (!excalidrawAPI || !draggedDiagramElements) return;
 
     event.preventDefault();
 
@@ -85,34 +97,36 @@ function TutorTool() {
     const dropX = clientX - left;
     const dropY = clientY - top;
 
-    const qualifiedElements = convertToExcalidrawElements(diagramToPlace).map(
-      (element) => ({
-        ...element,
-        x: element.x + dropX,
-        y: element.y + dropY,
-      })
-    );
+    const positionedElements = draggedDiagramElements.map((element) => ({
+      ...element,
+      x: element.x + dropX,
+      y: element.y + dropY,
+    }));
 
     excalidrawAPI.updateScene({
-      elements: [...excalidrawAPI.getSceneElements(), ...qualifiedElements],
+      elements: [...excalidrawAPI.getSceneElements(), ...positionedElements],
     });
 
-    setDiagramToPlace(null);
+    console.log("Elements placed on canvas:", positionedElements);
+    setDraggedDiagramElements(null); // Clear dragged elements after drop
   };
 
   const handleDragOver = (event: React.DragEvent) => {
-    event.preventDefault();
+    event.preventDefault(); // Allow dropping
+  };
+
+  const handleDiagramDragStart = (elements: ExcalidrawElement[]) => {
+    console.log("Diagram drag started:", elements);
+    setDraggedDiagramElements(elements); // Cache elements being dragged
   };
 
   const handleWebcamClose = () => {
     if (isStreamMode) {
-      // Exit fullscreen and show the overlay if webcam is on
       setIsStreamMode(false);
       if (webcamOn) {
         setWebcamOverlayVisible(true);
       }
     } else {
-      // Turn off the webcam and hide the overlay
       setWebcamOn(false);
       setWebcamOverlayVisible(false);
     }
@@ -160,6 +174,7 @@ function TutorTool() {
           setIsStreamMode={setIsStreamMode}
           setWebcamOn={setWebcamOn}
           webcamOn={webcamOn}
+          onToggleVideoPlayer={toggleVideoPlayer}
         />
         <CustomToolbar
           excalidrawAPI={excalidrawAPI}
@@ -191,10 +206,26 @@ function TutorTool() {
         />
       </div>
 
+      {isVideoPlayerVisible && (
+        <div
+          style={{
+            position: "absolute",
+            top: "50px",
+            left: "50px",
+            zIndex: 100,
+            pointerEvents: "auto",
+          }}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <VideoPlayer />
+        </div>
+      )}
+
       <DiagramSidebar
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
-        onDiagramSelect={handleDiagramSelect}
+        onDragStart={handleDiagramDragStart} // Pass callback for drag start
       />
     </div>
   );

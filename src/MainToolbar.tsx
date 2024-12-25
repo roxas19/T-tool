@@ -7,6 +7,7 @@ type MainToolbarProps = {
   setIsStreamMode: React.Dispatch<React.SetStateAction<boolean>>; // Activates Stream Mode
   setWebcamOn: React.Dispatch<React.SetStateAction<boolean>>; // Sets the webcam feed state
   webcamOn: boolean; // Current webcam state
+  onToggleVideoPlayer: () => void; // Toggles VideoPlayer on/off
 };
 
 const MainToolbar: React.FC<MainToolbarProps> = ({
@@ -16,6 +17,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
   setIsStreamMode,
   setWebcamOn,
   webcamOn,
+  onToggleVideoPlayer,
 }) => {
   const handleOpen = () => {
     excalidrawAPI?.resetScene();
@@ -82,6 +84,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
       >
         Stream View
       </button>
+      <button onClick={onToggleVideoPlayer}>Toggle Video Player</button>
     </div>
   );
 };
