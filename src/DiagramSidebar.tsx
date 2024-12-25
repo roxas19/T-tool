@@ -5,11 +5,13 @@ import { initializeMermaid } from "./utils/mermaidConfig";
 interface DiagramSidebarProps {
   isSidebarOpen: boolean;
   setIsSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  onDiagramSelect?: (elements: any[]) => void; // Add this optional callback
 }
 
 const DiagramSidebar: React.FC<DiagramSidebarProps> = ({
   isSidebarOpen,
   setIsSidebarOpen,
+  onDiagramSelect,
 }) => {
   const [diagrams, setDiagrams] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -48,6 +50,15 @@ const DiagramSidebar: React.FC<DiagramSidebarProps> = ({
 
     loadDiagrams();
   }, []);
+
+  // Handle diagram selection
+  const handleDiagramClick = (diagramSvg: string) => {
+    if (onDiagramSelect) {
+      // Convert SVG into an array of elements for Excalidraw
+      const elements = [{ type: "customSvg", svg: diagramSvg }];
+      onDiagramSelect(elements);
+    }
+  };
 
   return (
     <>
@@ -103,8 +114,10 @@ const DiagramSidebar: React.FC<DiagramSidebarProps> = ({
                   border: "1px solid #ccc",
                   borderRadius: "5px",
                   backgroundColor: "#ffffff",
+                  cursor: "pointer", // Add hover indication
                 }}
                 dangerouslySetInnerHTML={{ __html: diagramSvg }} // Render the SVG
+                onClick={() => handleDiagramClick(diagramSvg)} // Trigger diagram selection
               ></div>
             ))
           )}

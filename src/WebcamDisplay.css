@@ -9,10 +9,44 @@
     overflow: hidden;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     z-index: 10;
-}
-
-.webcam-video {
+  }
+  
+  .webcam-container.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000; /* Ensure it appears above other elements */
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  
+  .webcam-video {
     width: 100%;
     height: 100%;
     object-fit: cover;
-}
+  }
+  
+  .webcam-controls {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    display: flex;
+    gap: 10px;
+  }
+  
+  .webcam-controls button {
+    padding: 5px 10px;
+    background-color: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .webcam-controls button:hover {
+    background-color: #0d47a1;
+  }
+  

@@ -1,12 +1,22 @@
-import React from 'react';
+import React from "react";
 
 type MainToolbarProps = {
   excalidrawAPI: any;
-  onToggleWebcam: () => void;
-  onUploadPDF: () => void;  // Update this to remove event parameter
+  onToggleWebcam: () => void; // Toggles webcam feed on/off
+  onUploadPDF: () => void; // Handles PDF uploads
+  setIsStreamMode: React.Dispatch<React.SetStateAction<boolean>>; // Activates Stream Mode
+  setWebcamOn: React.Dispatch<React.SetStateAction<boolean>>; // Sets the webcam feed state
+  webcamOn: boolean; // Current webcam state
 };
 
-const MainToolbar: React.FC<MainToolbarProps> = ({ excalidrawAPI, onToggleWebcam, onUploadPDF }) => {
+const MainToolbar: React.FC<MainToolbarProps> = ({
+  excalidrawAPI,
+  onToggleWebcam,
+  onUploadPDF,
+  setIsStreamMode,
+  setWebcamOn,
+  webcamOn,
+}) => {
   const handleOpen = () => {
     excalidrawAPI?.resetScene();
   };
@@ -21,9 +31,9 @@ const MainToolbar: React.FC<MainToolbarProps> = ({ excalidrawAPI, onToggleWebcam
 
   const handleExportImage = () => {
     excalidrawAPI?.exportToBlob().then((blob: Blob) => {
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = 'excalidraw-image.png';
+      link.download = "excalidraw-image.png";
       link.click();
     });
   };
@@ -31,21 +41,21 @@ const MainToolbar: React.FC<MainToolbarProps> = ({ excalidrawAPI, onToggleWebcam
   const handleResetCanvas = () => {
     excalidrawAPI?.updateScene({
       elements: [],
-      appState: { ...excalidrawAPI.getAppState(), viewBackgroundColor: '#ffffff' },
+      appState: { ...excalidrawAPI.getAppState(), viewBackgroundColor: "#ffffff" },
     });
   };
 
   const handleUndo = () => {
-    (document.querySelector('.undo-button-container button') as HTMLButtonElement)?.click();
+    (document.querySelector(".undo-button-container button") as HTMLButtonElement)?.click();
   };
 
   const handleRedo = () => {
-    (document.querySelector('.redo-button-container button') as HTMLButtonElement)?.click();
+    (document.querySelector(".redo-button-container button") as HTMLButtonElement)?.click();
   };
 
   const handleImageUpload = () => {
     excalidrawAPI?.setActiveTool({
-      type: 'image',
+      type: "image",
       insertOnCanvasDirectly: true,
     });
     console.log("Image tool activated for upload.");
@@ -61,8 +71,17 @@ const MainToolbar: React.FC<MainToolbarProps> = ({ excalidrawAPI, onToggleWebcam
       <button onClick={handleRedo}>Redo</button>
       <button onClick={onToggleWebcam}>Toggle Webcam</button>
       <button onClick={handleImageUpload}>Upload Image</button>
-      {/* Update the PDF upload button to use onUploadPDF prop */}
       <button onClick={onUploadPDF}>Upload PDF</button>
+      <button
+        onClick={() => {
+          setIsStreamMode(true); // Activate Stream Mode
+          if (!webcamOn) {
+            setWebcamOn(true); // Ensure the webcam feed is active
+          }
+        }}
+      >
+        Stream View
+      </button>
     </div>
   );
 };
