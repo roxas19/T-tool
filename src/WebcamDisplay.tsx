@@ -7,6 +7,8 @@ type WebcamDisplayProps = {
   webcamOn: boolean; // Determines if the webcam feed should be active
   isWebcamOverlayVisible: boolean; // Controls overlay visibility
   setWebcamOverlayVisible: (visible: boolean) => void; // Toggles overlay visibility
+  onToggleDrawingMode: (active: boolean) => void; // Toggles drawing mode
+  isDrawingMode: boolean; // Indicates if drawing mode is active
 };
 
 const WebcamDisplay: React.FC<WebcamDisplayProps> = ({
@@ -15,6 +17,8 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({
   webcamOn,
   isWebcamOverlayVisible,
   setWebcamOverlayVisible,
+  onToggleDrawingMode,
+  isDrawingMode,
 }) => {
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
@@ -25,13 +29,11 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({
     const startWebcam = async () => {
       try {
         if (videoStream) {
-          // Stop any existing streams
           videoStream.getTracks().forEach((track) => track.stop());
           setVideoStream(null);
         }
 
         if (webcamOn) {
-          // Start a new stream
           const stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode },
           });
@@ -48,13 +50,11 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({
     startWebcam();
 
     return () => {
-      // Cleanup: Stop the video stream when the component unmounts or `webcamOn` changes
       videoStream?.getTracks().forEach((track) => track.stop());
       setVideoStream(null);
     };
   }, [webcamOn, facingMode]);
 
-  // Handle switching between front and back cameras
   const handleSwitchCamera = async () => {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
@@ -70,40 +70,44 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({
     }
   };
 
-  // Hide the component when the webcam is off or not visible
   if (!webcamOn || (!fullscreen && !isWebcamOverlayVisible)) return null;
 
   return (
-    <div
-      className={`webcam-container ${fullscreen ? "fullscreen" : ""}`}
-      style={{
-        position: fullscreen ? "fixed" : "absolute",
-        top: fullscreen ? "0" : "10px",
-        right: fullscreen ? "0" : "10px",
-        zIndex: fullscreen ? 1000 : 10,
-        width: fullscreen ? "100vw" : "200px",
-        height: fullscreen ? "100vh" : "150px",
-        backgroundColor: fullscreen ? "black" : "transparent",
-      }}
-    >
-      {/* Webcam Video */}
-      <video ref={videoRef} autoPlay muted className="webcam-video" />
+    <>
+      <div
+        className={`webcam-container ${fullscreen ? "fullscreen" : ""} ${
+          isDrawingMode ? "draw-mode" : "stream-mode"
+        }`}
+      >
+        {/* Webcam Video */}
+        <video ref={videoRef} autoPlay muted className="webcam-video" />
+
+        {/* Excalidraw Overlay */}
+        {isDrawingMode && (
+          <div className="excalidraw-overlay">
+            <button onClick={() => onToggleDrawingMode(false)}>Exit Drawing</button>
+          </div>
+        )}
+      </div>
 
       {/* Webcam Controls */}
-      <div className="webcam-controls">
+      <div className="webcam-controls" style={{ zIndex: 1010 }}>
         <button
           onClick={() => {
             onClose();
             if (!fullscreen) {
-              setWebcamOverlayVisible(false); // Hide overlay only if not in fullscreen
+              setWebcamOverlayVisible(false);
             }
           }}
         >
           {fullscreen ? "Exit Stream" : "Close"}
         </button>
         <button onClick={handleSwitchCamera}>Switch Camera</button>
+        <button onClick={() => onToggleDrawingMode(!isDrawingMode)}>
+          {isDrawingMode ? "Exit Draw" : "Draw"}
+        </button>
       </div>
-    </div>
+    </>
   );
 };
 

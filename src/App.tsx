@@ -7,6 +7,7 @@ import WebcamDisplay from "./WebcamDisplay";
 import PDFViewer from "./PDFViewer";
 import DiagramSidebar from "./DiagramSidebar";
 import VideoPlayer from "./VideoPlayer";
+import Recording from "./Recording";
 import "./App.css";
 import { usePageNavigation } from "./hooks/usePageNavigation";
 import { usePDFHandler } from "./hooks/usePDFHandler";
@@ -50,6 +51,11 @@ function TutorTool() {
   const [excalidrawAPI, setExcalidrawAPI] = useState<CustomExcalidrawAPI | null>(
     null
   );
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [isRecording, setIsRecording] = useState(false); // Track recording status
+  const toggleRecording = () => {
+    setIsRecording((prev) => !prev); // Toggle recording state
+  };
   const { savePage, loadPage, currentPage, setCurrentPage } =
     usePageNavigation(excalidrawAPI);
   const {
@@ -108,16 +114,16 @@ function TutorTool() {
     });
 
     console.log("Elements placed on canvas:", positionedElements);
-    setDraggedDiagramElements(null); // Clear dragged elements after drop
+    setDraggedDiagramElements(null);
   };
 
   const handleDragOver = (event: React.DragEvent) => {
-    event.preventDefault(); // Allow dropping
+    event.preventDefault();
   };
 
   const handleDiagramDragStart = (elements: ExcalidrawElement[]) => {
     console.log("Diagram drag started:", elements);
-    setDraggedDiagramElements(elements); // Cache elements being dragged
+    setDraggedDiagramElements(elements);
   };
 
   const handleWebcamClose = () => {
@@ -144,8 +150,81 @@ function TutorTool() {
         webcamOn={webcamOn}
         isWebcamOverlayVisible={isWebcamOverlayVisible}
         setWebcamOverlayVisible={setWebcamOverlayVisible}
+        onToggleDrawingMode={(active) => setIsDrawingMode(active)}
+        isDrawingMode={isDrawingMode}
       />
-
+  
+      {/* Conditional Rendering for Toolbars */}
+      {(!isStreamMode || isDrawingMode) && (
+        <>
+          <div className={`main-toolbar ${isStreamMode ? "stream-toolbar" : ""}`}>
+            <MainToolbar
+              excalidrawAPI={excalidrawAPI}
+              onUploadPDF={handlePdfUpload}
+              onToggleWebcam={toggleWebcam}
+              setIsStreamMode={setIsStreamMode}
+              setWebcamOn={setWebcamOn}
+              webcamOn={webcamOn}
+              onToggleVideoPlayer={toggleVideoPlayer}
+              onToggleRecording={toggleRecording} // Added for recording
+              isRecording={isRecording} // Pass recording state
+            />
+          </div>
+  
+          <div className={`custom-toolbar ${isStreamMode ? "stream-toolbar" : ""}`}>
+            <CustomToolbar
+              excalidrawAPI={excalidrawAPI}
+              onToolSelect={(toolType: string) => setSelectedTool(toolType)}
+            />
+          </div>
+        </>
+      )}
+  
+      {/* Page Navigation */}
+      <PageNavigation
+        savePage={savePage}
+        loadPage={loadPage}
+        currentPage={currentPage}
+        setCurrentPage={(page) => {
+          setPdfCurrentPage(page);
+          setCurrentPage(page);
+        }}
+        overlayVisible={!!pdfFile}
+        pdfTotalPages={pdfTotalPages}
+      />
+  
+      {/* Excalidraw Canvas */}
+      {isStreamMode && isDrawingMode && (
+        <div className="excalidraw-draw-mode">
+          <Excalidraw
+            onChange={(elements, state) =>
+              console.log("Canvas Updated", elements, state)
+            }
+            excalidrawAPI={(api) =>
+              setExcalidrawAPI(api as unknown as CustomExcalidrawAPI)
+            }
+            initialData={{
+              appState: { viewBackgroundColor: "transparent", gridSize: null },
+            }}
+          />
+        </div>
+      )}
+  
+      {!isStreamMode && (
+        <Excalidraw
+          onChange={(elements, state) =>
+            console.log("Canvas Updated", elements, state)
+          }
+          excalidrawAPI={(api) =>
+            setExcalidrawAPI(api as unknown as CustomExcalidrawAPI)
+          }
+          initialData={{
+            appState: { viewBackgroundColor: "#ffffff", gridSize: null },
+          }}
+        />
+      )}
+  
+      {/* PDF Viewer */}
       <PDFViewer
         pdfFile={pdfFile}
         currentPage={pdfCurrentPage}
@@ -155,57 +234,8 @@ function TutorTool() {
         disablePdfScrollMode={disablePdfScrollMode}
         handlePdfClose={handlePdfClose}
       />
-
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 1,
-          pointerEvents: isPdfScrollMode ? "none" : "auto",
-        }}
-      >
-        <MainToolbar
-          excalidrawAPI={excalidrawAPI}
-          onUploadPDF={handlePdfUpload}
-          onToggleWebcam={toggleWebcam}
-          setIsStreamMode={setIsStreamMode}
-          setWebcamOn={setWebcamOn}
-          webcamOn={webcamOn}
-          onToggleVideoPlayer={toggleVideoPlayer}
-        />
-        <CustomToolbar
-          excalidrawAPI={excalidrawAPI}
-          onToolSelect={(toolType: string) => setSelectedTool(toolType)}
-        />
-
-        <PageNavigation
-          savePage={savePage}
-          loadPage={loadPage}
-          currentPage={currentPage}
-          setCurrentPage={(page) => {
-            setPdfCurrentPage(page);
-            setCurrentPage(page);
-          }}
-          overlayVisible={!!pdfFile}
-          pdfTotalPages={pdfTotalPages}
-        />
-
-        <Excalidraw
-          onChange={(elements, state) =>
-            console.log("Canvas Updated", elements, state)
-          }
-          excalidrawAPI={(api) =>
-            setExcalidrawAPI(api as unknown as CustomExcalidrawAPI)
-          }
-          initialData={{
-            appState: { viewBackgroundColor: "transparent", gridSize: null },
-          }}
-        />
-      </div>
-
+  
+      {/* Video Player */}
       {isVideoPlayerVisible && (
         <div
           style={{
@@ -221,14 +251,21 @@ function TutorTool() {
           <VideoPlayer />
         </div>
       )}
-
+  
+      {/* Diagram Sidebar */}
       <DiagramSidebar
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
-        onDragStart={handleDiagramDragStart} // Pass callback for drag start
+        onDragStart={handleDiagramDragStart}
       />
+  
+      {/* Recording Component */}
+      <Recording isRecording={isRecording} />
     </div>
   );
+  
+  
+  
 }
 
 export default TutorTool;

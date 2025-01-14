@@ -18,6 +18,14 @@
   z-index: 1000;
 }
 
+/* Custom toolbar during stream and draw mode */
+.custom-toolbar.stream-toolbar {
+  background: rgba(0, 0, 0, 0.8); /* Darker background for contrast */
+  color: white; /* Ensure visibility */
+  z-index: 1003; /* Above Excalidraw canvas */
+}
+
+/* Custom toolbar buttons */
 .custom-toolbar button {
   padding: 8px;
   border: 1px solid #ccc;
@@ -33,6 +41,7 @@
   background-color: #e0e0e0;
 }
 
+/* Style and position the main toolbar */
 .main-toolbar {
   position: fixed;
   top: 10px;
@@ -42,20 +51,18 @@
   padding: 10px 20px;
   border-radius: 8px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  z-index: 10;
+  z-index: 1000;
   display: flex;
   gap: 10px;
 }
 
-.main-toolbar button {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  background-color: #1976d2;
-  color: #ffffff;
-  font-size: 14px;
+/* Main toolbar during stream and draw mode */
+.main-toolbar.stream-toolbar {
+  background: rgba(0, 0, 0, 0.8); /* Darker background */
+  z-index: 1003; /* Ensure it's above the Excalidraw canvas */
 }
+
+/* Main toolbar buttons */
 .main-toolbar button {
   padding: 8px 12px;
   border: none;
@@ -67,23 +74,21 @@
   margin-right: 10px;
 }
 
+.main-toolbar button:hover {
+  background-color: #0d47a1;
+}
 
-
-
-
-
-
-
+/* Tool config menu for Excalidraw */
 .tool-config-menu {
   position: absolute;
-  top: 60px; /* Adjust this to position the menu below the button */
-  right: 20px; /* Or adjust based on the button's position */
+  top: 60px;
+  right: 20px;
   background: rgba(255, 255, 255, 0.95);
   padding: 10px;
   border-radius: 8px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-  width: 150px; /* Make it compact */
+  width: 150px;
 }
 
 .color-options {
@@ -104,6 +109,7 @@
   font-size: 14px;
 }
 
+/* PDF upload button */
 .pdf-upload-button {
   position: absolute;
   top: 20px;
@@ -115,9 +121,13 @@
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  z-index: 10; /* Add a high z-index to ensure it appears above the canvas */
+  z-index: 10; /* Above the canvas */
 }
 
 .pdf-upload-button:hover {
   background-color: #0056b3;
+}
+
+.webcam-controls{
+  z-index: 1010;
 }

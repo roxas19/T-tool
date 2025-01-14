@@ -8,6 +8,8 @@ type MainToolbarProps = {
   setWebcamOn: React.Dispatch<React.SetStateAction<boolean>>; // Sets the webcam feed state
   webcamOn: boolean; // Current webcam state
   onToggleVideoPlayer: () => void; // Toggles VideoPlayer on/off
+  onToggleRecording: () => void; // Toggles recording on/off
+  isRecording: boolean; // Current recording state
 };
 
 const MainToolbar: React.FC<MainToolbarProps> = ({
@@ -18,6 +20,8 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
   setWebcamOn,
   webcamOn,
   onToggleVideoPlayer,
+  onToggleRecording,
+  isRecording,
 }) => {
   const handleOpen = () => {
     excalidrawAPI?.resetScene();
@@ -76,15 +80,18 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
       <button onClick={onUploadPDF}>Upload PDF</button>
       <button
         onClick={() => {
-          setIsStreamMode(true); // Activate Stream Mode
+          setIsStreamMode(true);
           if (!webcamOn) {
-            setWebcamOn(true); // Ensure the webcam feed is active
+            setWebcamOn(true);
           }
         }}
       >
         Stream View
       </button>
       <button onClick={onToggleVideoPlayer}>Toggle Video Player</button>
+      <button onClick={onToggleRecording}>
+        {isRecording ? "Stop Recording" : "Start Recording"}
+      </button>
     </div>
   );
 };
