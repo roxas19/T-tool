@@ -1,37 +1,59 @@
 .video-player-wrapper {
-    position: absolute;
-    top: 50px;
-    left: 50px;
-    z-index: 100; /* High enough to overlay other components */
-    pointer-events: auto; /* Allow interactions */
-    background-color: #000; /* Optional: Background to distinguish the player */
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.25);
-  }
-  
-  .video-player {
-    width: 640px;
-    height: 360px;
-  }
-  
-  .video-player-controls {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 10px;
-  }
-  
-  .video-player-controls button {
-    padding: 8px 16px;
-    font-size: 14px;
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .video-player-controls button:hover {
-    background-color: #0056b3;
-  }
-  
+  position: absolute;
+  top: 50px;
+  left: 50px;
+  z-index: 100; /* High enough to overlay other components */
+  pointer-events: auto; /* Allow interactions */
+  background-color: #000; /* Optional: Background to distinguish the player */
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.video-player {
+  display: block; /* Ensure it's treated as a block-level element */
+  width: 640px;
+  height: 360px;
+}
+
+.youtube-player {
+  display: block; /* Ensure iframe takes full width/height */
+  width: 640px;
+  height: 360px;
+  border: none; /* Remove iframe border */
+}
+
+.video-player-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.video-player-controls button {
+  padding: 8px 16px;
+  font-size: 14px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.video-player-controls button:hover {
+  background-color: #0056b3;
+}
+
+/* Loading placeholder */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 640px; /* Match the video player width */
+  height: 360px; /* Match the video player height */
+  background-color: rgba(0, 0, 0, 0.75); /* Slight transparency for distinction */
+  color: #fff; /* White text for visibility */
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 8px; /* Match the wrapper's border radius */
+  text-align: center;
+}
