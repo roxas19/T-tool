@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { openDB, IDBPDatabase } from "idb";
+import "./Recording.css";
 
 type RecordingProps = {
   isRecording: boolean;
@@ -7,18 +8,19 @@ type RecordingProps = {
 
 const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
   const [db, setDb] = React.useState<IDBPDatabase | null>(null);
+  const [playbackDb, setPlaybackDb] = React.useState<IDBPDatabase | null>(null); // For 15-minute playback storage
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const recordingQueue = useRef<Blob[]>([]); // Queue for chunks
+  const recordingQueue = useRef<Blob[]>([]);
 
-  // Initialize IndexedDB
   useEffect(() => {
-    const initDB = async () => {
+    const initDBs = async () => {
       try {
         await indexedDB.deleteDatabase("RecordingDB");
-        console.log("Old IndexedDB deleted successfully.");
+        await indexedDB.deleteDatabase("PlaybackDB");
+        console.log("Old IndexedDBs deleted successfully.");
 
-        const db = await openDB("RecordingDB", 1, {
+        const recordingDb = await openDB("RecordingDB", 1, {
           upgrade(db) {
             if (!db.objectStoreNames.contains("chunks")) {
               db.createObjectStore("chunks", { keyPath: "id", autoIncrement: true });
@@ -26,21 +28,29 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
           },
         });
 
-        console.log("New IndexedDB initialized.");
-        setDb(db);
+        const playbackDb = await openDB("PlaybackDB", 1, {
+          upgrade(db) {
+            if (!db.objectStoreNames.contains("playback")) {
+              db.createObjectStore("playback", { keyPath: "id" });
+            }
+          },
+        });
+
+        console.log("New IndexedDBs initialized.");
+        setDb(recordingDb);
+        setPlaybackDb(playbackDb);
       } catch (error) {
-        console.error("Failed to initialize IndexedDB:", error);
+        console.error("Failed to initialize IndexedDBs:", error);
       }
     };
 
-    initDB();
+    initDBs();
 
     return () => {
-      clearIndexedDB();
+      clearIndexedDBs();
     };
   }, []);
 
-  // Trigger recording start/stop
   useEffect(() => {
     if (isRecording) {
       console.log("Recording started.");
@@ -64,16 +74,13 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           console.log("New video chunk recorded:", event.data);
-          recordingQueue.current.push(event.data); // Add chunk to queue
+          recordingQueue.current.push(event.data);
 
-          // Periodically flush the queue to IndexedDB
-          setTimeout(async () => {
-            await flushQueueToIndexedDB();
-          }, 10000); // Every 10 seconds
+          flushQueueToIndexedDB();
         }
       };
 
-      recorder.start(10000); // Record in 10-second chunks
+      recorder.start(10000); // Save chunks every 10 seconds
       mediaRecorderRef.current = recorder;
     } catch (error) {
       console.error("Failed to start recording:", error);
@@ -96,86 +103,92 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
       const finalBlob = await stitchChunks();
       if (finalBlob) {
         console.log("Full recording Blob created:", finalBlob);
-        downloadBlob(finalBlob);
+        downloadBlob(finalBlob, `recording-${Date.now()}.webm`);
       }
 
-      clearIndexedDB();
+      clearIndexedDBs();
     } catch (error) {
       console.error("Failed to stop recording:", error);
     }
   };
-
   const flushQueueToIndexedDB = async () => {
-    if (!db || recordingQueue.current.length === 0) {
-      console.warn("Nothing to flush to IndexedDB.");
-      return;
-    }
+    if (!db || recordingQueue.current.length === 0) return;
 
-    try {
-      const tx = db.transaction("chunks", "readwrite");
-      const store = tx.store;
+    const tx = db.transaction("chunks", "readwrite");
+    const store = tx.store;
 
-      while (recordingQueue.current.length > 0) {
-        const chunk = recordingQueue.current.shift();
-        if (chunk) {
-          console.log("Flushing chunk to IndexedDB:", chunk);
-          await store.add({ data: chunk });
-        }
-      }
-
-      console.log("All queued chunks flushed to IndexedDB.");
-      await tx.done;
-    } catch (error) {
-      console.error("Failed to flush queue to IndexedDB:", error);
+    while (recordingQueue.current.length > 0) {
+      const chunk = recordingQueue.current.shift();
+      if (chunk) await store.add({ data: chunk, timestamp: Date.now() });
     }
-  };
-  const clearIndexedDB = async () => {
-    if (db) {
-      try {
-        const tx = db.transaction("chunks", "readwrite");
-        await tx.store.clear();
-        console.log("IndexedDB cleared.");
-      } catch (error) {
-        console.error("Failed to clear IndexedDB:", error);
-      }
-    }
+    await tx.done;
   };
 
-  const stitchChunks = async (): Promise<Blob | null> => {
+  const stitchChunks = async (lastMinutes = 0): Promise<Blob | null> => {
     if (!db) return null;
 
     const tx = db.transaction("chunks", "readonly");
     const store = tx.store;
-    const allChunks: Blob[] = [];
 
+    const now = Date.now();
+    const timeLimit = lastMinutes ? now - lastMinutes * 60 * 1000 : 0;
+
+    const chunks: Blob[] = [];
     let cursor = await store.openCursor();
+
     while (cursor) {
-      console.log("Retrieved chunk for stitching:", cursor.value.data);
-      allChunks.push(cursor.value.data);
+      if (!lastMinutes || cursor.value.timestamp >= timeLimit) {
+        chunks.push(cursor.value.data);
+      }
       cursor = await cursor.continue();
     }
 
-    if (allChunks.length === 0) {
-      console.warn("No chunks to stitch.");
-      return null;
-    }
+    if (chunks.length === 0) return null;
 
-    return new Blob(allChunks, { type: "video/webm" });
+    return new Blob(chunks, { type: "video/webm" });
   };
 
-  const downloadBlob = (blob: Blob) => {
+  const getPlaybackBlob = async (): Promise<Blob | null> => {
+    const blob = await stitchChunks(15); // Retrieve the last 15 minutes
+    return blob;
+  };
+
+  const downloadBlob = (blob: Blob, fileName: string) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `recording-${Date.now()}.webm`;
+    a.download = fileName;
     a.click();
     URL.revokeObjectURL(url);
   };
 
+  const clearIndexedDBs = async () => {
+    if (db) {
+      const tx = db.transaction("chunks", "readwrite");
+      await tx.store.clear();
+    }
+    if (playbackDb) {
+      const tx = playbackDb.transaction("playback", "readwrite");
+      await tx.store.clear();
+    }
+  };
+
   return (
-    <div>
-      {isRecording && <div>Recording in progress...</div>}
-      {!isRecording && <div>Recording stopped. Preparing the file...</div>}
+    <div className="recording-toolbar">
+      <div className="recording-status">
+        {isRecording ? "Recording in progress..." : "Recording stopped"}
+      </div>
+      <button
+        onClick={async () => {
+          const blob = await getPlaybackBlob();
+          if (blob) downloadBlob(blob, `last-15-minutes-${Date.now()}.webm`);
+          else console.warn("No video data available for the last 15 minutes.");
+        }}
+        disabled={!isRecording}
+        className="recording-button"
+      >
+        Download Last 15 Minutes
+      </button>
     </div>
   );
 };
