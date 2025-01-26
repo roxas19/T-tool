@@ -1,15 +1,17 @@
 import React from "react";
+import { handleStartMeeting, handleStopMeeting } from "./utils/meetingUtils"; // Updated utility functions
 
 type MainToolbarProps = {
   excalidrawAPI: any;
-  onToggleWebcam: () => void; // Toggles webcam feed on/off
-  onUploadPDF: () => void; // Handles PDF uploads
-  setIsStreamMode: React.Dispatch<React.SetStateAction<boolean>>; // Activates Stream Mode
-  setWebcamOn: React.Dispatch<React.SetStateAction<boolean>>; // Sets the webcam feed state
-  webcamOn: boolean; // Current webcam state
-  onToggleVideoPlayer: () => void; // Toggles VideoPlayer on/off
-  onToggleRecording: () => void; // Toggles recording on/off
-  isRecording: boolean; // Current recording state
+  onToggleWebcam: () => void;
+  onUploadPDF: () => void;
+  setIsStreamMode: React.Dispatch<React.SetStateAction<boolean>>;
+  setWebcamOn: React.Dispatch<React.SetStateAction<boolean>>;
+  webcamOn: boolean;
+  onToggleVideoPlayer: () => void;
+  onToggleRecording: () => void;
+  isRecording: boolean;
+  setRoomUrl: React.Dispatch<React.SetStateAction<string | null>>; // Add setRoomUrl to props
 };
 
 const MainToolbar: React.FC<MainToolbarProps> = ({
@@ -22,32 +24,26 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
   onToggleVideoPlayer,
   onToggleRecording,
   isRecording,
+  setRoomUrl,
 }) => {
-  const handleOpen = () => {
-    excalidrawAPI?.resetScene();
+  const meetingId = "test-meeting-1"; // Replace with a dynamic meeting ID
+
+  const handleStartMeetingClick = () => {
+    handleStartMeeting(setRoomUrl, meetingId); // Pass setRoomUrl to capture room URL
   };
 
-  const handleSave = () => {
-    const elements = excalidrawAPI?.getSceneElements();
-    const appState = excalidrawAPI?.getAppState();
-    const scene = JSON.stringify({ elements, appState });
-    localStorage.setItem("excalidraw-scene", scene);
-    alert("Canvas saved!");
+  const handleStopMeetingClick = () => {
+    handleStopMeeting(setRoomUrl, meetingId); // Pass setRoomUrl for proper cleanup
   };
-
-  const handleExportImage = () => {
-    excalidrawAPI?.exportToBlob().then((blob: Blob) => {
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "excalidraw-image.png";
-      link.click();
-    });
-  };
+  
 
   const handleResetCanvas = () => {
     excalidrawAPI?.updateScene({
       elements: [],
-      appState: { ...excalidrawAPI.getAppState(), viewBackgroundColor: "#ffffff" },
+      appState: {
+        ...excalidrawAPI.getAppState(),
+        viewBackgroundColor: "#ffffff",
+      },
     });
   };
 
@@ -69,9 +65,6 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
 
   return (
     <div className="main-toolbar">
-      <button onClick={handleOpen}>Open</button>
-      <button onClick={handleSave}>Save</button>
-      <button onClick={handleExportImage}>Export Image</button>
       <button onClick={handleResetCanvas}>Reset</button>
       <button onClick={handleUndo}>Undo</button>
       <button onClick={handleRedo}>Redo</button>
@@ -92,6 +85,9 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
       <button onClick={onToggleRecording}>
         {isRecording ? "Stop Recording" : "Start Recording"}
       </button>
+      {/* Separate Start and Stop Meeting Buttons */}
+      <button onClick={handleStartMeetingClick}>Start Meeting</button>
+      <button onClick={handleStopMeetingClick}>Stop Meeting</button>
     </div>
   );
 };

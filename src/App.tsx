@@ -12,6 +12,7 @@ import "./App.css";
 import { usePageNavigation } from "./hooks/usePageNavigation";
 import { usePDFHandler } from "./hooks/usePDFHandler";
 import { useWebcamManager } from "./hooks/useWebcamManager";
+import MeetingUI from "./MeetingUI";
 
 type ExcalidrawElement = {
   id: string;
@@ -53,6 +54,7 @@ function TutorTool() {
   const [isRecording, setIsRecording] = useState(false); // Track recording status
   const [playbackMode, setPlaybackMode] = useState<"youtube" | "local">("youtube"); // Default to YouTube mode
   const { savePage, loadPage, currentPage, setCurrentPage } = usePageNavigation(excalidrawAPI);
+  const [roomUrl, setRoomUrl] = useState<string | null>(null); // Store the room URL
 
   const {
     pdfFile,
@@ -139,6 +141,11 @@ function TutorTool() {
     }
   };
 
+  const handleMeetingEnd = () => {
+    console.log("Meeting ended.");
+    setRoomUrl(null); // Clear the room URL when the meeting ends
+  };
+
   return (
     <div
       style={{ height: "100vh", position: "relative", overflow: "hidden" }}
@@ -154,7 +161,13 @@ function TutorTool() {
         onToggleDrawingMode={(active) => setIsDrawingMode(active)}
         isDrawingMode={isDrawingMode}
       />
-      {/* Conditional Rendering for Toolbars */}
+
+      {/* Meeting UI */}
+      <MeetingUI
+        roomUrl={roomUrl} // Pass the room URL dynamically
+        onMeetingEnd={handleMeetingEnd} // Handle meeting end
+      />
+
       {(!isStreamMode || isDrawingMode) && (
         <>
           <MainToolbar
@@ -166,7 +179,8 @@ function TutorTool() {
             webcamOn={webcamOn}
             onToggleVideoPlayer={toggleVideoPlayer}
             onToggleRecording={toggleRecording} // Keep recording logic
-            isRecording={isRecording} // Pass recording state
+            isRecording={isRecording}
+            setRoomUrl={setRoomUrl} // Pass roomUrl setter
           />
 
           <div className={`custom-toolbar ${isStreamMode ? "stream-toolbar" : ""}`}>
