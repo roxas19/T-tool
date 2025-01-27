@@ -1,60 +1,69 @@
 import React from "react";
+import ParticipantTile, { Participant } from "./ParticipantTile";
 import "./MeetingView.css";
+import { DailyCall } from "@daily-co/daily-js";
 
 type MeetingViewProps = {
-  participants: {
-    id: string;
-    name: string;
-    isScreenSharing: boolean;
-    isWebcamOn: boolean;
-    isMicOn: boolean;
-  }[];
-  callObjectRef: React.MutableRefObject<any>;
+  participants: Participant[];
+  callObjectRef: React.MutableRefObject<DailyCall | null>;
   leaveMeeting: () => void;
+  startScreenShare: () => void; // Added from MeetingUI
+  stopScreenShare: () => void;  // Added from MeetingUI
 };
 
 const MeetingView: React.FC<MeetingViewProps> = ({
   participants,
   callObjectRef,
   leaveMeeting,
+  startScreenShare,
+  stopScreenShare,
 }) => {
+  const isScreenSharingActive = participants.some(
+    (p) => p.isScreenSharing
+  );
+
+  console.log("Participants passed to MeetingView:", participants);
+  console.log("Is screen sharing active:", isScreenSharingActive);
+
   return (
     <div className="meeting-view">
-      <div className="participant-grid">{renderGrid()}</div>
-      <div className="controls">
+      {/* Participant Grid */}
+      <div
+        className={`participant-grid ${
+          participants.length === 1 ? "single" : ""
+        }`}
+      >
+        {participants.length > 0 ? (
+          participants.map((participant) => (
+            <ParticipantTile
+              key={participant.sessionId} // Use sessionId as the unique key
+              participant={participant}
+              callObject={callObjectRef.current}
+            />
+          ))
+        ) : (
+          <div className="no-participants">No participants in the meeting</div>
+        )}
+      </div>
+
+      {/* Controls Toolbar */}
+      <div className="meeting-controls">
         <button onClick={leaveMeeting}>Leave Meeting</button>
+        <button
+          onClick={startScreenShare}
+          disabled={isScreenSharingActive}
+        >
+          Start Screen Share
+        </button>
+        <button
+          onClick={stopScreenShare}
+          disabled={!isScreenSharingActive}
+        >
+          Stop Screen Share
+        </button>
       </div>
     </div>
   );
-
-  function renderGrid() {
-    const gridSlots = [...Array(4)].map((_, index) => {
-      const participant = participants[index];
-      if (participant) {
-        return (
-          <div key={participant.id} className="grid-slot">
-            {participant.isScreenSharing ? (
-              <div className="screen-share">Screen Sharing</div>
-            ) : participant.isWebcamOn ? (
-              <video autoPlay playsInline></video>
-            ) : participant.isMicOn ? (
-              <div className="audio-indicator">Audio On</div>
-            ) : (
-              <div className="placeholder">Participant</div>
-            )}
-          </div>
-        );
-      } else {
-        return (
-          <div key={index} className="grid-slot placeholder">
-            Empty Slot
-          </div>
-        );
-      }
-    });
-
-    return <div className="grid-container">{gridSlots}</div>;
-  }
 };
 
 export default MeetingView;

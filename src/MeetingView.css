@@ -1,105 +1,65 @@
-/* MeetingView.css */
-
-/* Overall fullscreen layout for the meeting */
 .meeting-view {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: #1c1c1e; /* Dark background for the meeting */
-    color: #ffffff;
+    position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 1000;
+    height: 100vh; /* Full height */
+    width: 100%; /* Full width */
+    background: #121212; /* Dark background for contrast */
+    overflow: hidden; /* Prevent scrollbars from appearing */
   }
   
-  /* Participant grid container */
   .participant-grid {
-    flex: 1; /* Occupies most of the space */
+    flex: 1;
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* 2x2 grid for up to 4 participants */
-    grid-gap: 16px;
-    width: 90%;
-    max-width: 1200px;
-    height: calc(100% - 80px); /* Leaves space for controls */
-    align-self: center;
-    justify-self: center;
-    margin-top: 20px;
-  }
-  
-  /* Individual participant slots */
-  .grid-slot {
-    background-color: #2c2c2e; /* Darker grey for slots */
-    border-radius: 8px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-  }
-  
-  /* Placeholder for empty slots */
-  .grid-slot.placeholder {
-    border: 2px dashed #5a5a5c;
-    background-color: transparent;
-  }
-  
-  /* Screen sharing view */
-  .screen-share {
-    font-size: 1.2rem;
-    font-weight: bold;
-    text-align: center;
-    background-color: rgba(0, 0, 0, 0.6);
-    color: #ffffff;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-gap: 10px;
     padding: 10px;
-    border-radius: 4px;
+    justify-items: center;
+    align-items: center;
   }
   
-  /* Audio indicator for participants */
-  .audio-indicator {
-    font-size: 1rem;
-    font-weight: 500;
-    text-align: center;
-    background-color: #3d85c6; /* Blue to indicate audio */
-    color: #ffffff;
-    padding: 5px 10px;
-    border-radius: 4px;
-  }
-  
-  /* Controls container */
-  .controls {
+  .participant-grid.single {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 16px;
-    width: 100%;
-    background-color: #121212; /* Slightly darker than the main background */
-    border-top: 1px solid #333;
   }
   
-  /* Control buttons */
-  .controls button {
-    background-color: #007aff; /* iOS-style blue for main actions */
-    color: #ffffff;
+  .no-participants {
+    font-size: 1.5rem;
+    color: #fff;
+    text-align: center;
+  }
+  
+  .meeting-controls {
+    position: fixed; /* Keep it visible at all times */
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    padding: 10px 20px;
+    background: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
+    border-radius: 10px;
+    z-index: 1000; /* Ensure it is above other elements */
+  }
+  
+  .meeting-controls button {
+    padding: 10px 15px;
     font-size: 1rem;
-    font-weight: bold;
-    padding: 12px 20px;
+    color: white;
+    background-color: #007bff;
     border: none;
-    border-radius: 8px;
-    margin: 0 8px;
+    border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s ease;
   }
   
-  .controls button:hover {
-    background-color: #005bb5; /* Darker blue on hover */
+  .meeting-controls button:hover {
+    background-color: #0056b3;
   }
   
-  .controls button:active {
-    background-color: #004494; /* Even darker blue on active */
+  .meeting-controls button:disabled {
+    background-color: #444;
+    cursor: not-allowed;
   }
   

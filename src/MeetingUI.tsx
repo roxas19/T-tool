@@ -5,19 +5,12 @@ import DailyIframe, {
   DailyEventObjectParticipant,
   DailyEventObjectParticipantLeft,
 } from "@daily-co/daily-js";
-import MeetingView from "./MeetingView"; // New fullscreen component
-
-type Participant = {
-  id: string;
-  name: string;
-  isScreenSharing: boolean;
-  isWebcamOn: boolean;
-  isMicOn: boolean;
-};
+import MeetingView from "./MeetingView";
+import { Participant } from "./ParticipantTile";
 
 type MeetingUIProps = {
-  roomUrl: string | null; // Room URL passed from parent
-  onMeetingEnd: () => void; // Callback when the meeting ends
+  roomUrl: string | null;
+  onMeetingEnd: () => void;
 };
 
 const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onMeetingEnd }) => {
@@ -25,11 +18,10 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onMeetingEnd }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [isMeetingActive, setIsMeetingActive] = useState(false);
 
-  // Join the meeting and set up listeners
   useEffect(() => {
     if (!roomUrl) {
       console.warn("No room URL provided. Skipping meeting initialization.");
-      return ;
+      return;
     }
 
     console.log("Joining meeting with room URL:", roomUrl);
@@ -37,10 +29,18 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onMeetingEnd }) => {
     const callObject = DailyIframe.createCallObject();
     callObjectRef.current = callObject;
 
+    // Attempt to join
     callObject
-      .join({ url: roomUrl })
+      .join({
+        url: roomUrl,
+        videoSource: false, // Disable webcam for screen-only sharing
+        audioSource: true, // Enable microphone if needed
+      })
       .then(() => {
-        console.log("Meeting joined successfully.");
+        console.log(
+          "Meeting joined successfully. Room configuration:",
+          callObject.participants()
+        );
         setIsMeetingActive(true);
       })
       .catch((error) => {
@@ -48,59 +48,56 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onMeetingEnd }) => {
         callObjectRef.current = null;
       });
 
+    // Register Daily events
     callObject.on("participant-updated", handleParticipantUpdated);
     callObject.on("participant-left", handleParticipantLeft);
 
+    // Cleanup on unmount
     return () => {
-      console.log("Cleaning up DailyIframe instance.");
       if (callObjectRef.current) {
         callObjectRef.current.leave();
         callObjectRef.current.destroy();
         callObjectRef.current = null;
-        console.log("DailyIframe instance destroyed.");
       }
-      // Explicitly reset all states
       setParticipants([]);
       setIsMeetingActive(false);
-      onMeetingEnd(); // Notify parent
+      onMeetingEnd();
     };
   }, [roomUrl, onMeetingEnd]);
 
   const handleParticipantUpdated = (event: DailyEventObjectParticipant) => {
     const updatedParticipant = event.participant;
+    console.log("Participant updated:", updatedParticipant);
+
     setParticipants((prev) => {
-      const existingParticipantIndex = prev.findIndex(
-        (p) => p.id === updatedParticipant.user_id
+      const existingIndex = prev.findIndex(
+        (p) => p.sessionId === updatedParticipant.session_id
       );
-      if (existingParticipantIndex !== -1) {
+
+      const updatedData: Participant = {
+        sessionId: updatedParticipant.session_id, // Use session_id for reliable lookups
+        userId: updatedParticipant.user_id, // Optionally store user_id
+        name: updatedParticipant.user_name || "Guest",
+        isScreenSharing:
+          updatedParticipant.tracks.screenVideo?.state === "playable",
+        isWebcamOn: updatedParticipant.tracks.video?.state === "playable",
+        isMicOn: updatedParticipant.tracks.audio?.state === "playable",
+      };
+
+      if (existingIndex !== -1) {
         const updatedParticipants = [...prev];
-        updatedParticipants[existingParticipantIndex] = {
-          id: updatedParticipant.user_id,
-          name: updatedParticipant.user_name || "Guest",
-          isScreenSharing: !!updatedParticipant.screen,
-          isWebcamOn: !!updatedParticipant.video,
-          isMicOn: !!updatedParticipant.audio,
-        };
+        updatedParticipants[existingIndex] = updatedData;
         return updatedParticipants;
       } else {
-        return [
-          ...prev,
-          {
-            id: updatedParticipant.user_id,
-            name: updatedParticipant.user_name || "Guest",
-            isScreenSharing: !!updatedParticipant.screen,
-            isWebcamOn: !!updatedParticipant.video,
-            isMicOn: !!updatedParticipant.audio,
-          },
-        ];
+        return [...prev, updatedData];
       }
     });
   };
 
   const handleParticipantLeft = (event: DailyEventObjectParticipantLeft) => {
-    const leftParticipantId = event.participant.user_id;
+    const leftParticipantId = event.participant.session_id;
     setParticipants((prev) =>
-      prev.filter((participant) => participant.id !== leftParticipantId)
+      prev.filter((p) => p.sessionId !== leftParticipantId)
     );
   };
 
@@ -116,7 +113,31 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onMeetingEnd }) => {
     onMeetingEnd();
   };
 
-  // Only render MeetingView if the meeting is active
+  // Start screen sharing
+  const startScreenShare = () => {
+    try {
+      callObjectRef.current?.startScreenShare();
+      console.log("Screen sharing started");
+    } catch (err) {
+      console.error("Error starting screen sharing:", err);
+    }
+  };
+
+  // Stop screen sharing
+  const stopScreenShare = () => {
+    try {
+      callObjectRef.current?.stopScreenShare();
+      console.log("Screen sharing stopped");
+    } catch (err) {
+      console.error("Error stopping screen sharing:", err);
+    }
+  };
+
+  // Debugging: Check participant states
+  useEffect(() => {
+    console.log("Current participants:", participants);
+  }, [participants]);
+
   if (!isMeetingActive) return null;
 
   return (
@@ -124,6 +145,8 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onMeetingEnd }) => {
       participants={participants}
       callObjectRef={callObjectRef}
       leaveMeeting={leaveMeeting}
+      startScreenShare={startScreenShare} // Pass screen-sharing controls
+      stopScreenShare={stopScreenShare} // Pass screen-sharing controls
     />
   );
 };
