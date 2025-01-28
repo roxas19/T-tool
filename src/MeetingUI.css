@@ -1,114 +1,72 @@
-/* MeetingUI.css */
 .meeting-ui {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    background-color: #f8f9fa; /* Light background for the meeting area */
-    position: relative;
-  }
-  
-  .meeting-inactive {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: #6c757d; /* Neutral gray */
-    height: 100%;
-    width: 100%;
-    text-align: center;
-    background-color: #ffffff; /* Background for inactive state */
-  }
-  
-  .controls {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-  
-  .controls button {
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    color: #ffffff;
-    background-color: #007bff; /* Primary button color */
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-  
-  .controls button:hover {
-    background-color: #0056b3; /* Darker blue on hover */
-  }
-  
-  .participant-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Two columns */
-    gap: 1rem;
-    width: 100%;
-    max-width: 600px;
-    margin-bottom: 1rem;
-  }
-  
-  .grid-slot {
-    width: 100%;
-    aspect-ratio: 16 / 9; /* Maintain video aspect ratio */
-    background-color: #e9ecef; /* Light gray background for empty slots */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #ced4da; /* Border for grid slots */
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  
-  .grid-slot.placeholder {
-    color: #6c757d; /* Gray color for placeholder text */
-    font-size: 1rem;
-  }
-  
-  .screen-share {
-    background-color: #ffc107; /* Highlight for screen sharing */
-    color: #212529; /* Dark text for contrast */
-    padding: 0.5rem;
-    border-radius: 4px;
-  }
-  
-  .participant-list {
-    width: 100%;
-    max-width: 600px;
-    padding: 1rem;
-    background-color: #ffffff;
-    border: 1px solid #ced4da;
-    border-radius: 8px;
-  }
-  
-  .participant {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #dee2e6;
-  }
-  
-  .participant span {
-    font-size: 1rem;
-    color: #495057; /* Text color */
-  }
-  
-  .participant button {
-    font-size: 0.875rem;
-    padding: 0.25rem 0.5rem;
-    color: #ffffff;
-    background-color: #28a745; /* Green for enable/disable actions */
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .participant button:hover {
-    background-color: #218838; /* Darker green on hover */
-  }
-  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: #f8f9fa; /* Light background */
+  position: relative;
+}
+
+.meeting-status {
+  font-size: 1.5rem;
+  color: #6c757d; /* Neutral gray for status text */
+  text-align: center;
+  margin-top: 20px;
+}
+
+.controls {
+  display: flex;
+  gap: 1rem;
+  margin-top: 20px;
+}
+
+.controls button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  color: #ffffff;
+  background-color: #007bff; /* Primary button */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.controls button:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}
+
+.participant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Responsive grid */
+  gap: 1rem;
+  width: 100%;
+  max-width: 800px;
+  margin: 20px auto;
+}
+
+.grid-slot {
+  width: 100%;
+  aspect-ratio: 16 / 9; /* Maintain video aspect ratio */
+  background-color: #e9ecef; /* Light gray for placeholders */
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.grid-slot.placeholder {
+  color: #6c757d; /* Gray placeholder text */
+  font-size: 1rem;
+}
+
+.screen-share {
+  background-color: #ffc107; /* Highlight for screen sharing */
+  color: #212529;
+  padding: 0.5rem;
+  border-radius: 5px;
+  margin-top: 10px;
+}

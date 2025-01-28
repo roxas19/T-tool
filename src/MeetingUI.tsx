@@ -1,152 +1,93 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect } from "react";
+import { 
+  useDaily, 
+  useMeetingState, 
+  useScreenShare 
+} from "@daily-co/daily-react";
 import "./MeetingUI.css";
-import DailyIframe, {
-  DailyCall,
-  DailyEventObjectParticipant,
-  DailyEventObjectParticipantLeft,
-} from "@daily-co/daily-js";
 import MeetingView from "./MeetingView";
-import { Participant } from "./ParticipantTile";
 
+/**
+ * Props:
+ * - roomUrl: the Daily room URL (null if meeting not started)
+ * - onMeetingEnd: callback triggered when user leaves or meeting ends
+ */
 type MeetingUIProps = {
   roomUrl: string | null;
   onMeetingEnd: () => void;
 };
 
 const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onMeetingEnd }) => {
-  const callObjectRef = useRef<DailyCall | null>(null);
-  const [participants, setParticipants] = useState<Participant[]>([]);
-  const [isMeetingActive, setIsMeetingActive] = useState(false);
+  const daily = useDaily(); // Access the Daily call object from DailyProvider
+  const meetingState = useMeetingState(); // "joined-meeting", "left-meeting", "loading", etc.
+  const {
+    isSharingScreen,
+    startScreenShare,
+    stopScreenShare,
+  } = useScreenShare({
+    onLocalScreenShareStarted: () => console.log("Screen sharing started"),
+    onLocalScreenShareStopped: () => console.log("Screen sharing stopped"),
+    onError: (error) => console.error("Screen share error:", error),
+  });
 
+  /**
+   * Join the meeting (if we have a valid roomUrl and aren't already joined).
+   * This effect runs whenever `roomUrl` changes.
+   */
   useEffect(() => {
     if (!roomUrl) {
-      console.warn("No room URL provided. Skipping meeting initialization.");
+      console.warn("No room URL provided. Skipping meeting join.");
+      return;
+    }
+    if (!daily) {
+      console.warn("Daily call object not available yet.");
+      return;
+    }
+    if (meetingState === "joined-meeting") {
+      // Already in the meeting
       return;
     }
 
     console.log("Joining meeting with room URL:", roomUrl);
 
-    const callObject = DailyIframe.createCallObject();
-    callObjectRef.current = callObject;
-
-    // Attempt to join
-    callObject
-      .join({
-        url: roomUrl,
-        videoSource: false, // Disable webcam for screen-only sharing
-        audioSource: true, // Enable microphone if needed
-      })
-      .then(() => {
-        console.log(
-          "Meeting joined successfully. Room configuration:",
-          callObject.participants()
-        );
-        setIsMeetingActive(true);
-      })
-      .catch((error) => {
-        console.error("Failed to join the meeting:", error);
-        callObjectRef.current = null;
-      });
-
-    // Register Daily events
-    callObject.on("participant-updated", handleParticipantUpdated);
-    callObject.on("participant-left", handleParticipantLeft);
-
-    // Cleanup on unmount
-    return () => {
-      if (callObjectRef.current) {
-        callObjectRef.current.leave();
-        callObjectRef.current.destroy();
-        callObjectRef.current = null;
-      }
-      setParticipants([]);
-      setIsMeetingActive(false);
-      onMeetingEnd();
-    };
-  }, [roomUrl, onMeetingEnd]);
-
-  const handleParticipantUpdated = (event: DailyEventObjectParticipant) => {
-    const updatedParticipant = event.participant;
-    console.log("Participant updated:", updatedParticipant);
-
-    setParticipants((prev) => {
-      const existingIndex = prev.findIndex(
-        (p) => p.sessionId === updatedParticipant.session_id
-      );
-
-      const updatedData: Participant = {
-        sessionId: updatedParticipant.session_id, // Use session_id for reliable lookups
-        userId: updatedParticipant.user_id, // Optionally store user_id
-        name: updatedParticipant.user_name || "Guest",
-        isScreenSharing:
-          updatedParticipant.tracks.screenVideo?.state === "playable",
-        isWebcamOn: updatedParticipant.tracks.video?.state === "playable",
-        isMicOn: updatedParticipant.tracks.audio?.state === "playable",
-      };
-
-      if (existingIndex !== -1) {
-        const updatedParticipants = [...prev];
-        updatedParticipants[existingIndex] = updatedData;
-        return updatedParticipants;
-      } else {
-        return [...prev, updatedData];
-      }
+    daily.join({ url: roomUrl }).catch((error) => {
+      console.error("Failed to join the meeting:", error);
     });
-  };
+  }, [roomUrl, daily, meetingState]);
 
-  const handleParticipantLeft = (event: DailyEventObjectParticipantLeft) => {
-    const leftParticipantId = event.participant.session_id;
-    setParticipants((prev) =>
-      prev.filter((p) => p.sessionId !== leftParticipantId)
-    );
-  };
-
+  /**
+   * Leaves the meeting explicitly and invokes onMeetingEnd.
+   */
   const leaveMeeting = () => {
-    console.log("Leaving meeting...");
-    if (callObjectRef.current) {
-      callObjectRef.current.leave();
-      callObjectRef.current.destroy();
-      callObjectRef.current = null;
+    if (daily) {
+      daily.leave(); // Triggers meetingState to become "left-meeting"
     }
-    setParticipants([]);
-    setIsMeetingActive(false);
     onMeetingEnd();
   };
 
-  // Start screen sharing
-  const startScreenShare = () => {
-    try {
-      callObjectRef.current?.startScreenShare();
-      console.log("Screen sharing started");
-    } catch (err) {
-      console.error("Error starting screen sharing:", err);
-    }
-  };
+  // Hide UI until we've joined or are in the process of joining
+  if (!roomUrl || meetingState === "left-meeting") {
+    return null;
+  }
 
-  // Stop screen sharing
-  const stopScreenShare = () => {
-    try {
-      callObjectRef.current?.stopScreenShare();
-      console.log("Screen sharing stopped");
-    } catch (err) {
-      console.error("Error stopping screen sharing:", err);
-    }
-  };
+  // Show a "Loading..." UI while not yet joined
+  if (meetingState !== "joined-meeting") {
+    return <p className="meeting-status">Joining meeting...</p>;
+  }
 
-  // Debugging: Check participant states
-  useEffect(() => {
-    console.log("Current participants:", participants);
-  }, [participants]);
-
-  if (!isMeetingActive) return null;
-
+  // Once we're "joined-meeting", render your main UI
   return (
     <MeetingView
-      participants={participants}
-      callObjectRef={callObjectRef}
       leaveMeeting={leaveMeeting}
-      startScreenShare={startScreenShare} // Pass screen-sharing controls
-      stopScreenShare={stopScreenShare} // Pass screen-sharing controls
+      isScreenSharing={isSharingScreen}
+      startScreenShare={() => {
+        console.log("Attempting to start screen share...");
+        startScreenShare();
+      }}
+      stopScreenShare={() => {
+        console.log("Attempting to stop screen share...");
+        stopScreenShare();
+      }}
     />
   );
 };
