@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import "./VideoPlayer.css";
+import "./css/VideoPlayer.css";
 
 type VideoPlayerProps = {
   playbackMode: "youtube" | "local"; // Playback mode: YouTube or Local Video

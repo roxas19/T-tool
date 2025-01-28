@@ -1,27 +1,22 @@
 import React from "react";
-import { handleStartMeeting, handleStopMeeting } from "./utils/meetingUtils"; // Updated utility functions
+import { handleStartMeeting, handleStopMeeting } from "./utils/meetingUtils";
 
 type MainToolbarProps = {
   excalidrawAPI: any;
-  onToggleWebcam: () => void;
-  onUploadPDF: () => void;
   setIsStreamMode: React.Dispatch<React.SetStateAction<boolean>>;
   setWebcamOn: React.Dispatch<React.SetStateAction<boolean>>;
   webcamOn: boolean;
-  onToggleVideoPlayer: () => void;
+  onToggleWebcam: () => void; // Restored webcam toggle function
   onToggleRecording: () => void;
   isRecording: boolean;
-  setRoomUrl: React.Dispatch<React.SetStateAction<string | null>>; // Add setRoomUrl to props
+  setRoomUrl: React.Dispatch<React.SetStateAction<string | null>>;
 };
 
 const MainToolbar: React.FC<MainToolbarProps> = ({
   excalidrawAPI,
-  onToggleWebcam,
-  onUploadPDF,
   setIsStreamMode,
   setWebcamOn,
-  webcamOn,
-  onToggleVideoPlayer,
+  onToggleWebcam,
   onToggleRecording,
   isRecording,
   setRoomUrl,
@@ -29,13 +24,12 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
   const meetingId = "test-meeting-1"; // Replace with a dynamic meeting ID
 
   const handleStartMeetingClick = () => {
-    handleStartMeeting(setRoomUrl, meetingId); // Pass setRoomUrl to capture room URL
+    handleStartMeeting(setRoomUrl, meetingId);
   };
 
   const handleStopMeetingClick = () => {
-    handleStopMeeting(setRoomUrl, meetingId); // Pass setRoomUrl for proper cleanup
+    handleStopMeeting(setRoomUrl, meetingId);
   };
-  
 
   const handleResetCanvas = () => {
     excalidrawAPI?.updateScene({
@@ -68,24 +62,27 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
       <button onClick={handleResetCanvas}>Reset</button>
       <button onClick={handleUndo}>Undo</button>
       <button onClick={handleRedo}>Redo</button>
-      <button onClick={onToggleWebcam}>Toggle Webcam</button>
       <button onClick={handleImageUpload}>Upload Image</button>
-      <button onClick={onUploadPDF}>Upload PDF</button>
+
+      {/* Webcam Toggle */}
+      <button onClick={onToggleWebcam}>Toggle Webcam</button>
+
+      {/* Stream View (Enables Stream Mode and Webcam) */}
       <button
         onClick={() => {
           setIsStreamMode(true);
-          if (!webcamOn) {
-            setWebcamOn(true);
-          }
+          setWebcamOn(true);
         }}
       >
         Stream View
       </button>
-      <button onClick={onToggleVideoPlayer}>Toggle Video Player</button>
+
+      {/* Recording Toggle */}
       <button onClick={onToggleRecording}>
         {isRecording ? "Stop Recording" : "Start Recording"}
       </button>
-      {/* Separate Start and Stop Meeting Buttons */}
+
+      {/* Meeting Management */}
       <button onClick={handleStartMeetingClick}>Start Meeting</button>
       <button onClick={handleStopMeetingClick}>Stop Meeting</button>
     </div>

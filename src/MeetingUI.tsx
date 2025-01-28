@@ -4,7 +4,7 @@ import {
   useMeetingState, 
   useScreenShare 
 } from "@daily-co/daily-react";
-import "./MeetingUI.css";
+import "./css/MeetingUI.css";
 import MeetingView from "./MeetingView";
 
 /**

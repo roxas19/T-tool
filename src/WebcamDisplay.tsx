@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import "./WebcamDisplay.css";
+import "./css/WebcamDisplay.css";
 
 type WebcamDisplayProps = {
   onClose: () => void; // Callback to close the webcam view

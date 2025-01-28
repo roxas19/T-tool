@@ -1,6 +1,6 @@
 import React from "react";
 import { useParticipantIds, DailyVideo } from "@daily-co/daily-react";
-import "./MeetingView.css";
+import "./css/MeetingView.css";
 
 function MeetingView({ leaveMeeting, isScreenSharing, startScreenShare, stopScreenShare }) {
   // Filter only screen-sharing participants

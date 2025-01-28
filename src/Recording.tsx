@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { openDB, IDBPDatabase } from "idb";
-import "./Recording.css";
+import "./css/Recording.css";
 
 type RecordingProps = {
   isRecording: boolean;

@@ -1,24 +1,19 @@
-
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { DailyProvider } from "@daily-co/daily-react";
-import DailyIframe from "@daily-co/daily-js";
+import { getOrCreateCallObject } from "./dailyCall";
 
 // Excalidraw + other custom imports
 import { Excalidraw } from "@excalidraw/excalidraw";
 import CustomToolbar from "./CustomToolbar";
-import PageNavigation from "./PageNavigation";
 import MainToolbar from "./MainToolbar";
 import WebcamDisplay from "./WebcamDisplay";
-import PDFViewer from "./PDFViewer";
 import DiagramSidebar from "./DiagramSidebar";
 import VideoPlayer from "./VideoPlayer";
 import Recording from "./Recording";
-import { getOrCreateCallObject } from "./dailyCall";
-import "./App.css";
+import "./css/App.css";
 
 // Hooks
 import { usePageNavigation } from "./hooks/usePageNavigation";
-import { usePDFHandler } from "./hooks/usePDFHandler";
 import { useWebcamManager } from "./hooks/useWebcamManager";
 
 // Meeting UI
@@ -70,21 +65,8 @@ function App() {
   const [isRecording, setIsRecording] = useState(false); // Recording status
   const [playbackMode, setPlaybackMode] = useState<"youtube" | "local">("youtube"); // Default to YouTube mode
   
-  // Page navigation + PDF + Webcam logic
+  // Page navigation & webcam logic
   const { savePage, loadPage, currentPage, setCurrentPage } = usePageNavigation(excalidrawAPI);
-  const {
-    pdfFile,
-    isPdfScrollMode,
-    pdfCurrentPage,
-    pdfTotalPages,
-    setPdfCurrentPage,
-    setPdfTotalPages,
-    handlePdfUpload,
-    handlePdfClose,
-    enablePdfScrollMode,
-    disablePdfScrollMode,
-  } = usePDFHandler();
-
   const {
     webcamOn,
     isStreamMode,
@@ -117,8 +99,6 @@ function App() {
     console.log("Diagram drag started:", elements);
     setDraggedDiagramElements(elements);
   };
-// App.tsx (Part 2 of 2)
-// ...continuation from Part 1
 
   const handleCanvasDrop = (event: React.DragEvent) => {
     if (!excalidrawAPI || !draggedDiagramElements) return;
@@ -194,12 +174,10 @@ function App() {
           <>
             <MainToolbar
               excalidrawAPI={excalidrawAPI}
-              onUploadPDF={handlePdfUpload}
-              onToggleWebcam={toggleWebcam}
+              onToggleWebcam={toggleWebcam}  // ✅ Webcam toggle restored
               setIsStreamMode={setIsStreamMode}
               setWebcamOn={setWebcamOn}
               webcamOn={webcamOn}
-              onToggleVideoPlayer={toggleVideoPlayer}
               onToggleRecording={toggleRecording}
               isRecording={isRecording}
               setRoomUrl={setRoomUrl}
@@ -214,64 +192,17 @@ function App() {
           </>
         )}
 
-        {/* Page Navigation */}
-        <PageNavigation
-          savePage={savePage}
-          loadPage={loadPage}
-          currentPage={currentPage}
-          setCurrentPage={(page) => {
-            setPdfCurrentPage(page);
-            setCurrentPage(page);
-          }}
-          overlayVisible={!!pdfFile}
-          pdfTotalPages={pdfTotalPages}
-        />
-
         {/* Excalidraw Canvas */}
-        {isStreamMode && isDrawingMode && (
-          <div className="excalidraw-draw-mode">
-            <Excalidraw
-              excalidrawAPI={(api) => setExcalidrawAPI(api as unknown as CustomExcalidrawAPI)}
-              initialData={{
-                appState: { viewBackgroundColor: "transparent", gridSize: null },
-              }}
-            />
-          </div>
-        )}
-
-        {!isStreamMode && (
-          <Excalidraw
-            excalidrawAPI={(api) => setExcalidrawAPI(api as unknown as CustomExcalidrawAPI)}
-            initialData={{
-              appState: { viewBackgroundColor: "#ffffff", gridSize: null },
-            }}
-          />
-        )}
-
-        {/* PDF Viewer */}
-        <PDFViewer
-          pdfFile={pdfFile}
-          currentPage={pdfCurrentPage}
-          setTotalPages={setPdfTotalPages}
-          isPdfScrollMode={isPdfScrollMode}
-          enablePdfScrollMode={enablePdfScrollMode}
-          disablePdfScrollMode={disablePdfScrollMode}
-          handlePdfClose={handlePdfClose}
+        <Excalidraw
+          excalidrawAPI={(api) => setExcalidrawAPI(api as unknown as CustomExcalidrawAPI)}
+          initialData={{
+            appState: { viewBackgroundColor: isStreamMode ? "transparent" : "#ffffff", gridSize: null },
+          }}
         />
 
         {/* Video Player */}
         {isVideoPlayerVisible && (
-          <div
-            style={{
-              position: "absolute",
-              top: "50px",
-              left: "50px",
-              zIndex: 100,
-              pointerEvents: "auto",
-            }}
-            onClick={(e) => e.stopPropagation()}
-            onMouseDown={(e) => e.stopPropagation()}
-          >
+          <div className="floating-video">
             <VideoPlayer playbackMode={playbackMode} />
           </div>
         )}
