@@ -174,22 +174,26 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
   };
 
   return (
-    <div className="recording-toolbar">
-      <div className="recording-status">
-        {isRecording ? "Recording in progress..." : "Recording stopped"}
-      </div>
-      <button
-        onClick={async () => {
-          const blob = await getPlaybackBlob();
-          if (blob) downloadBlob(blob, `last-15-minutes-${Date.now()}.webm`);
-          else console.warn("No video data available for the last 15 minutes.");
-        }}
-        disabled={!isRecording}
-        className="recording-button"
-      >
-        Download Last 15 Minutes
-      </button>
-    </div>
+    <>
+      {isRecording && (
+        <div className="recording-toolbar">
+          <div className="recording-status">
+            Recording in progress...
+          </div>
+          <button
+            onClick={async () => {
+              const blob = await getPlaybackBlob();
+              if (blob) downloadBlob(blob, `last-15-minutes-${Date.now()}.webm`);
+              else console.warn("No video data available for the last 15 minutes.");
+            }}
+            disabled={!isRecording}
+            className="recording-button"
+          >
+            Download Last 15 Minutes
+          </button>
+        </div>
+      )}
+    </>
   );
 };
 

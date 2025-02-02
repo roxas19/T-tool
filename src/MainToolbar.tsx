@@ -1,15 +1,14 @@
 import React from "react";
-import { handleStartMeeting, handleStopMeeting } from "./utils/meetingUtils";
 
 type MainToolbarProps = {
   excalidrawAPI: any;
   setIsStreamMode: React.Dispatch<React.SetStateAction<boolean>>;
   setWebcamOn: React.Dispatch<React.SetStateAction<boolean>>;
   webcamOn: boolean;
-  onToggleWebcam: () => void; // Restored webcam toggle function
+  onToggleWebcam: () => void;
   onToggleRecording: () => void;
   isRecording: boolean;
-  setRoomUrl: React.Dispatch<React.SetStateAction<string | null>>;
+  setIsMeetingActive: React.Dispatch<React.SetStateAction<boolean>>; // Added prop for meeting toggle
 };
 
 const MainToolbar: React.FC<MainToolbarProps> = ({
@@ -19,18 +18,8 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
   onToggleWebcam,
   onToggleRecording,
   isRecording,
-  setRoomUrl,
+  setIsMeetingActive, // New prop
 }) => {
-  const meetingId = "test-meeting-1"; // Replace with a dynamic meeting ID
-
-  const handleStartMeetingClick = () => {
-    handleStartMeeting(setRoomUrl, meetingId);
-  };
-
-  const handleStopMeetingClick = () => {
-    handleStopMeeting(setRoomUrl, meetingId);
-  };
-
   const handleResetCanvas = () => {
     excalidrawAPI?.updateScene({
       elements: [],
@@ -82,9 +71,8 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
         {isRecording ? "Stop Recording" : "Start Recording"}
       </button>
 
-      {/* Meeting Management */}
-      <button onClick={handleStartMeetingClick}>Start Meeting</button>
-      <button onClick={handleStopMeetingClick}>Stop Meeting</button>
+      {/* Start Meeting Button */}
+      <button onClick={() => setIsMeetingActive(true)}>Start Meeting</button>
     </div>
   );
 };

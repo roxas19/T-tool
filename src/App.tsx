@@ -1,25 +1,22 @@
 import React, { useState } from "react";
-import { DailyProvider } from "@daily-co/daily-react";
-import { getOrCreateCallObject } from "./dailyCall";
 
-// Excalidraw + other custom imports
-import { Excalidraw } from "@excalidraw/excalidraw";
-import CustomToolbar from "./CustomToolbar";
-import MainToolbar from "./MainToolbar";
+// Custom components
 import WebcamDisplay from "./WebcamDisplay";
 import DiagramSidebar from "./DiagramSidebar";
 import VideoPlayer from "./VideoPlayer";
 import Recording from "./Recording";
-import "./css/App.css";
+import ExcalidrawComponent from "./ExcalidrawComponent";
+import MeetingApp from "./MeetingApp";
+import MainToolbar from "./MainToolbar";
 
 // Hooks
 import { usePageNavigation } from "./hooks/usePageNavigation";
 import { useWebcamManager } from "./hooks/useWebcamManager";
 
-// Meeting UI
-import MeetingUI from "./MeetingUI";
+// Styles
+import "./css/App.css";
 
-// Typings for Excalidraw
+// Typings
 type ExcalidrawElement = {
   id: string;
   type: string;
@@ -28,45 +25,11 @@ type ExcalidrawElement = {
   [key: string]: any;
 };
 
-type CustomExcalidrawAPI = {
-  updateScene: (sceneData: any, opts?: { commitToStore?: boolean }) => void;
-  getSceneElements: () => readonly any[];
-  getAppState: () => any;
-  exportToBlob: () => Promise<Blob>;
-  resetScene: () => void;
-  undo: () => void;
-  redo: () => void;
-  setActiveTool: (tool: any) => void;
-  onChange: (callback: (elements: any[], appState: any) => void) => () => void;
-  onPointerDown: (
-    callback: (
-      activeTool: any,
-      pointerDownState: any,
-      event: React.PointerEvent<HTMLElement>
-    ) => void
-  ) => () => void;
-  onPointerUp: (
-    callback: (
-      activeTool: any,
-      pointerDownState: any,
-      event: PointerEvent
-    ) => void
-  ) => () => void;
-};
+const App: React.FC = () => {
+  // Page navigation logic
+  const { savePage, loadPage, currentPage, setCurrentPage } = usePageNavigation(null);
 
-// Begin our main App component
-function App() {
-  // Create a Daily call object once (memoized) to share with DailyProvider
-  const callObject = getOrCreateCallObject();
-
-  // Excalidraw and meeting states
-  const [excalidrawAPI, setExcalidrawAPI] = useState<CustomExcalidrawAPI | null>(null);
-  const [isDrawingMode, setIsDrawingMode] = useState(false);
-  const [isRecording, setIsRecording] = useState(false); // Recording status
-  const [playbackMode, setPlaybackMode] = useState<"youtube" | "local">("youtube"); // Default to YouTube mode
-  
-  // Page navigation & webcam logic
-  const { savePage, loadPage, currentPage, setCurrentPage } = usePageNavigation(excalidrawAPI);
+  // Webcam and stream state management
   const {
     webcamOn,
     isStreamMode,
@@ -77,148 +40,121 @@ function App() {
     setWebcamOverlayVisible,
   } = useWebcamManager();
 
-  // Room URL for Daily meeting
-  const [roomUrl, setRoomUrl] = useState<string | null>(null);
+  // Meeting state
+  const [isMeetingActive, setIsMeetingActive] = useState(false);
+  const [isMeetingMinimized, setIsMeetingMinimized] = useState(false);
+  const [meetingState, setMeetingState] = useState<"setup" | "inProgress">("setup");
+  const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
+  const meetingId = "my-test-meeting"; // Hardcoded for testing (can be dynamic later)
 
   // Additional states
-  const [selectedTool, setSelectedTool] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
-  const [draggedDiagramElements, setDraggedDiagramElements] = useState<ExcalidrawElement[] | null>(
-    null
-  );
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [playbackMode, setPlaybackMode] = useState<"youtube" | "local">("youtube");
 
   // Toggles
   const toggleRecording = () => setIsRecording((prev) => !prev);
-  const toggleVideoPlayer = () => {
-    setIsVideoPlayerVisible((prev) => !prev);
-    console.log("VideoPlayer visibility toggled:", !isVideoPlayerVisible);
-  };
-
-  const handleDiagramDragStart = (elements: ExcalidrawElement[]) => {
-    console.log("Diagram drag started:", elements);
-    setDraggedDiagramElements(elements);
-  };
-
-  const handleCanvasDrop = (event: React.DragEvent) => {
-    if (!excalidrawAPI || !draggedDiagramElements) return;
-    event.preventDefault();
-
-    const { clientX, clientY } = event;
-    const canvas = event.target as HTMLElement;
-    const { left, top } = canvas.getBoundingClientRect();
-    const dropX = clientX - left;
-    const dropY = clientY - top;
-
-    const positionedElements = draggedDiagramElements.map((element) => ({
-      ...element,
-      x: element.x + dropX,
-      y: element.y + dropY,
-    }));
-
-    excalidrawAPI.updateScene({
-      elements: [...excalidrawAPI.getSceneElements(), ...positionedElements],
-    });
-
-    console.log("Elements placed on canvas:", positionedElements);
-    setDraggedDiagramElements(null);
-  };
-
-  const handleDragOver = (event: React.DragEvent) => {
-    event.preventDefault();
-  };
+  const toggleVideoPlayer = () => setIsVideoPlayerVisible((prev) => !prev);
 
   const handleWebcamClose = () => {
     if (isStreamMode) {
       setIsStreamMode(false);
-      if (webcamOn) {
-        setWebcamOverlayVisible(true);
-      }
+      if (webcamOn) setWebcamOverlayVisible(true);
     } else {
       setWebcamOn(false);
       setWebcamOverlayVisible(false);
     }
   };
 
-  // Called when Daily meeting ends (from inside MeetingUI)
-  const handleMeetingEnd = () => {
-    console.log("Meeting ended.");
-    setRoomUrl(null); // Clear the room URL
+  const handleDiagramDragStart = (elements: ExcalidrawElement[]) => {
+    console.log("Drag started for elements:", elements);
   };
 
-  // Render
   return (
-    // Wrap everything with DailyProvider, passing the same callObject
-    <DailyProvider callObject={callObject}>
-      <div
-        style={{ height: "100vh", position: "relative", overflow: "hidden" }}
-        onDrop={handleCanvasDrop}
-        onDragOver={handleDragOver}
-      >
-        {/* Webcam Overlay */}
-        <WebcamDisplay
-          onClose={handleWebcamClose}
-          fullscreen={isStreamMode}
-          webcamOn={webcamOn}
-          isWebcamOverlayVisible={isWebcamOverlayVisible}
-          setWebcamOverlayVisible={setWebcamOverlayVisible}
-          onToggleDrawingMode={(active) => setIsDrawingMode(active)}
-          isDrawingMode={isDrawingMode}
-        />
+    <div className="app-container" style={{ height: "100vh", position: "relative", overflow: "hidden" }}>
+      {/* ✅ Main Toolbar */}
+      <MainToolbar
+        excalidrawAPI={excalidrawAPI}
+        onToggleWebcam={toggleWebcam}
+        setIsStreamMode={setIsStreamMode}
+        setWebcamOn={setWebcamOn}
+        webcamOn={webcamOn}
+        onToggleRecording={toggleRecording}
+        isRecording={isRecording}
+        setIsMeetingActive={setIsMeetingActive}
+      />
 
-        {/* Meeting UI (Daily React-based) */}
-        <MeetingUI roomUrl={roomUrl} onMeetingEnd={handleMeetingEnd} />
+      {/* Webcam Overlay */}
+      <WebcamDisplay
+        onClose={handleWebcamClose}
+        fullscreen={isStreamMode}
+        webcamOn={webcamOn}
+        isWebcamOverlayVisible={isWebcamOverlayVisible}
+        setWebcamOverlayVisible={setWebcamOverlayVisible}
+        onToggleDrawingMode={(active) => setIsDrawingMode(active)}
+        isDrawingMode={isDrawingMode}
+      />
 
-        {/* Only show toolbars if not in full stream mode OR if drawing */}
-        {(!isStreamMode || isDrawingMode) && (
-          <>
-            <MainToolbar
-              excalidrawAPI={excalidrawAPI}
-              onToggleWebcam={toggleWebcam}  // ✅ Webcam toggle restored
-              setIsStreamMode={setIsStreamMode}
-              setWebcamOn={setWebcamOn}
-              webcamOn={webcamOn}
-              onToggleRecording={toggleRecording}
-              isRecording={isRecording}
-              setRoomUrl={setRoomUrl}
-            />
+      {/* Excalidraw Component */}
+      <ExcalidrawComponent
+        isStreamMode={isStreamMode}
+        setIsStreamMode={setIsStreamMode}
+        webcamOn={webcamOn}
+        setWebcamOn={setWebcamOn}
+        toggleWebcam={toggleWebcam}
+        isRecording={isRecording}
+        onToggleRecording={toggleRecording}
+        isDrawingMode={isDrawingMode}
+        setIsDrawingMode={setIsDrawingMode}
+        setExcalidrawAPI={setExcalidrawAPI}
+      />
 
-            <div className={`custom-toolbar ${isStreamMode ? "stream-toolbar" : ""}`}>
-              <CustomToolbar
-                excalidrawAPI={excalidrawAPI}
-                onToolSelect={(toolType: string) => setSelectedTool(toolType)}
-              />
-            </div>
-          </>
-        )}
+      {/* Video Player */}
+      {isVideoPlayerVisible && (
+        <div className="floating-video">
+          <VideoPlayer playbackMode={playbackMode} />
+        </div>
+      )}
 
-        {/* Excalidraw Canvas */}
-        <Excalidraw
-          excalidrawAPI={(api) => setExcalidrawAPI(api as unknown as CustomExcalidrawAPI)}
-          initialData={{
-            appState: { viewBackgroundColor: isStreamMode ? "transparent" : "#ffffff", gridSize: null },
-          }}
-        />
+      {/* Diagram Sidebar */}
+      <DiagramSidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} onDragStart={handleDiagramDragStart} />
 
-        {/* Video Player */}
-        {isVideoPlayerVisible && (
-          <div className="floating-video">
-            <VideoPlayer playbackMode={playbackMode} />
+      {/* Recording Indicator */}
+      <Recording isRecording={isRecording} />
+
+      {/* ✅ Meeting Overlay */}
+      {isMeetingActive && (
+        <div className={`meeting-overlay ${isMeetingMinimized ? "minimized" : ""}`}>
+          <div className="meeting-header">
+            <span>Meeting in Progress</span>
+            <button onClick={() => setIsMeetingMinimized(!isMeetingMinimized)}>
+              {isMeetingMinimized ? "Maximize" : "Minimize"}
+            </button>
+            <button
+              onClick={() => {
+                setIsMeetingActive(false);
+                setMeetingState("setup");
+              }}
+            >
+              Close Meeting
+            </button>
           </div>
-        )}
 
-        {/* Diagram Sidebar */}
-        <DiagramSidebar
-          isSidebarOpen={isSidebarOpen}
-          setIsSidebarOpen={setIsSidebarOpen}
-          onDragStart={handleDiagramDragStart}
-        />
-
-        {/* Recording Indicator */}
-        <Recording isRecording={isRecording} />
-      </div>
-    </DailyProvider>
+          {/* Conditional rendering of MeetingApp */}
+          <MeetingApp
+            isMeetingMinimized={isMeetingMinimized}
+            onMeetingStart={() => setMeetingState("inProgress")}
+            onClose={() => {
+              setIsMeetingActive(false);
+              setMeetingState("setup");
+            }}
+          />
+        </div>
+      )}
+    </div>
   );
-}
+};
 
 export default App;
