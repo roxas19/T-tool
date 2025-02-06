@@ -7,7 +7,9 @@ import {
   useScreenShare,
 } from "@daily-co/daily-react";
 import { stopMeeting } from "./meetingFunctions";
-import { ParticipantList } from "./participantControls";
+import { ParticipantList, ParticipantPermission } from "./participantControls";
+import MeetingControls from "./MeetingControls";
+import ActiveVideoGrid from "./ActiveVideoGrid";
 import "../css/MeetingApp.css"; // Adjust path as needed
 
 export interface MeetingUIProps {
@@ -20,73 +22,127 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) =
   const daily = useDaily();
   const localParticipant = useLocalParticipant();
   const { isSharingScreen, startScreenShare, stopScreenShare } = useScreenShare();
+
+  // Global permission state: maps participantId to granted permissions.
+  const [grantedPermissions, setGrantedPermissions] = useState<{
+    [id: string]: ParticipantPermission;
+  }>({});
+
   const [showParticipants, setShowParticipants] = useState(false);
 
+  // Derive granted participant IDs (those with either audio or video granted).
+  const grantedParticipantIds = Object.keys(grantedPermissions).filter(
+    (id) => grantedPermissions[id].audio || grantedPermissions[id].video
+  );
+
+  // Active grid: always include the host's session ID first,
+  // then include up to three granted participant IDs.
+  const activeParticipants = localParticipant
+    ? [localParticipant.session_id, ...grantedParticipantIds].slice(0, 4)
+    : grantedParticipantIds.slice(0, 4);
+
+  // Join meeting and enable local audio/video.
   useEffect(() => {
     if (!daily || !roomUrl) return;
     daily.join({ url: roomUrl }).then(() => {
       daily.setLocalAudio(true);
       daily.setLocalVideo(true);
     });
-    return () => {
-      daily.leave();
-    };
+    // No automatic cleanup here; meeting stops only via the explicit Stop Meeting button.
   }, [daily, roomUrl]);
 
   const handleStopMeeting = async () => {
     if (daily) {
-      await daily.leave(); // Leave the Daily meeting
+      await daily.leave();
     }
-    await stopMeeting(meetingName); // Use the passed meetingName
+    await stopMeeting(meetingName);
     onStop();
   };
 
+  // Callback to update permissions from ParticipantList.
+  // Enforces that only up to 3 non-host participants can have permissions.
+  const handlePermissionChange = (
+    participantId: string,
+    permission: ParticipantPermission
+  ) => {
+    const isAlreadyGranted = grantedPermissions.hasOwnProperty(participantId);
+    const currentGrantedCount = Object.keys(grantedPermissions).filter(
+      (id) => grantedPermissions[id].audio || grantedPermissions[id].video
+    ).length;
+
+    if (!isAlreadyGranted && currentGrantedCount >= 3) {
+      return;
+    }
+
+    setGrantedPermissions((prev) => ({
+      ...prev,
+      [participantId]: permission,
+    }));
+
+    if (daily) {
+      daily.sendAppMessage(
+        {
+          type: "PERMISSION_UPDATE",
+          participantId,
+          audio: permission.audio,
+          video: permission.video,
+        },
+        "*" // Broadcast to all participants.
+      );
+    }
+  };
+
+  // Render function to generate a video tile for a given participant ID.
+  const renderTile = (participantId: string, index: number) => {
+    const isLocal = participantId === localParticipant?.session_id;
+    const tileClass =
+      isSharingScreen && isLocal ? "grid-slot screen-share-adjust" : "grid-slot";
+    return (
+      <div key={participantId} className={tileClass}>
+        <DailyVideo
+          sessionId={participantId}
+          type={isSharingScreen && isLocal ? "screenVideo" : "video"}
+          autoPlay
+          muted={isLocal} // Mute local video to prevent echo.
+        />
+      </div>
+    );
+  };
+
   return (
-    <div className="meeting-container">
-      <div className="video-grid">
-        {isSharingScreen ? (
-          <div className="video-tile screen-share-tile">
-            <DailyVideo
-              sessionId={localParticipant?.session_id || ""}
-              type="screenVideo"
-              autoPlay
-            />
-          </div>
-        ) : (
-          <div className="video-tile">
-            {localParticipant?.session_id ? (
-              <DailyVideo
-                sessionId={localParticipant.session_id || ""}
-                type="video"
-                autoPlay
-                muted
-              />
-            ) : (
-              <div className="no-video">No Host Video</div>
-            )}
-          </div>
-        )}
+    <div className="meeting-overlay">
+      {/* Meeting Header */}
+      <div className="meeting-header">
+        <h2>Meeting in Progress</h2>
+        {/* You can add minimize/maximize or close buttons here */}
       </div>
 
-      <div className="control-panel">
-        <button onClick={handleStopMeeting} className="control-button stop-button">
-          Stop Meeting
-        </button>
-        <button
-          onClick={() => (isSharingScreen ? stopScreenShare() : startScreenShare())}
-          className="control-button share-button"
-        >
-          {isSharingScreen ? "Stop Sharing" : "Share Screen"}
-        </button>
-        <button
-          onClick={() => setShowParticipants(!showParticipants)}
-          className="control-button"
-        >
-          {showParticipants ? "Hide Participants" : "Show Participants"}
-        </button>
+      {/* Meeting Container: holds the dynamic ActiveVideoGrid */}
+      <div className="meeting-container">
+        <ActiveVideoGrid
+          activeParticipants={activeParticipants}
+          renderTile={renderTile}
+        />
       </div>
 
-      {showParticipants && <ParticipantList />}
+      {/* Meeting Controls placed separately so they don't overlap the grid */}
+      <MeetingControls
+        onStopMeeting={handleStopMeeting}
+        isSharingScreen={isSharingScreen}
+        onToggleShare={() =>
+          isSharingScreen ? stopScreenShare() : startScreenShare()
+        }
+        showParticipants={showParticipants}
+        onToggleParticipants={() => setShowParticipants(!showParticipants)}
+      />
+
+      {/* Optionally, render the Participant List if toggled */}
+      {showParticipants && (
+        <ParticipantList
+          onPermissionChange={handlePermissionChange}
+          grantedPermissions={grantedPermissions}
+        />
+      )}
     </div>
   );
 };

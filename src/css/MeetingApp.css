@@ -1,99 +1,123 @@
-body {
+/* ==========================================================================
+   Global Settings
+   ========================================================================== */
+   body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
     background-color: #f0f0f0;
-}
+  }
   
-.app-container {
+  /* ==========================================================================
+     App & Main Containers
+     ========================================================================== */
+  .app-container {
     height: 100vh;
-    position: relative;
     overflow: hidden;
-}
-
-.meeting-container {
-    flex-grow: 1;
+    position: relative;
+  }
+  
+  .meeting-container {
+    width: 90%;
+    height: 90%;
+    margin: auto;
+    background-color: #e9ecef;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
-    background: #e9ecef;
-    padding: 20px;
-    overflow: auto; /* Allow scrolling inside the meeting container */
-}
-
-.video-grid {
+    justify-content: center;
+    overflow: hidden;
+  }
+  
+  /* ==========================================================================
+     Participant Grid & Video Tiles
+     ========================================================================== */
+  .participant-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
     width: 100%;
-    max-width: 1200px;
-    height: 100%; /* Let it grow to take full container height */
-    overflow: auto;
-}
-
-.video-tile,
-.screen-share-tile {
-    background: black;
+    height: 100%;
+    gap: 20px;
+    overflow: hidden;
+  }
+  
+  .grid-slot {
+    background-color: #000;
     border-radius: 10px;
     overflow: hidden;
-    aspect-ratio: 16/9;
+    /* Default aspect ratio for video tiles */
+    aspect-ratio: 16 / 9;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100%; /* Expand within the grid */
-}
-
-.video-tile video,
-.screen-share-tile video {
+  }
+  
+  .grid-slot video {
     width: 100%;
     height: 100%;
     object-fit: contain;
-}
-
-
-.no-video {
-    color: white;
-    font-size: 1.2em;
-    text-align: center;
-}
-
-.control-panel {
+  }
+  
+  /* When the local participant is sharing screen */
+  .screen-share-adjust {
+    aspect-ratio: auto;
+    width: 100%;
+    height: 100%;
+  }
+  
+  /* Placeholder style for empty grid cells */
+  .grid-slot.placeholder {
+    background-color: #e9ecef;
+    border: 1px dashed #ced4da;
+    color: #6c757d;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* ==========================================================================
+     Meeting Controls Panel
+     ========================================================================== */
+  .control-panel {
     position: fixed;
     bottom: 0;
+    left: 0;
     width: 100%;
     background-color: #f8f9fa;
     padding: 10px;
     display: flex;
     justify-content: center;
     gap: 20px;
-    box-shadow: 0px -2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.control-button {
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .control-button {
     padding: 12px 20px;
     font-size: 16px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-}
-
-.stop-button {
-    background-color: red;
-    color: white;
-}
-
-.share-button {
-    background-color: green;
-    color: white;
-}
-
-.participants-button {
+  }
+  
+  .stop-button {
+    background-color: #dc3545;
+    color: #fff;
+  }
+  
+  .share-button {
+    background-color: #28a745;
+    color: #fff;
+  }
+  
+  .participants-button {
     background-color: #007bff;
-    color: white;
-}
-
-.modal {
+    color: #fff;
+  }
+  
+  /* ==========================================================================
+     Modal (Meeting Setup)
+     ========================================================================== */
+  .modal {
     position: fixed;
     top: 0;
     left: 0;
@@ -101,136 +125,198 @@ body {
     height: 100vh;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
-    justify-content: center;
     align-items: center;
-}
-
-.modal-content {
-    background: white;
+    justify-content: center;
+  }
+  
+  .modal-content {
+    background-color: #fff;
     padding: 20px;
+    width: 300px;
     border-radius: 10px;
     text-align: center;
-    width: 300px;
-}
-
-.modal-content h2 {
+  }
+  
+  .modal-content h2 {
     margin-bottom: 15px;
-}
-
-.modal-content input {
+  }
+  
+  .modal-content input {
     width: 100%;
     padding: 10px;
     margin-bottom: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
-}
-
-.modal-content button {
+  }
+  
+  .modal-content button {
     padding: 10px 15px;
-    background: #007bff;
-    color: white;
+    background-color: #007bff;
     border: none;
     border-radius: 5px;
+    color: #fff;
     cursor: pointer;
-}
-
-.screen-share-tile {
-    border: 3px solid green;
-}
-
-.participant-list {
-    position: absolute;
-    right: 20px;
-    top: 20px;
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 15px;
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.participant-list h3 {
-    margin: 0;
-    margin-bottom: 10px;
-    font-size: 18px;
-    text-align: center;
-}
-
-.participant-list ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.participant-list li {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px;
-    background: #f8f9fa;
-    border-radius: 5px;
-    margin-bottom: 5px;
-}
-
-.participant-list li span {
-    font-size: 14px;
-}
-
-.muted {
-    color: gray;
-    font-size: 12px;
-}
-
-.meeting-overlay {
+  }
+  
+  /* ==========================================================================
+     Meeting Overlay & Minimized State
+     ========================================================================== */
+  .meeting-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
-    min-height: 100vh; /* Let it grow naturally */
-    background-color: white;
+    min-height: 100vh;
+    background-color: #fff;
     z-index: 9999;
     padding: 10px;
     display: flex;
     flex-direction: column;
-    overflow-y: auto; /* Enable scrolling for overflowing content */
-}
-
-
-/* Hide the meeting UI when minimized */
-.hidden {
+    overflow-y: auto;
+  }
+  
+  .hidden {
     display: none;
-}
-
-/* Adjustments for minimized overlay */
-.minimized {
+  }
+  
+  .minimized {
     width: 300px;
     height: 50px;
     padding: 0;
     overflow: hidden;
     border: 1px solid #ccc;
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     background-color: #007bff;
-    color: white;
+    color: #fff;
     cursor: pointer;
-}
-
-.meeting-header {
+  }
+  
+  /* ==========================================================================
+     Meeting Header & UI
+     ========================================================================== */
+  .meeting-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     background-color: #007bff;
-    color: white;
+    color: #fff;
     padding: 10px;
     font-size: 18px;
-}
-
-.meeting-header button {
+  }
+  
+  .meeting-header button {
     background: none;
     border: none;
-    color: white;
+    color: #fff;
     cursor: pointer;
     font-size: 16px;
-}
+  }
+  
+  .meeting-ui {
+    width: 100%;
+    height: 100%;
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  
+  .meeting-status {
+    font-size: 1.5rem;
+    color: #6c757d;
+    text-align: center;
+    margin-top: 20px;
+  }
+  
+  /* Additional controls (if rendered within MeetingUI) */
+  .controls {
+    display: flex;
+    gap: 1rem;
+    margin-top: 20px;
+  }
+  
+  .controls button {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .controls button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Screen share indicator styling */
+  .screen-share {
+    background-color: #ffc107;
+    color: #212529;
+    padding: 0.5rem;
+    border-radius: 5px;
+    margin-top: 10px;
+  }
+  
+  /* ==========================================================================
+     Participant List & Controls
+     ========================================================================== */
+  .participant-list {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  .participant-list h3 {
+    margin: 0 0 10px;
+    font-size: 18px;
+    text-align: center;
+  }
+  
+  .participant-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .participant-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    margin-bottom: 5px;
+  }
+  
+  .participant-list li span {
+    font-size: 14px;
+  }
+  
+  /* Muted indicators within participant list items */
+  .muted {
+    color: gray;
+    font-size: 12px;
+  }
+  
+  /* Grant controls (visible on ParticipantItem click) */
+  .grant-controls {
+    margin-top: 5px;
+  }
+  
+  .grant-controls .control-button {
+    margin-right: 5px;
+  }
+  
