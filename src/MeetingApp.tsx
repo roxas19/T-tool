@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { DailyProvider } from "@daily-co/daily-react";
 import { startMeeting } from "./Meeting/meetingFunctions";
-import MeetingUI from "./Meeting/MeetingUI";// Import the new MeetingUI component
+import MeetingUI from "./Meeting/MeetingUI"; // Import the updated MeetingUI component
 import "./css/MeetingApp.css";
 
 interface MeetingAppProps {
@@ -11,7 +11,11 @@ interface MeetingAppProps {
   onClose: () => void;
 }
 
-const MeetingApp: React.FC<MeetingAppProps> = ({ isMeetingMinimized, onMeetingStart, onClose }) => {
+const MeetingApp: React.FC<MeetingAppProps> = ({
+  isMeetingMinimized,
+  onMeetingStart,
+  onClose,
+}) => {
   const [meetingName, setMeetingName] = useState("default-meeting");
   const [roomUrl, setRoomUrl] = useState<string | null>(null);
 
@@ -43,12 +47,10 @@ const MeetingApp: React.FC<MeetingAppProps> = ({ isMeetingMinimized, onMeetingSt
     );
   }
 
-  // Render ongoing meeting UI
+  // Render ongoing meeting UI without an extra wrapper.
   return (
     <DailyProvider>
-      <div className={`meeting-container ${isMeetingMinimized ? "hidden" : ""}`}>
-        <MeetingUI roomUrl={roomUrl} onStop={onClose} meetingName={meetingName} />
-      </div>
+      <MeetingUI roomUrl={roomUrl} onStop={onClose} meetingName={meetingName} />
     </DailyProvider>
   );
 };

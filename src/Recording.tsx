@@ -8,17 +8,16 @@ type RecordingProps = {
 
 const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
   const [db, setDb] = React.useState<IDBPDatabase | null>(null);
-  const [playbackDb, setPlaybackDb] = React.useState<IDBPDatabase | null>(null); // For 15-minute playback storage
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recordingQueue = useRef<Blob[]>([]);
 
+  // Initialize a single IndexedDB for recording (no PlaybackDB)
   useEffect(() => {
-    const initDBs = async () => {
+    const initDB = async () => {
       try {
         await indexedDB.deleteDatabase("RecordingDB");
-        await indexedDB.deleteDatabase("PlaybackDB");
-        console.log("Old IndexedDBs deleted successfully.");
+        console.log("Old RecordingDB deleted successfully.");
 
         const recordingDb = await openDB("RecordingDB", 1, {
           upgrade(db) {
@@ -28,29 +27,21 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
           },
         });
 
-        const playbackDb = await openDB("PlaybackDB", 1, {
-          upgrade(db) {
-            if (!db.objectStoreNames.contains("playback")) {
-              db.createObjectStore("playback", { keyPath: "id" });
-            }
-          },
-        });
-
-        console.log("New IndexedDBs initialized.");
+        console.log("New IndexedDB initialized.");
         setDb(recordingDb);
-        setPlaybackDb(playbackDb);
       } catch (error) {
-        console.error("Failed to initialize IndexedDBs:", error);
+        console.error("Failed to initialize IndexedDB:", error);
       }
     };
 
-    initDBs();
+    initDB();
 
     return () => {
       clearIndexedDBs();
     };
   }, []);
 
+  // Start or stop recording based on the isRecording prop
   useEffect(() => {
     if (isRecording) {
       console.log("Recording started.");
@@ -61,6 +52,7 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
     }
   }, [isRecording]);
 
+  // Start recording using getDisplayMedia and a MediaRecorder instance
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({
@@ -75,21 +67,26 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
         if (event.data.size > 0) {
           console.log("New video chunk recorded:", event.data);
           recordingQueue.current.push(event.data);
-
           flushQueueToIndexedDB();
         }
       };
 
-      recorder.start(10000); // Save chunks every 10 seconds
+      // Start recording with a 10-second timeslice.
+      recorder.start(10000);
       mediaRecorderRef.current = recorder;
     } catch (error) {
       console.error("Failed to start recording:", error);
     }
   };
 
+  // Stop recording and force a final flush of any pending data
   const stopRecording = async () => {
     try {
       if (mediaRecorderRef.current) {
+        // Force any pending data (which might be less than 10 seconds) to be available
+        mediaRecorderRef.current.requestData();
+        // Wait briefly (200ms) to ensure the ondataavailable event fires
+        await new Promise((resolve) => setTimeout(resolve, 200));
         mediaRecorderRef.current.stop();
       }
       if (streamRef.current) {
@@ -100,7 +97,7 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
       await flushQueueToIndexedDB();
 
       console.log("Preparing full recording for download...");
-      const finalBlob = await stitchChunks();
+      const finalBlob = await stitchChunks(); // Stitch all chunks together for the full recording
       if (finalBlob) {
         console.log("Full recording Blob created:", finalBlob);
         downloadBlob(finalBlob, `recording-${Date.now()}.webm`);
@@ -111,6 +108,8 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
       console.error("Failed to stop recording:", error);
     }
   };
+
+  // Flush the in-memory recording queue into the IndexedDB ("chunks" store)
   const flushQueueToIndexedDB = async () => {
     if (!db || recordingQueue.current.length === 0) return;
 
@@ -119,11 +118,15 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
 
     while (recordingQueue.current.length > 0) {
       const chunk = recordingQueue.current.shift();
-      if (chunk) await store.add({ data: chunk, timestamp: Date.now() });
+      if (chunk) {
+        await store.add({ data: chunk, timestamp: Date.now() });
+      }
     }
     await tx.done;
   };
 
+  // Stitch together chunks from IndexedDB.
+  // If lastMinutes is provided, only include chunks recorded within that time window.
   const stitchChunks = async (lastMinutes = 0): Promise<Blob | null> => {
     if (!db) return null;
 
@@ -148,11 +151,20 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
     return new Blob(chunks, { type: "video/webm" });
   };
 
+  // For the "Download Last 15 Minutes" button.
+  // If still recording, force a flush of any pending partial chunk.
   const getPlaybackBlob = async (): Promise<Blob | null> => {
-    const blob = await stitchChunks(15); // Retrieve the last 15 minutes
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+      mediaRecorderRef.current.requestData();
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+    await flushQueueToIndexedDB();
+    // Stitch only chunks from the last 15 minutes based on timestamp
+    const blob = await stitchChunks(15);
     return blob;
   };
 
+  // Create a temporary anchor to download the blob as a file.
   const downloadBlob = (blob: Blob, fileName: string) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -162,13 +174,10 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
     URL.revokeObjectURL(url);
   };
 
+  // Clear the IndexedDB store ("chunks") after downloading
   const clearIndexedDBs = async () => {
     if (db) {
       const tx = db.transaction("chunks", "readwrite");
-      await tx.store.clear();
-    }
-    if (playbackDb) {
-      const tx = playbackDb.transaction("playback", "readwrite");
       await tx.store.clear();
     }
   };
@@ -177,9 +186,7 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
     <>
       {isRecording && (
         <div className="recording-toolbar">
-          <div className="recording-status">
-            Recording in progress...
-          </div>
+          <div className="recording-status">Recording in progress...</div>
           <button
             onClick={async () => {
               const blob = await getPlaybackBlob();

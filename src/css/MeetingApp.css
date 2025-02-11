@@ -17,35 +17,109 @@
     position: relative;
   }
   
-  .meeting-container {
-    width: 90%;
-    height: 90%;
-    margin: auto;
-    background-color: #e9ecef;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+  /* ==========================================================================
+     Persistent Meeting Overlay & Header (Managed in App.tsx)
+     ========================================================================== */
+  /* We now structure the overlay as a grid with three rows:
+     header, meeting-content, and control-panel, with an 8px gap between rows.
+  */
+  .meeting-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    min-height: 100vh;
+    background-color: #fff;
+    z-index: 9999;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 8px;
     overflow: hidden;
   }
   
+  /* Persistent header that always appears at the top */
+  .meeting-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 20px;  /* top and sides */
+    font-size: 18px;
+    flex-shrink: 0;
+    /* The 8px gap below is now handled by the grid gap */
+  }
+  
+  .meeting-header button {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
   /* ==========================================================================
-     Participant Grid & Video Tiles
+     Meeting Content Area (Rendered by MeetingUI.tsx)
+     This container sits directly between the header and the control panel.
      ========================================================================== */
+  .meeting-content {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;  /* Fill the available grid row */
+    overflow-y: auto;
+    background-color: #f8f9fa;
+  }
+  
+  /* ==========================================================================
+     Video Grid & Related Containers
+     ========================================================================== */
+  .video-grid-container {
+    width: 100%;
+    height: 100%; /* Let it fill the meeting-content area */
+    display: grid; /* Use grid so the participant-grid can fill available space */
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  
   .participant-grid {
     display: grid;
     width: 100%;
     height: 100%;
-    gap: 20px;
+    gap: 0;  /* No gap so that video tiles can fill the area */
+    grid-template-rows: 1fr;  /* Default for one tile */
+    grid-template-columns: 1fr;
     overflow: hidden;
+  }
+  
+  /* Additional classes for dynamic tile layout (to be applied via JavaScript):
+     .one-tile: for one video tile (full area)
+     .two-tiles: for two tiles (vertically stacked: 2 rows, 1 column)
+     .grid-2x2: for three or four tiles (2×2 grid)
+  */
+  .participant-grid.one-tile {
+    grid-template-rows: 1fr;
+    grid-template-columns: 1fr;
+  }
+  
+  .participant-grid.two-tiles {
+    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr;
+  }
+  
+  .participant-grid.grid-2x2 {
+    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
   }
   
   .grid-slot {
     background-color: #000;
     border-radius: 10px;
     overflow: hidden;
-    /* Default aspect ratio for video tiles */
-    aspect-ratio: 16 / 9;
+    width: 100%;
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -57,14 +131,14 @@
     object-fit: contain;
   }
   
-  /* When the local participant is sharing screen */
+  /* Adjustments when the local participant is sharing screen */
   .screen-share-adjust {
-    aspect-ratio: auto;
     width: 100%;
     height: 100%;
+    /* Removed aspect-ratio so it fills its container */
   }
   
-  /* Placeholder style for empty grid cells */
+  /* Placeholder for empty grid cells */
   .grid-slot.placeholder {
     background-color: #e9ecef;
     border: 1px dashed #ced4da;
@@ -78,17 +152,15 @@
   /* ==========================================================================
      Meeting Controls Panel
      ========================================================================== */
+  /* Now part of the grid in the meeting-overlay (third row) */
   .control-panel {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
     background-color: #f8f9fa;
-    padding: 10px;
+    padding: 0;  /* No extra padding */
     display: flex;
     justify-content: center;
     gap: 20px;
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    /* It will automatically be placed at the bottom row of the grid */
   }
   
   .control-button {
@@ -127,6 +199,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 10000;
   }
   
   .modal-content {
@@ -159,22 +232,8 @@
   }
   
   /* ==========================================================================
-     Meeting Overlay & Minimized State
+     Minimized State
      ========================================================================== */
-  .meeting-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    min-height: 100vh;
-    background-color: #fff;
-    z-index: 9999;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-  }
-  
   .hidden {
     display: none;
   }
@@ -194,37 +253,30 @@
   }
   
   /* ==========================================================================
-     Meeting Header & UI
+     New Minimized Meeting Panel Styles
      ========================================================================== */
-  .meeting-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  .minimized-panel {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    padding: 5px 10px;
     background-color: #007bff;
-    color: #fff;
-    padding: 10px;
-    font-size: 18px;
-  }
-  
-  .meeting-header button {
-    background: none;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    font-size: 16px;
-  }
-  
-  .meeting-ui {
-    width: 100%;
-    height: 100%;
-    background-color: #f8f9fa;
+    border: 1px solid #ccc;
+    border-radius: 5px;
     display: flex;
-    flex-direction: column;
+    gap: 10px;
     align-items: center;
-    justify-content: center;
-    position: relative;
+    z-index: 10000;
   }
   
+  .minimized-panel .control-button {
+    padding: 5px 10px;
+    font-size: 14px;
+  }
+  
+  /* ==========================================================================
+     Additional Controls & UI Elements
+     ========================================================================== */
   .meeting-status {
     font-size: 1.5rem;
     color: #6c757d;
@@ -232,7 +284,6 @@
     margin-top: 20px;
   }
   
-  /* Additional controls (if rendered within MeetingUI) */
   .controls {
     display: flex;
     gap: 1rem;
@@ -254,7 +305,6 @@
     background-color: #0056b3;
   }
   
-  /* Screen share indicator styling */
   .screen-share {
     background-color: #ffc107;
     color: #212529;
@@ -305,13 +355,11 @@
     font-size: 14px;
   }
   
-  /* Muted indicators within participant list items */
   .muted {
     color: gray;
     font-size: 12px;
   }
   
-  /* Grant controls (visible on ParticipantItem click) */
   .grant-controls {
     margin-top: 5px;
   }

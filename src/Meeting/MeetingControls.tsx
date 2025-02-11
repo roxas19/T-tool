@@ -1,6 +1,6 @@
 // MeetingControls.tsx
-import React, { useState } from "react";
-import { useDaily } from "@daily-co/daily-react";
+import React from "react";
+import { useMediaToggleContext } from "./MediaToggleContext";
 import "../css/MeetingApp.css";
 
 interface MeetingControlsProps {
@@ -18,27 +18,7 @@ const MeetingControls: React.FC<MeetingControlsProps> = ({
   showParticipants,
   onToggleParticipants,
 }) => {
-  // Use Daily's hook to access the Daily instance
-  const daily = useDaily();
-  // Local state for host's own media (audio/mic and video/webcam)
-  const [isHostAudioOn, setIsHostAudioOn] = useState(true);
-  const [isHostVideoOn, setIsHostVideoOn] = useState(true);
-
-  const handleToggleHostAudio = () => {
-    const newAudioState = !isHostAudioOn;
-    setIsHostAudioOn(newAudioState);
-    if (daily) {
-      daily.setLocalAudio(newAudioState);
-    }
-  };
-
-  const handleToggleHostVideo = () => {
-    const newVideoState = !isHostVideoOn;
-    setIsHostVideoOn(newVideoState);
-    if (daily) {
-      daily.setLocalVideo(newVideoState);
-    }
-  };
+  const { isHostAudioOn, isHostVideoOn, toggleAudio, toggleVideo } = useMediaToggleContext();
 
   return (
     <div className="control-panel">
@@ -51,10 +31,10 @@ const MeetingControls: React.FC<MeetingControlsProps> = ({
       <button onClick={onToggleParticipants} className="control-button">
         {showParticipants ? "Hide Participants" : "Show Participants"}
       </button>
-      <button onClick={handleToggleHostAudio} className="control-button">
+      <button onClick={toggleAudio} className="control-button">
         {isHostAudioOn ? "Mute Mic" : "Unmute Mic"}
       </button>
-      <button onClick={handleToggleHostVideo} className="control-button">
+      <button onClick={toggleVideo} className="control-button">
         {isHostVideoOn ? "Turn Off Camera" : "Turn On Camera"}
       </button>
     </div>

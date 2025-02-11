@@ -1,5 +1,3 @@
-// ExcalidrawComponent.tsx
-
 import React, { useState } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
 
@@ -74,32 +72,47 @@ const ExcalidrawComponent: React.FC<ExcalidrawComponentProps> = ({
     setExcalidrawAPI(typedAPI);
   };
 
-  // Excalidraw initial data
+  // When in stream mode, toggle between "draw" and "hidden" classes.
+  // Outside stream mode, we don’t want any extra class.
+  const canvasWrapperClass = isStreamMode
+    ? (isDrawingMode ? "excalidraw-draw-mode" : "excalidraw-hidden")
+    : "";
+
+  // When in stream mode and drawing mode is active, we want a transparent background.
+  // Otherwise use white (via initialData) while the container always gets full width/height in regular mode.
   const initialData = {
     appState: {
-      viewBackgroundColor: isStreamMode ? "transparent" : "#ffffff",
+      viewBackgroundColor: isStreamMode && isDrawingMode ? "transparent" : "#ffffff",
       gridSize: null,
     },
   };
 
+  // Define styles based on mode:
+  const canvasWrapperStyle = isStreamMode
+    ? { backgroundColor: "transparent" } // stream mode CSS classes handle size/positioning
+    : { width: "100%", height: "100%", backgroundColor: "transparent" };
+
   return (
-    <div
-      className="excalidraw-component"
-      style={{ height: "100%", position: "relative" }}
-    >
-      {/* Custom Toolbar */}
-      <div className={`custom-toolbar-wrapper ${isStreamMode ? "stream-toolbar" : ""}`}>
+    <div className="excalidraw-component" style={{ height: "100%", position: "relative" }}>
+      {/* Custom Toolbar - always visible */}
+      <div
+        className={`custom-toolbar-wrapper ${isStreamMode ? "stream-toolbar" : ""}`}
+        style={{ position: "absolute", top: "50px", right: "10px", zIndex: 1004 }}
+      >
         <CustomToolbar
-          excalidrawAPI={excalidrawAPI} // ✅ Pass actual excalidrawAPI state, NOT the setter function
+          excalidrawAPI={excalidrawAPI}
           onToolSelect={(tool) => setSelectedTool(tool)}
         />
       </div>
 
       {/* Excalidraw Canvas */}
-      <Excalidraw
-        excalidrawAPI={handleExcalidrawAPI} // ✅ This now properly updates excalidrawAPI state
-        initialData={initialData}
-      />
+      <div className={canvasWrapperClass} style={canvasWrapperStyle}>
+        <Excalidraw
+          key={isStreamMode ? (isDrawingMode ? "draw-mode" : "hidden-mode") : "regular-mode"}
+          excalidrawAPI={handleExcalidrawAPI}
+          initialData={initialData}
+        />
+      </div>
     </div>
   );
 };
@@ -114,7 +127,7 @@ const CustomToolbar: React.FC<{
   onToolSelect: (toolType: string) => void;
 }> = ({ excalidrawAPI, onToolSelect }) => {
   const activateTool = (tool: string) => {
-    excalidrawAPI?.setActiveTool({ type: tool }); // ✅ Fix: `setActiveTool` should be used to select tools
+    excalidrawAPI?.setActiveTool({ type: tool });
     onToolSelect(tool);
   };
 

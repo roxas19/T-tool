@@ -1,3 +1,4 @@
+// App.tsx
 import React, { useState } from "react";
 
 // Custom components
@@ -8,6 +9,10 @@ import Recording from "./Recording";
 import ExcalidrawComponent from "./ExcalidrawComponent";
 import MeetingApp from "./MeetingApp";
 import MainToolbar from "./MainToolbar";
+import MinimizedMeetingPanel from "./Meeting/MinimizedMeetingPanel"; // Import the minimized panel
+
+// Media toggle context provider
+import { MediaToggleProvider } from "./Meeting/MediaToggleContext";
 
 // Hooks
 import { usePageNavigation } from "./hooks/usePageNavigation";
@@ -73,7 +78,10 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="app-container" style={{ height: "100vh", position: "relative", overflow: "hidden" }}>
+    <div
+      className="app-container"
+      style={{ height: "100vh", position: "relative", overflow: "hidden" }}
+    >
       {/* ✅ Main Toolbar */}
       <MainToolbar
         excalidrawAPI={excalidrawAPI}
@@ -119,39 +127,52 @@ const App: React.FC = () => {
       )}
 
       {/* Diagram Sidebar */}
-      <DiagramSidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} onDragStart={handleDiagramDragStart} />
+      <DiagramSidebar
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+        onDragStart={handleDiagramDragStart}
+      />
 
       {/* Recording Indicator */}
       <Recording isRecording={isRecording} />
 
       {/* ✅ Meeting Overlay */}
       {isMeetingActive && (
-        <div className={`meeting-overlay ${isMeetingMinimized ? "minimized" : ""}`}>
-          <div className="meeting-header">
-            <span>Meeting in Progress</span>
-            <button onClick={() => setIsMeetingMinimized(!isMeetingMinimized)}>
-              {isMeetingMinimized ? "Maximize" : "Minimize"}
-            </button>
-            <button
-              onClick={() => {
-                setIsMeetingActive(false);
-                setMeetingState("setup");
-              }}
-            >
-              Close Meeting
-            </button>
-          </div>
+        <>
+          {/* Wrap the entire meeting overlay with MediaToggleProvider */}
+          <MediaToggleProvider>
+            {/* Full Meeting Overlay */}
+            <div className={`meeting-overlay ${isMeetingMinimized ? "hidden" : ""}`}>
+              <div className="meeting-header">
+                <span>Meeting in Progress</span>
+                <button onClick={() => setIsMeetingMinimized(true)}>Minimize</button>
+                <button
+                  onClick={() => {
+                    setIsMeetingActive(false);
+                    setMeetingState("setup");
+                  }}
+                >
+                  Close Meeting
+                </button>
+              </div>
 
-          {/* Conditional rendering of MeetingApp */}
-          <MeetingApp
-            isMeetingMinimized={isMeetingMinimized}
-            onMeetingStart={() => setMeetingState("inProgress")}
-            onClose={() => {
-              setIsMeetingActive(false);
-              setMeetingState("setup");
-            }}
-          />
-        </div>
+              {/* Meeting UI */}
+              <MeetingApp
+                isMeetingMinimized={isMeetingMinimized}
+                onMeetingStart={() => setMeetingState("inProgress")}
+                onClose={() => {
+                  setIsMeetingActive(false);
+                  setMeetingState("setup");
+                }}
+              />
+            </div>
+
+            {/* Minimized Meeting Panel */}
+            {isMeetingMinimized && (
+              <MinimizedMeetingPanel onMaximize={() => setIsMeetingMinimized(false)} />
+            )}
+          </MediaToggleProvider>
+        </>
       )}
     </div>
   );

@@ -110,22 +110,17 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) =
   };
 
   return (
-    <div className="meeting-overlay">
-      {/* Meeting Header */}
-      <div className="meeting-header">
-        <h2>Meeting in Progress</h2>
-        {/* You can add minimize/maximize or close buttons here */}
-      </div>
-
-      {/* Meeting Container: holds the dynamic ActiveVideoGrid */}
-      <div className="meeting-container">
+    // Use a top-level container named "meeting-content" to host meeting UI below the persistent header.
+    <div className="meeting-content">
+      {/* Video Grid Container */}
+      <div className="video-grid-container">
         <ActiveVideoGrid
           activeParticipants={activeParticipants}
           renderTile={renderTile}
         />
       </div>
 
-      {/* Meeting Controls placed separately so they don't overlap the grid */}
+      {/* Meeting Controls */}
       <MeetingControls
         onStopMeeting={handleStopMeeting}
         isSharingScreen={isSharingScreen}
@@ -136,7 +131,7 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) =
         onToggleParticipants={() => setShowParticipants(!showParticipants)}
       />
 
-      {/* Optionally, render the Participant List if toggled */}
+      {/* Participant List (if toggled) */}
       {showParticipants && (
         <ParticipantList
           onPermissionChange={handlePermissionChange}
