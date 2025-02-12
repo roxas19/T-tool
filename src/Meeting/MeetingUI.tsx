@@ -30,6 +30,9 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) =
 
   const [showParticipants, setShowParticipants] = useState(false);
 
+  // New state to track which video tile is expanded (clicked)
+  const [expandedParticipantId, setExpandedParticipantId] = useState<string | null>(null);
+
   // Derive granted participant IDs (those with either audio or video granted).
   const grantedParticipantIds = Object.keys(grantedPermissions).filter(
     (id) => grantedPermissions[id].audio || grantedPermissions[id].video
@@ -93,12 +96,18 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) =
   };
 
   // Render function to generate a video tile for a given participant ID.
+  // The tile is wrapped in an onClick handler to trigger expansion.
   const renderTile = (participantId: string, index: number) => {
     const isLocal = participantId === localParticipant?.session_id;
     const tileClass =
       isSharingScreen && isLocal ? "grid-slot screen-share-adjust" : "grid-slot";
     return (
-      <div key={participantId} className={tileClass}>
+      <div
+        key={participantId}
+        className={tileClass}
+        onClick={() => setExpandedParticipantId(participantId)}
+        style={{ cursor: "pointer" }}
+      >
         <DailyVideo
           sessionId={participantId}
           type={isSharingScreen && isLocal ? "screenVideo" : "video"}
@@ -110,7 +119,6 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) =
   };
 
   return (
-    // Use a top-level container named "meeting-content" to host meeting UI below the persistent header.
     <div className="meeting-content">
       {/* Video Grid Container */}
       <div className="video-grid-container">
@@ -137,6 +145,36 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) =
           onPermissionChange={handlePermissionChange}
           grantedPermissions={grantedPermissions}
         />
+      )}
+
+      {/* Expanded Video Overlay */}
+      {expandedParticipantId && (
+        <div className="expanded-video-overlay">
+          {/* Reuse the one-tile grid structure to mimic the single-participant layout */}
+          <div className="participant-grid one-tile">
+            <div className="grid-slot">
+              <DailyVideo
+                sessionId={expandedParticipantId}
+                type={
+                  isSharingScreen && expandedParticipantId === localParticipant?.session_id
+                    ? "screenVideo"
+                    : "video"
+                }
+                autoPlay
+                muted={false}
+              />
+            </div>
+          </div>
+          <button
+            className="close-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpandedParticipantId(null);
+            }}
+          >
+            Close
+          </button>
+        </div>
       )}
     </div>
   );

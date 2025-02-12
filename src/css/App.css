@@ -1,10 +1,14 @@
-
+/* --------------------------
+   Excalidraw Default Overrides
+-------------------------- */
 /* Hide Excalidraw’s default toolbar */
 .excalidraw .App-menu.App-menu_top {
   display: none !important;
 }
 
-/* Style and position the custom toolbar */
+/* --------------------------
+   Custom Toolbar Styles
+-------------------------- */
 .custom-toolbar {
   position: fixed;
   right: 10px;
@@ -17,16 +21,16 @@
   border-radius: 8px;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
   z-index: 1000;
+  pointer-events: auto;
 }
 
-/* Custom toolbar during stream and draw mode */
+/* When in draw mode, add the stream-toolbar class to boost the toolbar's z-index */
 .custom-toolbar.stream-toolbar {
-  background: rgba(0, 0, 0, 0.8); /* Darker background for contrast */
-  color: white; /* Ensure visibility */
-  z-index: 1003; /* Above Excalidraw canvas */
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  z-index: 1003; /* Ensure toolbar appears above the Excalidraw overlay (z-index: 1002) */
 }
 
-/* Custom toolbar buttons */
 .custom-toolbar button {
   padding: 8px;
   border: 1px solid #ccc;
@@ -42,7 +46,9 @@
   background-color: #e0e0e0;
 }
 
-/* Style and position the main toolbar */
+/* --------------------------
+   Main Toolbar Styles
+-------------------------- */
 .main-toolbar {
   position: fixed;
   top: 10px;
@@ -57,13 +63,11 @@
   gap: 10px;
 }
 
-/* Main toolbar during stream and draw mode */
 .main-toolbar.stream-toolbar {
-  background: rgba(0, 0, 0, 0.8); /* Darker background */
-  z-index: 1003; /* Ensure it's above the Excalidraw canvas */
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 1003;
 }
 
-/* Main toolbar buttons */
 .main-toolbar button {
   padding: 8px 12px;
   border: none;
@@ -79,7 +83,9 @@
   background-color: #0d47a1;
 }
 
-/* Tool config menu for Excalidraw */
+/* --------------------------
+   Tool Config Menu
+-------------------------- */
 .tool-config-menu {
   position: absolute;
   top: 60px;
@@ -110,7 +116,9 @@
   font-size: 14px;
 }
 
-/* PDF upload button */
+/* --------------------------
+   PDF Upload Button
+-------------------------- */
 .pdf-upload-button {
   position: absolute;
   top: 20px;
@@ -122,33 +130,123 @@
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  z-index: 10; /* Above the canvas */
+  z-index: 10;
 }
 
 .pdf-upload-button:hover {
   background-color: #0056b3;
 }
 
-.webcam-controls {
-  z-index: 1010;
-}
-
-/* NEW: Excalidraw hidden state (used when drawing mode is off in stream mode) */
+/* --------------------------
+   Excalidraw States
+-------------------------- */
+/* Hidden state (used when draw mode is off in overlay scenarios) */
 .excalidraw-hidden {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease-in-out;
 }
 
-/* NEW: Excalidraw draw mode (used when drawing mode is active in stream mode) */
+/* Draw mode (used when the Excalidraw canvas is overlaid) */
 .excalidraw-draw-mode {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 1002; /* Above webcam container but below toolbars */
-  background-color: transparent; /* So the webcam feed shows through */
+  z-index: 1002; /* Positioned below toolbars (which are 1003) */
+  background-color: transparent;
   pointer-events: auto;
   transition: opacity 0.2s ease-in-out;
+}
+
+/* --------------------------
+   Webcam Display Styles
+-------------------------- */
+/* Webcam container */
+.webcam-container {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 200px;
+  height: 150px;
+  border: 2px solid #1976d2;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+  background-color: black;
+  pointer-events: none; /* Disable interactions by default */
+}
+
+.webcam-container.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background-color: black;
+  pointer-events: none;
+}
+
+/* Webcam controls */
+.webcam-controls {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  display: flex;
+  gap: 10px;
+  z-index: 1010 !important;
+  pointer-events: auto !important;
+}
+
+.webcam-controls button {
+  padding: 5px 10px;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.webcam-controls button:hover {
+  background-color: #0d47a1;
+}
+
+/* Webcam video */
+.webcam-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* Excalidraw overlay (used within WebcamDisplay for exit drawing) */
+.excalidraw-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1001; /* Should be above webcam video but below controls */
+  background-color: transparent;
+  pointer-events: auto;
+}
+
+/* --------------------------
+   General Button Styles
+-------------------------- */
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+button:focus {
+  outline: none;
+  box-shadow: 0 0 5px rgba(25, 118, 210, 0.5);
 }

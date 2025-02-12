@@ -1,14 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./css/WebcamDisplay.css";
 
+// Define the unified display mode type.
+export type DisplayMode = "regular" | "draw";
+
 type WebcamDisplayProps = {
   onClose: () => void; // Callback to close the webcam view
   fullscreen?: boolean; // Determines if the webcam is in fullscreen mode
   webcamOn: boolean; // Determines if the webcam feed should be active
   isWebcamOverlayVisible: boolean; // Controls overlay visibility
   setWebcamOverlayVisible: (visible: boolean) => void; // Toggles overlay visibility
-  onToggleDrawingMode: (active: boolean) => void; // Toggles drawing mode
-  isDrawingMode: boolean; // Indicates if drawing mode is active
+  onToggleDrawingMode: (mode: DisplayMode) => void; // Callback to toggle drawing mode (unified)
+  displayMode: DisplayMode; // Current drawing mode ("draw" for overlay, "regular" for normal)
 };
 
 const WebcamDisplay: React.FC<WebcamDisplayProps> = ({
@@ -18,7 +21,7 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({
   isWebcamOverlayVisible,
   setWebcamOverlayVisible,
   onToggleDrawingMode,
-  isDrawingMode,
+  displayMode,
 }) => {
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
@@ -76,16 +79,18 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({
     <>
       <div
         className={`webcam-container ${fullscreen ? "fullscreen" : ""} ${
-          isDrawingMode ? "draw-mode" : "stream-mode"
+          displayMode === "draw" ? "draw-mode" : "stream-mode"
         }`}
       >
         {/* Webcam Video */}
         <video ref={videoRef} autoPlay muted className="webcam-video" />
 
         {/* Excalidraw Overlay */}
-        {isDrawingMode && (
+        {displayMode === "draw" && (
           <div className="excalidraw-overlay">
-            <button onClick={() => onToggleDrawingMode(false)}>Exit Drawing</button>
+            <button onClick={() => onToggleDrawingMode("regular")}>
+              Exit Drawing
+            </button>
           </div>
         )}
       </div>
@@ -103,8 +108,8 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({
           {fullscreen ? "Exit Stream" : "Close"}
         </button>
         <button onClick={handleSwitchCamera}>Switch Camera</button>
-        <button onClick={() => onToggleDrawingMode(!isDrawingMode)}>
-          {isDrawingMode ? "Exit Draw" : "Draw"}
+        <button onClick={() => onToggleDrawingMode(displayMode === "draw" ? "regular" : "draw")}>
+          {displayMode === "draw" ? "Exit Draw" : "Draw"}
         </button>
       </div>
     </>

@@ -56,8 +56,10 @@ const App: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
-  const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [playbackMode, setPlaybackMode] = useState<"youtube" | "local">("youtube");
+
+  // New unified draw mode state: "regular" (standalone canvas) or "draw" (overlay mode)
+  const [displayMode, setDisplayMode] = useState<"regular" | "draw">("regular");
 
   // Toggles
   const toggleRecording = () => setIsRecording((prev) => !prev);
@@ -101,21 +103,14 @@ const App: React.FC = () => {
         webcamOn={webcamOn}
         isWebcamOverlayVisible={isWebcamOverlayVisible}
         setWebcamOverlayVisible={setWebcamOverlayVisible}
-        onToggleDrawingMode={(active) => setIsDrawingMode(active)}
-        isDrawingMode={isDrawingMode}
+        // When toggling drawing mode from the webcam overlay, update the unified displayMode:
+        onToggleDrawingMode={(mode) => setDisplayMode(mode)}
+        displayMode={displayMode}
       />
 
       {/* Excalidraw Component */}
       <ExcalidrawComponent
-        isStreamMode={isStreamMode}
-        setIsStreamMode={setIsStreamMode}
-        webcamOn={webcamOn}
-        setWebcamOn={setWebcamOn}
-        toggleWebcam={toggleWebcam}
-        isRecording={isRecording}
-        onToggleRecording={toggleRecording}
-        isDrawingMode={isDrawingMode}
-        setIsDrawingMode={setIsDrawingMode}
+        displayMode={displayMode}
         setExcalidrawAPI={setExcalidrawAPI}
       />
 
