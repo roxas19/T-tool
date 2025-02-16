@@ -8,7 +8,9 @@ type MainToolbarProps = {
   onToggleWebcam: () => void;
   onToggleRecording: () => void;
   isRecording: boolean;
-  setIsMeetingActive: React.Dispatch<React.SetStateAction<boolean>>; // Added prop for meeting toggle
+  setIsMeetingActive: React.Dispatch<React.SetStateAction<boolean>>;
+  // New prop for PDF upload callback
+  onPdfUpload: (file: File) => void;
 };
 
 const MainToolbar: React.FC<MainToolbarProps> = ({
@@ -18,7 +20,8 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
   onToggleWebcam,
   onToggleRecording,
   isRecording,
-  setIsMeetingActive, // New prop
+  setIsMeetingActive,
+  onPdfUpload,
 }) => {
   const handleResetCanvas = () => {
     excalidrawAPI?.updateScene({
@@ -46,12 +49,46 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     console.log("Image tool activated for upload.");
   };
 
+  // PDF file input handler
+  const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onPdfUpload(file);
+      // Clear the input value so that the same file can be re-uploaded if needed
+      e.target.value = "";
+    }
+  };
+
   return (
     <div className="main-toolbar">
       <button onClick={handleResetCanvas}>Reset</button>
       <button onClick={handleUndo}>Undo</button>
       <button onClick={handleRedo}>Redo</button>
       <button onClick={handleImageUpload}>Upload Image</button>
+
+      {/* PDF Upload Button */}
+      <label
+        htmlFor="pdf-upload"
+        style={{
+          cursor: "pointer",
+          margin: "0 10px",
+          padding: "8px 16px",
+          backgroundColor: "#007bff",
+          color: "#fff",
+          borderRadius: "4px",
+          display: "inline-block"
+        }}
+      >
+        Upload PDF
+        <input
+          id="pdf-upload"
+          type="file"
+          accept="application/pdf"
+          style={{ display: "none" }}
+          onChange={handlePdfChange}
+        />
+      </label>
+
 
       {/* Webcam Toggle */}
       <button onClick={onToggleWebcam}>Toggle Webcam</button>

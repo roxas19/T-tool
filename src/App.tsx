@@ -9,7 +9,8 @@ import Recording from "./Recording";
 import ExcalidrawComponent from "./ExcalidrawComponent";
 import MeetingApp from "./MeetingApp";
 import MainToolbar from "./MainToolbar";
-import MinimizedMeetingPanel from "./Meeting/MinimizedMeetingPanel"; // Import the minimized panel
+import MinimizedMeetingPanel from "./Meeting/MinimizedMeetingPanel";
+import PdfViewer from "./PDFViewer"; // Import the PDF Viewer component
 
 // Media toggle context provider
 import { MediaToggleProvider } from "./Meeting/MediaToggleContext";
@@ -61,6 +62,10 @@ const App: React.FC = () => {
   // New unified draw mode state: "regular" (standalone canvas) or "draw" (overlay mode)
   const [displayMode, setDisplayMode] = useState<"regular" | "draw">("regular");
 
+  // New state for PDF Viewer Mode
+  const [pdfViewerMode, setPdfViewerMode] = useState(false);
+  const [pdfSrc, setPdfSrc] = useState<string | null>(null);
+
   // Toggles
   const toggleRecording = () => setIsRecording((prev) => !prev);
   const toggleVideoPlayer = () => setIsVideoPlayerVisible((prev) => !prev);
@@ -79,12 +84,19 @@ const App: React.FC = () => {
     console.log("Drag started for elements:", elements);
   };
 
+  // Handler for PDF uploads from MainToolbar
+  const handlePdfUpload = (file: File) => {
+    const fileUrl = URL.createObjectURL(file);
+    setPdfSrc(fileUrl);
+    setPdfViewerMode(true);
+  };
+
   return (
     <div
       className="app-container"
       style={{ height: "100vh", position: "relative", overflow: "hidden" }}
     >
-      {/* ✅ Main Toolbar */}
+      {/* Main Toolbar with the new onPdfUpload prop */}
       <MainToolbar
         excalidrawAPI={excalidrawAPI}
         onToggleWebcam={toggleWebcam}
@@ -94,79 +106,107 @@ const App: React.FC = () => {
         onToggleRecording={toggleRecording}
         isRecording={isRecording}
         setIsMeetingActive={setIsMeetingActive}
+        onPdfUpload={handlePdfUpload}
       />
 
-      {/* Webcam Overlay */}
-      <WebcamDisplay
-        onClose={handleWebcamClose}
-        fullscreen={isStreamMode}
-        webcamOn={webcamOn}
-        isWebcamOverlayVisible={isWebcamOverlayVisible}
-        setWebcamOverlayVisible={setWebcamOverlayVisible}
-        // When toggling drawing mode from the webcam overlay, update the unified displayMode:
-        onToggleDrawingMode={(mode) => setDisplayMode(mode)}
-        displayMode={displayMode}
-      />
-
-      {/* Excalidraw Component */}
-      <ExcalidrawComponent
-        displayMode={displayMode}
-        setExcalidrawAPI={setExcalidrawAPI}
-      />
-
-      {/* Video Player */}
-      {isVideoPlayerVisible && (
-        <div className="floating-video">
-          <VideoPlayer playbackMode={playbackMode} />
+      {/* PDF Viewer Overlay */}
+      {pdfViewerMode && pdfSrc ? (
+        <div
+          className="pdf-viewer-overlay"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "#fff",
+            zIndex: 1000,
+          }}
+        >
+          <PdfViewer
+            src={pdfSrc}
+            onClose={() => {
+              setPdfViewerMode(false);
+              setPdfSrc(null);
+            }}
+          />
         </div>
-      )}
-
-      {/* Diagram Sidebar */}
-      <DiagramSidebar
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
-        onDragStart={handleDiagramDragStart}
-      />
-
-      {/* Recording Indicator */}
-      <Recording isRecording={isRecording} />
-
-      {/* ✅ Meeting Overlay */}
-      {isMeetingActive && (
+      ) : (
+        // Render the regular app components when not in PDF viewer mode
         <>
-          {/* Wrap the entire meeting overlay with MediaToggleProvider */}
-          <MediaToggleProvider>
-            {/* Full Meeting Overlay */}
-            <div className={`meeting-overlay ${isMeetingMinimized ? "hidden" : ""}`}>
-              <div className="meeting-header">
-                <span>Meeting in Progress</span>
-                <button onClick={() => setIsMeetingMinimized(true)}>Minimize</button>
-                <button
-                  onClick={() => {
-                    setIsMeetingActive(false);
-                    setMeetingState("setup");
-                  }}
-                >
-                  Close Meeting
-                </button>
-              </div>
+          {/* Webcam Overlay */}
+          <WebcamDisplay
+            onClose={handleWebcamClose}
+            fullscreen={isStreamMode}
+            webcamOn={webcamOn}
+            isWebcamOverlayVisible={isWebcamOverlayVisible}
+            setWebcamOverlayVisible={setWebcamOverlayVisible}
+            // When toggling drawing mode from the webcam overlay, update the unified displayMode:
+            onToggleDrawingMode={(mode) => setDisplayMode(mode)}
+            displayMode={displayMode}
+          />
 
-              {/* Meeting UI */}
-              <MeetingApp
-                isMeetingMinimized={isMeetingMinimized}
-                onMeetingStart={() => setMeetingState("inProgress")}
-                onClose={() => {
-                  setIsMeetingActive(false);
-                  setMeetingState("setup");
-                }}
-              />
+          {/* Excalidraw Component */}
+          <ExcalidrawComponent
+            displayMode={displayMode}
+            setExcalidrawAPI={setExcalidrawAPI}
+          />
+
+          {/* Video Player */}
+          {isVideoPlayerVisible && (
+            <div className="floating-video">
+              <VideoPlayer playbackMode={playbackMode} />
             </div>
+          )}
 
-            {/* Minimized Meeting Panel */}
-            {isMeetingMinimized && (
-              <MinimizedMeetingPanel onMaximize={() => setIsMeetingMinimized(false)} />
-            )}
-          </MediaToggleProvider>
+          {/* Diagram Sidebar */}
+          <DiagramSidebar
+            isSidebarOpen={isSidebarOpen}
+            setIsSidebarOpen={setIsSidebarOpen}
+            onDragStart={handleDiagramDragStart}
+          />
+
+          {/* Recording Indicator */}
+          <Recording isRecording={isRecording} />
+
+          {/* Meeting Overlay */}
+          {isMeetingActive && (
+            <>
+              {/* Wrap the entire meeting overlay with MediaToggleProvider */}
+              <MediaToggleProvider>
+                {/* Full Meeting Overlay */}
+                <div className={`meeting-overlay ${isMeetingMinimized ? "hidden" : ""}`}>
+                  <div className="meeting-header">
+                    <span>Meeting in Progress</span>
+                    <button onClick={() => setIsMeetingMinimized(true)}>Minimize</button>
+                    <button
+                      onClick={() => {
+                        setIsMeetingActive(false);
+                        setMeetingState("setup");
+                      }}
+                    >
+                      Close Meeting
+                    </button>
+                  </div>
+
+                  {/* Meeting UI */}
+                  <MeetingApp
+                    isMeetingMinimized={isMeetingMinimized}
+                    onMeetingStart={() => setMeetingState("inProgress")}
+                    onClose={() => {
+                      setIsMeetingActive(false);
+                      setMeetingState("setup");
+                    }}
+                  />
+                </div>
+
+                {/* Minimized Meeting Panel */}
+                {isMeetingMinimized && (
+                  <MinimizedMeetingPanel onMaximize={() => setIsMeetingMinimized(false)} />
+                )}
+              </MediaToggleProvider>
+            </>
+          )}
         </>
       )}
     </div>

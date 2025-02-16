@@ -1,0 +1,54 @@
+/* PdfViewer.css */
+
+/* Overall container for the PDF viewer */
+.pdf-viewer-container {
+    text-align: center;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Container for the controls (navigation, zoom slider, exit) */
+  .pdf-controls {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Styling for page info and labels */
+  .page-info {
+    margin: 0 10px;
+  }
+  
+  .zoom-label {
+    margin-left: 20px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .zoom-label input[type="range"] {
+    margin: 0 10px;
+  }
+  
+  /* Exit button style */
+  .exit-btn {
+    margin-left: 20px;
+  }
+  
+  /* Container wrapping the canvas to allow scrolling */
+  .pdf-canvas-container {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 10px;
+  }
+  
+  /* Style for the canvas element */
+  .pdf-canvas {
+    border: 1px solid #ccc;
+    display: block;
+  }
+  
