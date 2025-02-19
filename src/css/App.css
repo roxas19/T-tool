@@ -1,7 +1,4 @@
-/* --------------------------
-   Excalidraw Default Overrides
--------------------------- */
-/* Hide Excalidraw’s default toolbar */
+
 .excalidraw .App-menu.App-menu_top {
   display: none !important;
 }
@@ -58,7 +55,7 @@
   padding: 10px 20px;
   border-radius: 8px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  z-index: 1003;
   display: flex;
   gap: 10px;
 }

@@ -94,7 +94,7 @@ const App: React.FC = () => {
   return (
     <div
       className="app-container"
-      style={{ height: "100vh", position: "relative", overflow: "hidden" }}
+      style={{ height: "100vh", position: "relative" }}
     >
       {/* Main Toolbar with the new onPdfUpload prop */}
       <MainToolbar
