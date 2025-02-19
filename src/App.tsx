@@ -1,5 +1,5 @@
 // App.tsx
-import React, { useState } from "react";
+import React from "react";
 
 // Custom components
 import WebcamDisplay from "./WebcamDisplay";
@@ -10,7 +10,7 @@ import ExcalidrawComponent from "./ExcalidrawComponent";
 import MeetingApp from "./MeetingApp";
 import MainToolbar from "./MainToolbar";
 import MinimizedMeetingPanel from "./Meeting/MinimizedMeetingPanel";
-import PdfViewer from "./PDFViewer"; // Import the PDF Viewer component
+import PdfViewer from "./PDFViewer";
 
 // Media toggle context provider
 import { MediaToggleProvider } from "./Meeting/MediaToggleContext";
@@ -18,6 +18,9 @@ import { MediaToggleProvider } from "./Meeting/MediaToggleContext";
 // Hooks
 import { usePageNavigation } from "./hooks/usePageNavigation";
 import { useWebcamManager } from "./hooks/useWebcamManager";
+
+// Global UI Context
+import { GlobalUIProvider, useGlobalUI } from "./context/GlobalUIContext";
 
 // Styles
 import "./css/App.css";
@@ -31,7 +34,8 @@ type ExcalidrawElement = {
   [key: string]: any;
 };
 
-const App: React.FC = () => {
+// Separate App content component that uses the global UI context
+const AppContent: React.FC = () => {
   // Page navigation logic
   const { savePage, loadPage, currentPage, setCurrentPage } = usePageNavigation(null);
 
@@ -46,29 +50,28 @@ const App: React.FC = () => {
     setWebcamOverlayVisible,
   } = useWebcamManager();
 
-  // Meeting state
-  const [isMeetingActive, setIsMeetingActive] = useState(false);
-  const [isMeetingMinimized, setIsMeetingMinimized] = useState(false);
-  const [meetingState, setMeetingState] = useState<"setup" | "inProgress">("setup");
-  const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
-  const meetingId = "my-test-meeting"; // Hardcoded for testing (can be dynamic later)
+  // Global UI state from context
+  const {
+    pdfViewerMode,
+    setPdfViewerMode,
+    pdfSrc,
+    setPdfSrc,
+    isRecording,
+    setIsRecording,
+    isMeetingActive,
+    setIsMeetingActive,
+    isMeetingMinimized,
+    setIsMeetingMinimized,
+    meetingState,
+    setMeetingState,
+    displayMode,
+    setDisplayMode,
+  } = useGlobalUI();
 
-  // Additional states
-  const [isRecording, setIsRecording] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
-  const [playbackMode, setPlaybackMode] = useState<"youtube" | "local">("youtube");
-
-  // New unified draw mode state: "regular" (standalone canvas) or "draw" (overlay mode)
-  const [displayMode, setDisplayMode] = useState<"regular" | "draw">("regular");
-
-  // New state for PDF Viewer Mode
-  const [pdfViewerMode, setPdfViewerMode] = useState(false);
-  const [pdfSrc, setPdfSrc] = useState<string | null>(null);
-
-  // Toggles
-  const toggleRecording = () => setIsRecording((prev) => !prev);
-  const toggleVideoPlayer = () => setIsVideoPlayerVisible((prev) => !prev);
+  // Local states that remain local
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+  const [isVideoPlayerVisible, setIsVideoPlayerVisible] = React.useState(false);
+  const [playbackMode, setPlaybackMode] = React.useState<"youtube" | "local">("youtube");
 
   const handleWebcamClose = () => {
     if (isStreamMode) {
@@ -92,18 +95,15 @@ const App: React.FC = () => {
   };
 
   return (
-    <div
-      className="app-container"
-      style={{ height: "100vh", position: "relative" }}
-    >
-      {/* Main Toolbar with the new onPdfUpload prop */}
+    <div className="app-container" style={{ height: "100vh", position: "relative" }}>
+      {/* Main Toolbar */}
       <MainToolbar
-        excalidrawAPI={excalidrawAPI}
+        excalidrawAPI={null} // Replace with your excalidrawAPI reference as needed
         onToggleWebcam={toggleWebcam}
         setIsStreamMode={setIsStreamMode}
         setWebcamOn={setWebcamOn}
         webcamOn={webcamOn}
-        onToggleRecording={toggleRecording}
+        onToggleRecording={() => setIsRecording((prev) => !prev)}
         isRecording={isRecording}
         setIsMeetingActive={setIsMeetingActive}
         onPdfUpload={handlePdfUpload}
@@ -141,16 +141,12 @@ const App: React.FC = () => {
             webcamOn={webcamOn}
             isWebcamOverlayVisible={isWebcamOverlayVisible}
             setWebcamOverlayVisible={setWebcamOverlayVisible}
-            // When toggling drawing mode from the webcam overlay, update the unified displayMode:
             onToggleDrawingMode={(mode) => setDisplayMode(mode)}
             displayMode={displayMode}
           />
 
           {/* Excalidraw Component */}
-          <ExcalidrawComponent
-            displayMode={displayMode}
-            setExcalidrawAPI={setExcalidrawAPI}
-          />
+          <ExcalidrawComponent displayMode={displayMode} setExcalidrawAPI={() => {}} />
 
           {/* Video Player */}
           {isVideoPlayerVisible && (
@@ -172,9 +168,7 @@ const App: React.FC = () => {
           {/* Meeting Overlay */}
           {isMeetingActive && (
             <>
-              {/* Wrap the entire meeting overlay with MediaToggleProvider */}
               <MediaToggleProvider>
-                {/* Full Meeting Overlay */}
                 <div className={`meeting-overlay ${isMeetingMinimized ? "hidden" : ""}`}>
                   <div className="meeting-header">
                     <span>Meeting in Progress</span>
@@ -189,7 +183,6 @@ const App: React.FC = () => {
                     </button>
                   </div>
 
-                  {/* Meeting UI */}
                   <MeetingApp
                     isMeetingMinimized={isMeetingMinimized}
                     onMeetingStart={() => setMeetingState("inProgress")}
@@ -200,7 +193,6 @@ const App: React.FC = () => {
                   />
                 </div>
 
-                {/* Minimized Meeting Panel */}
                 {isMeetingMinimized && (
                   <MinimizedMeetingPanel onMaximize={() => setIsMeetingMinimized(false)} />
                 )}
@@ -210,6 +202,14 @@ const App: React.FC = () => {
         </>
       )}
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <GlobalUIProvider>
+      <AppContent />
+    </GlobalUIProvider>
   );
 };
 
