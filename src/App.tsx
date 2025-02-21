@@ -91,8 +91,7 @@ const AppContent: React.FC = () => {
   return (
     <div className="app-container" style={{ height: "100vh", position: "relative" }}>
       {/* Main Toolbar: No webcam-related props are passed now because MainToolbar uses global state directly. */}
-      <MainToolbar
-        excalidrawAPI={null} // Replace with your excalidrawAPI reference as needed.
+      <MainToolbar 
         onToggleRecording={() => setIsRecording((prev) => !prev)}
         isRecording={isRecording}
         setIsMeetingActive={setIsMeetingActive}
@@ -128,7 +127,7 @@ const AppContent: React.FC = () => {
           <WebcamDisplay onClose={handleWebcamClose} />
 
           {/* Excalidraw Component */}
-          <ExcalidrawComponent setExcalidrawAPI={() => {}} />
+          <ExcalidrawComponent />
 
           {/* Video Player */}
           {isVideoPlayerVisible && (

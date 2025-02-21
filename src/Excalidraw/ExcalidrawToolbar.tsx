@@ -1,22 +1,34 @@
+// ExcalidrawToolbar.tsx
 import React from "react";
+import { useGlobalUI } from "../context/GlobalUIContext";
 
-type CustomToolbarProps = {
-  excalidrawAPI: {
-    updateScene: (sceneData: any) => void;
-  } | null;
-  onToolSelect: (toolType: string) => void; // Ensure onToolSelect is included as a prop
+export type CustomExcalidrawAPI = {
+  updateScene: (sceneData: any, opts?: { commitToStore?: boolean }) => void;
+  // ...other methods
+  setActiveTool: (tool: any) => void;
 };
 
-const CustomToolbar = ({ excalidrawAPI, onToolSelect }: CustomToolbarProps) => {
+export interface ExcalidrawToolbarProps {
+  className?: string;
+  onToolSelect: (toolType: string) => void;
+}
+
+const ExcalidrawToolbar: React.FC<ExcalidrawToolbarProps> = ({
+  className,
+  onToolSelect,
+}) => {
+  // Retrieve the Excalidraw API from the global context
+  const { excalidrawAPI } = useGlobalUI();
+
   const activateTool = (tool: string) => {
-    excalidrawAPI?.updateScene({
-      appState: { activeTool: { type: tool } },
-    });
-    onToolSelect(tool); // Notify parent about selected tool
+    if (excalidrawAPI) {
+      excalidrawAPI.setActiveTool({ type: tool });
+    }
+    onToolSelect(tool);
   };
 
   return (
-    <div className="custom-toolbar">
+    <div className={className}>
       <button onClick={() => activateTool("selection")}>Selection</button>
       <button onClick={() => activateTool("freedraw")}>Pen</button>
       <button onClick={() => activateTool("eraser")}>Eraser</button>
@@ -31,4 +43,4 @@ const CustomToolbar = ({ excalidrawAPI, onToolSelect }: CustomToolbarProps) => {
   );
 };
 
-export default CustomToolbar;
+export default ExcalidrawToolbar;

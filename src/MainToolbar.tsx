@@ -1,8 +1,8 @@
+// MainToolbar.tsx
 import React from "react";
 import { useGlobalUI } from "./context/GlobalUIContext"; // Import the global context hook
 
 type MainToolbarProps = {
-  excalidrawAPI: any;
   onToggleRecording: () => void;
   isRecording: boolean;
   setIsMeetingActive: React.Dispatch<React.SetStateAction<boolean>>;
@@ -11,19 +11,19 @@ type MainToolbarProps = {
 };
 
 const MainToolbar: React.FC<MainToolbarProps> = ({
-  excalidrawAPI,
   onToggleRecording,
   isRecording,
   setIsMeetingActive,
   onPdfUpload,
 }) => {
-  // Access global webcam and stream states from the global UI context.
+  // Access global webcam, stream states, and the Excalidraw API from the global UI context.
   const {
     webcamOn,
     setWebcamOn,
     setIsStreamMode,
     isWebcamOverlayVisible,
     setIsWebcamOverlayVisible,
+    excalidrawAPI, // Now retrieved from global context
   } = useGlobalUI();
 
   const handleResetCanvas = () => {

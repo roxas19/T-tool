@@ -1,6 +1,33 @@
 // GlobalUIContext.tsx
 import React, { createContext, useContext, useState } from "react";
 
+// Define the CustomExcalidrawAPI type
+export type CustomExcalidrawAPI = {
+  updateScene: (sceneData: any, opts?: { commitToStore?: boolean }) => void;
+  getSceneElements: () => readonly any[];
+  getAppState: () => any;
+  exportToBlob: () => Promise<Blob>;
+  resetScene: () => void;
+  undo: () => void;
+  redo: () => void;
+  setActiveTool: (tool: any) => void;
+  onChange: (callback: (elements: any[], appState: any) => void) => () => void;
+  onPointerDown: (
+    callback: (
+      activeTool: any,
+      pointerDownState: any,
+      event: React.PointerEvent<HTMLElement>
+    ) => void
+  ) => () => void;
+  onPointerUp: (
+    callback: (
+      activeTool: any,
+      pointerDownState: any,
+      event: PointerEvent
+    ) => void
+  ) => () => void;
+};
+
 interface GlobalUIState {
   pdfViewerMode: boolean;
   setPdfViewerMode: React.Dispatch<React.SetStateAction<boolean>>;
@@ -18,12 +45,13 @@ interface GlobalUIState {
   setDisplayMode: React.Dispatch<React.SetStateAction<"regular" | "draw">>;
   isStreamMode: boolean;
   setIsStreamMode: React.Dispatch<React.SetStateAction<boolean>>;
-  // New state for the small webcam overlay visibility:
   isWebcamOverlayVisible: boolean;
   setIsWebcamOverlayVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  // New state for webcam feed on/off
   webcamOn: boolean;
   setWebcamOn: React.Dispatch<React.SetStateAction<boolean>>;
+  // New state for Excalidraw API
+  excalidrawAPI: CustomExcalidrawAPI | null;
+  setExcalidrawAPI: React.Dispatch<React.SetStateAction<CustomExcalidrawAPI | null>>;
 }
 
 const GlobalUIContext = createContext<GlobalUIState | undefined>(undefined);
@@ -37,10 +65,10 @@ export const GlobalUIProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [meetingState, setMeetingState] = useState<"setup" | "inProgress">("setup");
   const [displayMode, setDisplayMode] = useState<"regular" | "draw">("regular");
   const [isStreamMode, setIsStreamMode] = useState(false);
-  // For g5: When the webcam is toggled (but not in full stream view), the small webcam overlay should be visible.
   const [isWebcamOverlayVisible, setIsWebcamOverlayVisible] = useState(false);
-  // NEW for g6: Manage webcam feed state globally.
   const [webcamOn, setWebcamOn] = useState(false);
+  // New state for Excalidraw API
+  const [excalidrawAPI, setExcalidrawAPI] = useState<CustomExcalidrawAPI | null>(null);
 
   return (
     <GlobalUIContext.Provider
@@ -65,6 +93,8 @@ export const GlobalUIProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setIsWebcamOverlayVisible,
         webcamOn,
         setWebcamOn,
+        excalidrawAPI,
+        setExcalidrawAPI,
       }}
     >
       {children}
