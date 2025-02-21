@@ -1,11 +1,8 @@
 import React from "react";
+import { useGlobalUI } from "./context/GlobalUIContext"; // Import the global context hook
 
 type MainToolbarProps = {
   excalidrawAPI: any;
-  setIsStreamMode: React.Dispatch<React.SetStateAction<boolean>>;
-  setWebcamOn: React.Dispatch<React.SetStateAction<boolean>>;
-  webcamOn: boolean;
-  onToggleWebcam: () => void;
   onToggleRecording: () => void;
   isRecording: boolean;
   setIsMeetingActive: React.Dispatch<React.SetStateAction<boolean>>;
@@ -15,14 +12,20 @@ type MainToolbarProps = {
 
 const MainToolbar: React.FC<MainToolbarProps> = ({
   excalidrawAPI,
-  setIsStreamMode,
-  setWebcamOn,
-  onToggleWebcam,
   onToggleRecording,
   isRecording,
   setIsMeetingActive,
   onPdfUpload,
 }) => {
+  // Access global webcam and stream states from the global UI context.
+  const {
+    webcamOn,
+    setWebcamOn,
+    setIsStreamMode,
+    isWebcamOverlayVisible,
+    setIsWebcamOverlayVisible,
+  } = useGlobalUI();
+
   const handleResetCanvas = () => {
     excalidrawAPI?.updateScene({
       elements: [],
@@ -59,6 +62,17 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     }
   };
 
+  // Toggle Webcam: When pressed, it flips the webcamOn state and updates overlay visibility accordingly.
+  const toggleWebcam = () => {
+    if (webcamOn) {
+      setWebcamOn(false);
+      setIsWebcamOverlayVisible(false);
+    } else {
+      setWebcamOn(true);
+      setIsWebcamOverlayVisible(true);
+    }
+  };
+
   return (
     <div className="main-toolbar">
       <button onClick={handleResetCanvas}>Reset</button>
@@ -76,7 +90,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
           backgroundColor: "#007bff",
           color: "#fff",
           borderRadius: "4px",
-          display: "inline-block"
+          display: "inline-block",
         }}
       >
         Upload PDF
@@ -89,15 +103,16 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
         />
       </label>
 
-
       {/* Webcam Toggle */}
-      <button onClick={onToggleWebcam}>Toggle Webcam</button>
+      <button onClick={toggleWebcam}>Toggle Webcam</button>
 
       {/* Stream View (Enables Stream Mode and Webcam) */}
       <button
         onClick={() => {
+          // Set stream mode to true, ensure webcam is on, and hide small overlay.
           setIsStreamMode(true);
           setWebcamOn(true);
+          setIsWebcamOverlayVisible(false);
         }}
       >
         Stream View

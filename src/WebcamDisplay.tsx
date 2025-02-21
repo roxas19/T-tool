@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useGlobalUI } from "./context/GlobalUIContext"; // Import the global context hook
 import "./css/WebcamDisplay.css";
 
 // Define the unified display mode type.
@@ -6,28 +7,26 @@ export type DisplayMode = "regular" | "draw";
 
 type WebcamDisplayProps = {
   onClose: () => void; // Callback to close the webcam view
-  fullscreen?: boolean; // Determines if the webcam is in fullscreen mode
-  webcamOn: boolean; // Determines if the webcam feed should be active
-  isWebcamOverlayVisible: boolean; // Controls overlay visibility
-  setWebcamOverlayVisible: (visible: boolean) => void; // Toggles overlay visibility
-  onToggleDrawingMode: (mode: DisplayMode) => void; // Callback to toggle drawing mode (unified)
-  displayMode: DisplayMode; // Current drawing mode ("draw" for overlay, "regular" for normal)
+  // Removed webcamOn from props; it's now managed globally.
 };
 
-const WebcamDisplay: React.FC<WebcamDisplayProps> = ({
-  onClose,
-  fullscreen = false,
-  webcamOn,
-  isWebcamOverlayVisible,
-  setWebcamOverlayVisible,
-  onToggleDrawingMode,
-  displayMode,
-}) => {
+const WebcamDisplay: React.FC<WebcamDisplayProps> = ({ onClose }) => {
+  // Retrieve global states from GlobalUIContext.
+  const {
+    displayMode,
+    setDisplayMode,
+    isStreamMode,
+    setIsStreamMode, 
+    isWebcamOverlayVisible,
+    setIsWebcamOverlayVisible,
+    webcamOn,
+  } = useGlobalUI();
+
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Initialize or stop the webcam feed based on `webcamOn`
+  // Initialize or stop the webcam feed based on global `webcamOn`
   useEffect(() => {
     const startWebcam = async () => {
       try {
@@ -35,7 +34,6 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({
           videoStream.getTracks().forEach((track) => track.stop());
           setVideoStream(null);
         }
-
         if (webcamOn) {
           const stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode },
@@ -62,7 +60,6 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter((device) => device.kind === "videoinput");
-
       if (videoDevices.length > 1) {
         setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
       } else {
@@ -73,12 +70,13 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({
     }
   };
 
-  if (!webcamOn || (!fullscreen && !isWebcamOverlayVisible)) return null;
+  // Render only if the webcam is on and either we're in stream view or the small overlay is visible.
+  if (!webcamOn || (!isStreamMode && !isWebcamOverlayVisible)) return null;
 
   return (
     <>
       <div
-        className={`webcam-container ${fullscreen ? "fullscreen" : ""} ${
+        className={`webcam-container ${isStreamMode ? "fullscreen" : ""} ${
           displayMode === "draw" ? "draw-mode" : "stream-mode"
         }`}
       >
@@ -88,30 +86,38 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({
         {/* Excalidraw Overlay */}
         {displayMode === "draw" && (
           <div className="excalidraw-overlay">
-            <button onClick={() => onToggleDrawingMode("regular")}>
-              Exit Drawing
-            </button>
+            <button onClick={() => setDisplayMode("regular")}>Exit Drawing</button>
           </div>
         )}
       </div>
 
-      {/* Webcam Controls */}
-      <div className="webcam-controls" style={{ zIndex: 1010 }}>
-        <button
-          onClick={() => {
-            onClose();
-            if (!fullscreen) {
-              setWebcamOverlayVisible(false);
+      {/* Webcam Controls: Render only in full-screen stream mode */}
+      {isStreamMode && (
+        <div className="webcam-controls" style={{ zIndex: 1010 }}>
+          <button
+            onClick={() => {
+              // Exit full-screen stream view without hiding the small overlay.
+              setIsWebcamOverlayVisible(true); // Ensure small overlay remains visible.
+              // Exit stream mode.
+              // Note: setIsStreamMode should be available from the global context.
+              // (Make sure it is correctly destructured in the line above.)
+              // @ts-ignore - if TypeScript still complains, verify your GlobalUIContext.
+              setIsStreamMode(false);
+              onClose();
+            }}
+          >
+            Exit Stream
+          </button>
+          <button onClick={handleSwitchCamera}>Switch Camera</button>
+          <button
+            onClick={() =>
+              setDisplayMode(displayMode === "draw" ? "regular" : "draw")
             }
-          }}
-        >
-          {fullscreen ? "Exit Stream" : "Close"}
-        </button>
-        <button onClick={handleSwitchCamera}>Switch Camera</button>
-        <button onClick={() => onToggleDrawingMode(displayMode === "draw" ? "regular" : "draw")}>
-          {displayMode === "draw" ? "Exit Draw" : "Draw"}
-        </button>
-      </div>
+          >
+            {displayMode === "draw" ? "Exit Draw" : "Draw"}
+          </button>
+        </div>
+      )}
     </>
   );
 };

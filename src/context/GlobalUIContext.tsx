@@ -16,6 +16,14 @@ interface GlobalUIState {
   setMeetingState: React.Dispatch<React.SetStateAction<"setup" | "inProgress">>;
   displayMode: "regular" | "draw";
   setDisplayMode: React.Dispatch<React.SetStateAction<"regular" | "draw">>;
+  isStreamMode: boolean;
+  setIsStreamMode: React.Dispatch<React.SetStateAction<boolean>>;
+  // New state for the small webcam overlay visibility:
+  isWebcamOverlayVisible: boolean;
+  setIsWebcamOverlayVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  // New state for webcam feed on/off
+  webcamOn: boolean;
+  setWebcamOn: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const GlobalUIContext = createContext<GlobalUIState | undefined>(undefined);
@@ -28,6 +36,11 @@ export const GlobalUIProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isMeetingMinimized, setIsMeetingMinimized] = useState(false);
   const [meetingState, setMeetingState] = useState<"setup" | "inProgress">("setup");
   const [displayMode, setDisplayMode] = useState<"regular" | "draw">("regular");
+  const [isStreamMode, setIsStreamMode] = useState(false);
+  // For g5: When the webcam is toggled (but not in full stream view), the small webcam overlay should be visible.
+  const [isWebcamOverlayVisible, setIsWebcamOverlayVisible] = useState(false);
+  // NEW for g6: Manage webcam feed state globally.
+  const [webcamOn, setWebcamOn] = useState(false);
 
   return (
     <GlobalUIContext.Provider
@@ -46,6 +59,12 @@ export const GlobalUIProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setMeetingState,
         displayMode,
         setDisplayMode,
+        isStreamMode,
+        setIsStreamMode,
+        isWebcamOverlayVisible,
+        setIsWebcamOverlayVisible,
+        webcamOn,
+        setWebcamOn,
       }}
     >
       {children}

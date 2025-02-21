@@ -17,7 +17,6 @@ import { MediaToggleProvider } from "./Meeting/MediaToggleContext";
 
 // Hooks
 import { usePageNavigation } from "./hooks/usePageNavigation";
-import { useWebcamManager } from "./hooks/useWebcamManager";
 
 // Global UI Context
 import { GlobalUIProvider, useGlobalUI } from "./context/GlobalUIContext";
@@ -34,23 +33,12 @@ type ExcalidrawElement = {
   [key: string]: any;
 };
 
-// Separate App content component that uses the global UI context
+// Separate App content component that uses the global UI context.
 const AppContent: React.FC = () => {
-  // Page navigation logic
+  // Page navigation logic.
   const { savePage, loadPage, currentPage, setCurrentPage } = usePageNavigation(null);
 
-  // Webcam and stream state management
-  const {
-    webcamOn,
-    isStreamMode,
-    isWebcamOverlayVisible,
-    setIsStreamMode,
-    toggleWebcam,
-    setWebcamOn,
-    setWebcamOverlayVisible,
-  } = useWebcamManager();
-
-  // Global UI state from context
+  // Retrieve all webcam and related states from the global context.
   const {
     pdfViewerMode,
     setPdfViewerMode,
@@ -64,22 +52,28 @@ const AppContent: React.FC = () => {
     setIsMeetingMinimized,
     meetingState,
     setMeetingState,
-    displayMode,
-    setDisplayMode,
+    isStreamMode,
+    setIsStreamMode,
+    webcamOn,
+    setWebcamOn,
+    isWebcamOverlayVisible,
+    setIsWebcamOverlayVisible,
   } = useGlobalUI();
 
-  // Local states that remain local
+  // Local states that remain local.
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = React.useState(false);
   const [playbackMode, setPlaybackMode] = React.useState<"youtube" | "local">("youtube");
 
+  // Handler for closing the webcam.
   const handleWebcamClose = () => {
+    // If we're in stream view, exit stream view and show the small overlay.
     if (isStreamMode) {
       setIsStreamMode(false);
-      if (webcamOn) setWebcamOverlayVisible(true);
+      if (webcamOn) setIsWebcamOverlayVisible(true);
     } else {
       setWebcamOn(false);
-      setWebcamOverlayVisible(false);
+      setIsWebcamOverlayVisible(false);
     }
   };
 
@@ -87,7 +81,7 @@ const AppContent: React.FC = () => {
     console.log("Drag started for elements:", elements);
   };
 
-  // Handler for PDF uploads from MainToolbar
+  // Handler for PDF uploads from MainToolbar.
   const handlePdfUpload = (file: File) => {
     const fileUrl = URL.createObjectURL(file);
     setPdfSrc(fileUrl);
@@ -96,13 +90,9 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="app-container" style={{ height: "100vh", position: "relative" }}>
-      {/* Main Toolbar */}
+      {/* Main Toolbar: No webcam-related props are passed now because MainToolbar uses global state directly. */}
       <MainToolbar
-        excalidrawAPI={null} // Replace with your excalidrawAPI reference as needed
-        onToggleWebcam={toggleWebcam}
-        setIsStreamMode={setIsStreamMode}
-        setWebcamOn={setWebcamOn}
-        webcamOn={webcamOn}
+        excalidrawAPI={null} // Replace with your excalidrawAPI reference as needed.
         onToggleRecording={() => setIsRecording((prev) => !prev)}
         isRecording={isRecording}
         setIsMeetingActive={setIsMeetingActive}
@@ -132,21 +122,13 @@ const AppContent: React.FC = () => {
           />
         </div>
       ) : (
-        // Render the regular app components when not in PDF viewer mode
+        // Render regular app components when PDF viewer is not active.
         <>
           {/* Webcam Overlay */}
-          <WebcamDisplay
-            onClose={handleWebcamClose}
-            fullscreen={isStreamMode}
-            webcamOn={webcamOn}
-            isWebcamOverlayVisible={isWebcamOverlayVisible}
-            setWebcamOverlayVisible={setWebcamOverlayVisible}
-            onToggleDrawingMode={(mode) => setDisplayMode(mode)}
-            displayMode={displayMode}
-          />
+          <WebcamDisplay onClose={handleWebcamClose} />
 
           {/* Excalidraw Component */}
-          <ExcalidrawComponent displayMode={displayMode} setExcalidrawAPI={() => {}} />
+          <ExcalidrawComponent setExcalidrawAPI={() => {}} />
 
           {/* Video Player */}
           {isVideoPlayerVisible && (
@@ -182,7 +164,6 @@ const AppContent: React.FC = () => {
                       Close Meeting
                     </button>
                   </div>
-
                   <MeetingApp
                     isMeetingMinimized={isMeetingMinimized}
                     onMeetingStart={() => setMeetingState("inProgress")}
@@ -192,7 +173,6 @@ const AppContent: React.FC = () => {
                     }}
                   />
                 </div>
-
                 {isMeetingMinimized && (
                   <MinimizedMeetingPanel onMaximize={() => setIsMeetingMinimized(false)} />
                 )}

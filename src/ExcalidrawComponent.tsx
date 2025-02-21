@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
+import { useGlobalUI } from "./context/GlobalUIContext"; // Adjust the import path as needed
 
 // --- Types ---
 type CustomExcalidrawAPI = {
@@ -33,22 +34,25 @@ export type DisplayMode = "regular" | "draw";
 
 // --- Props for ExcalidrawComponent ---
 interface ExcalidrawComponentProps {
-  displayMode: DisplayMode;
   setExcalidrawAPI: React.Dispatch<React.SetStateAction<CustomExcalidrawAPI | null>>;
+  // Note: displayMode is no longer received via props.
 }
 
-const ExcalidrawComponent: React.FC<ExcalidrawComponentProps> = ({ displayMode, setExcalidrawAPI }) => {
+const ExcalidrawComponent: React.FC<ExcalidrawComponentProps> = ({ setExcalidrawAPI }) => {
+  // Access the global displayMode directly from the GlobalUIContext.
+  const { displayMode } = useGlobalUI();
+
   const [excalidrawAPI, setLocalExcalidrawAPI] = useState<CustomExcalidrawAPI | null>(null);
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
-  // Capture and set the Excalidraw API
+  // Capture and set the Excalidraw API.
   const handleExcalidrawAPI = (api: any) => {
     const typedAPI = api as unknown as CustomExcalidrawAPI;
     setLocalExcalidrawAPI(typedAPI);
     setExcalidrawAPI(typedAPI);
   };
 
-  // When displayMode changes, update the scene dynamically without forcing a remount.
+  // When displayMode changes, update the scene without forcing a remount.
   useEffect(() => {
     if (excalidrawAPI) {
       excalidrawAPI.updateScene({
@@ -78,7 +82,7 @@ const ExcalidrawComponent: React.FC<ExcalidrawComponentProps> = ({ displayMode, 
   const wrapperClass = getWrapperClass(displayMode);
   const wrapperStyle = getWrapperStyle(displayMode);
 
-  // Compute initial data based on displayMode (used only on initial mount)
+  // Compute initial data based on displayMode (used only on initial mount).
   const initialData = {
     appState: {
       viewBackgroundColor: displayMode === "draw" ? "transparent" : "#ffffff",
