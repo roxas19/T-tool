@@ -1,7 +1,12 @@
 // GlobalUIContext.tsx
 import React, { createContext, useContext, useState } from "react";
+// Optionally, you could import proper types from Excalidraw if available:
+// import { ExcalidrawElement, AppState, BinaryFiles } from "@excalidraw/excalidraw";
 
-// Define the CustomExcalidrawAPI type
+/**
+ * Updated CustomExcalidrawAPI type to match Excalidraw's latest API.
+ * Here we use `any` for simplicity, but you can replace these with proper types if available.
+ */
 export type CustomExcalidrawAPI = {
   updateScene: (sceneData: any, opts?: { commitToStore?: boolean }) => void;
   getSceneElements: () => readonly any[];
@@ -11,7 +16,9 @@ export type CustomExcalidrawAPI = {
   undo: () => void;
   redo: () => void;
   setActiveTool: (tool: any) => void;
-  onChange: (callback: (elements: any[], appState: any) => void) => () => void;
+  onChange: (
+    callback: (elements: readonly any[], appState: any, files: any) => void
+  ) => () => void;
   onPointerDown: (
     callback: (
       activeTool: any,

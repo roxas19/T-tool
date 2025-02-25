@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
 import { useGlobalUI } from "../context/GlobalUIContext";
+import "../css/Excalidraw.css"; // Import our custom CSS overrides
 
 // --- Types ---
 export type CustomExcalidrawAPI = {
@@ -13,7 +14,9 @@ export type CustomExcalidrawAPI = {
   undo: () => void;
   redo: () => void;
   setActiveTool: (tool: any) => void;
-  onChange: (callback: (elements: any[], appState: any) => void) => () => void;
+  onChange: (
+    callback: (elements: readonly any[], appState: any, files: any) => void
+  ) => () => void;
   onPointerDown: (
     callback: (
       activeTool: any,
@@ -32,15 +35,20 @@ export type CustomExcalidrawAPI = {
 
 export type DisplayMode = "regular" | "draw";
 
-const ExcalidrawCanvas: React.FC = () => {
-  // Get the displayMode and setExcalidrawAPI from the global UI context.
-  const { displayMode, setExcalidrawAPI } = useGlobalUI();
+// Define the props for ExcalidrawCanvas.
+interface ExcalidrawCanvasProps {
+  onSelectedElementChange?: (selectedElement: any) => void;
+}
 
+const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
+  onSelectedElementChange,
+}) => {
+  const { displayMode, setExcalidrawAPI } = useGlobalUI();
   const [excalidrawAPI, setLocalExcalidrawAPI] = useState<CustomExcalidrawAPI | null>(null);
 
-  // Callback to capture and forward the Excalidraw API to the global context.
+  // Capture and forward the Excalidraw API to global context.
   const handleExcalidrawAPI = (api: any) => {
-    const typedAPI = api as unknown as CustomExcalidrawAPI;
+    const typedAPI = api as CustomExcalidrawAPI;
     setLocalExcalidrawAPI(typedAPI);
     setExcalidrawAPI(typedAPI);
   };
@@ -56,24 +64,40 @@ const ExcalidrawCanvas: React.FC = () => {
     }
   }, [displayMode, excalidrawAPI]);
 
-  // Helper functions to compute wrapper class and style based on displayMode.
-  const getWrapperClass = (mode: DisplayMode) => (mode === "draw" ? "excalidraw-draw-mode" : "");
-  const getWrapperStyle = (mode: DisplayMode): React.CSSProperties =>
-    mode === "draw"
+  // onChange callback: capture the selected element and notify parent.
+  const handleChange = (
+    elements: readonly any[],
+    appState: any,
+    files: any
+  ) => {
+    let selEl = null;
+    if (appState.selectedElementIds && Object.keys(appState.selectedElementIds).length > 0) {
+      // Get the first selected element ID.
+      const selectedId = Object.keys(appState.selectedElementIds)[0];
+      // Find the element in the current scene.
+      selEl = elements.find((el) => el.id === selectedId) || null;
+    }
+    if (onSelectedElementChange) {
+      onSelectedElementChange(selEl);
+    }
+  };
+
+  const wrapperClass = displayMode === "draw" ? "excalidraw-draw-mode" : "";
+  const wrapperStyle: React.CSSProperties =
+    displayMode === "draw"
       ? {
-          backgroundColor: "transparent",
           position: "absolute",
           top: 0,
           left: 0,
           width: "100%",
           height: "100%",
+          backgroundColor: "transparent",
         }
-      : { width: "100%", height: "100%" };
+      : {
+          width: "100%",
+          height: "100%",
+        };
 
-  const wrapperClass = getWrapperClass(displayMode);
-  const wrapperStyle = getWrapperStyle(displayMode);
-
-  // Initial data for the Excalidraw canvas.
   const initialData = {
     appState: {
       viewBackgroundColor: displayMode === "draw" ? "transparent" : "#ffffff",
@@ -82,31 +106,28 @@ const ExcalidrawCanvas: React.FC = () => {
   };
 
   return (
-    <>
-      {/* Inline CSS for canvas-specific styling */}
-      <style>{`
-        .excalidraw-draw-mode {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          z-index: 1002; /* Above webcam container but below toolbars */
-          background-color: transparent;
-          pointer-events: auto;
-          transition: opacity 0.2s ease-in-out;
-        }
-      `}</style>
-
-      <div className="excalidraw-canvas" style={{ height: "100%", position: "relative" }}>
-        <div className={wrapperClass} style={wrapperStyle}>
-          <Excalidraw
-            excalidrawAPI={handleExcalidrawAPI}
-            initialData={initialData}
-          />
-        </div>
+    <div className="excalidraw-canvas" style={{ height: "100%", position: "relative" }}>
+      <div className={wrapperClass} style={wrapperStyle}>
+        <Excalidraw
+          excalidrawAPI={handleExcalidrawAPI}
+          initialData={initialData}
+          onChange={handleChange}
+          UIOptions={{
+            canvasActions: {
+              changeViewBackgroundColor: false,
+              clearCanvas: false,
+              export: false,
+              loadScene: false,
+              saveToActiveFile: false,
+              toggleTheme: false,
+              saveAsImage: false,
+            },
+            welcomeScreen: false,
+          }}
+          renderTopRightUI={() => null}
+        />
       </div>
-    </>
+    </div>
   );
 };
 

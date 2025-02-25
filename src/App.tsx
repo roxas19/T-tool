@@ -3,10 +3,9 @@ import React from "react";
 
 // Custom components
 import WebcamDisplay from "./WebcamDisplay";
-import DiagramSidebar from "./DiagramSidebar";
 import VideoPlayer from "./VideoPlayer";
 import Recording from "./Recording";
-import ExcalidrawComponent from "./ExcalidrawComponent";
+import ExcalidrawGeneral from "./ExcalidrawGeneral"; // Handles both canvas & toolbar (including AI mode)
 import MeetingApp from "./MeetingApp";
 import MainToolbar from "./MainToolbar";
 import MinimizedMeetingPanel from "./Meeting/MinimizedMeetingPanel";
@@ -23,6 +22,7 @@ import { GlobalUIProvider, useGlobalUI } from "./context/GlobalUIContext";
 
 // Styles
 import "./css/App.css";
+import "./css/Excalidraw.css"; // Import dedicated Excalidraw CSS
 
 // Typings
 type ExcalidrawElement = {
@@ -33,12 +33,11 @@ type ExcalidrawElement = {
   [key: string]: any;
 };
 
-// Separate App content component that uses the global UI context.
 const AppContent: React.FC = () => {
   // Page navigation logic.
   const { savePage, loadPage, currentPage, setCurrentPage } = usePageNavigation(null);
 
-  // Retrieve all webcam and related states from the global context.
+  // Retrieve global states from the UI context.
   const {
     pdfViewerMode,
     setPdfViewerMode,
@@ -58,16 +57,15 @@ const AppContent: React.FC = () => {
     setWebcamOn,
     isWebcamOverlayVisible,
     setIsWebcamOverlayVisible,
+    displayMode, // "regular" or "draw"
   } = useGlobalUI();
 
-  // Local states that remain local.
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+  // Local states
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = React.useState(false);
   const [playbackMode, setPlaybackMode] = React.useState<"youtube" | "local">("youtube");
 
   // Handler for closing the webcam.
   const handleWebcamClose = () => {
-    // If we're in stream view, exit stream view and show the small overlay.
     if (isStreamMode) {
       setIsStreamMode(false);
       if (webcamOn) setIsWebcamOverlayVisible(true);
@@ -77,11 +75,7 @@ const AppContent: React.FC = () => {
     }
   };
 
-  const handleDiagramDragStart = (elements: ExcalidrawElement[]) => {
-    console.log("Drag started for elements:", elements);
-  };
-
-  // Handler for PDF uploads from MainToolbar.
+  // Handler for PDF uploads.
   const handlePdfUpload = (file: File) => {
     const fileUrl = URL.createObjectURL(file);
     setPdfSrc(fileUrl);
@@ -90,7 +84,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="app-container" style={{ height: "100vh", position: "relative" }}>
-      {/* Main Toolbar: No webcam-related props are passed now because MainToolbar uses global state directly. */}
+      {/* Main Toolbar uses global state directly */}
       <MainToolbar 
         onToggleRecording={() => setIsRecording((prev) => !prev)}
         isRecording={isRecording}
@@ -121,13 +115,12 @@ const AppContent: React.FC = () => {
           />
         </div>
       ) : (
-        // Render regular app components when PDF viewer is not active.
         <>
           {/* Webcam Overlay */}
           <WebcamDisplay onClose={handleWebcamClose} />
 
-          {/* Excalidraw Component */}
-          <ExcalidrawComponent />
+          {/* Always render the ExcalidrawGeneral; its internal logic handles mode-specific styling */}
+          <ExcalidrawGeneral />
 
           {/* Video Player */}
           {isVideoPlayerVisible && (
@@ -135,13 +128,6 @@ const AppContent: React.FC = () => {
               <VideoPlayer playbackMode={playbackMode} />
             </div>
           )}
-
-          {/* Diagram Sidebar */}
-          <DiagramSidebar
-            isSidebarOpen={isSidebarOpen}
-            setIsSidebarOpen={setIsSidebarOpen}
-            onDragStart={handleDiagramDragStart}
-          />
 
           {/* Recording Indicator */}
           <Recording isRecording={isRecording} />
