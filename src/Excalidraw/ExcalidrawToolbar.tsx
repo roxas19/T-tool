@@ -5,8 +5,8 @@ import AIDiagrammingPanel from "./AIDiagrammingPanel";
 
 export type CustomExcalidrawAPI = {
   updateScene: (sceneData: any, opts?: { commitToStore?: boolean }) => void;
-  // ...other methods
   setActiveTool: (tool: any) => void;
+  // ...other methods
 };
 
 export interface ExcalidrawToolbarProps {
@@ -18,15 +18,12 @@ const ExcalidrawToolbar: React.FC<ExcalidrawToolbarProps> = ({
   className = "custom-toolbar",
   onToolSelect,
 }) => {
-  // Retrieve the Excalidraw API from the global context
   const { excalidrawAPI } = useGlobalUI();
-
-  // Local state to control toolbar mode: "normal" or "ai"
   const [mode, setMode] = useState<"normal" | "ai">("normal");
 
-  // Function to activate a tool in the normal toolbar mode
   const activateTool = (tool: string) => {
     if (excalidrawAPI) {
+      // Simply set the active tool.
       excalidrawAPI.setActiveTool({ type: tool });
     }
     onToolSelect(tool);
@@ -37,7 +34,6 @@ const ExcalidrawToolbar: React.FC<ExcalidrawToolbarProps> = ({
       {mode === "ai" ? (
         <AIDiagrammingPanel
           onDragStart={(elements) => {
-            // Optionally, handle drag events here if needed.
             console.log("AI Diagram dragged:", elements);
           }}
           onSwitchToToolbar={() => setMode("normal")}
@@ -54,7 +50,6 @@ const ExcalidrawToolbar: React.FC<ExcalidrawToolbarProps> = ({
           <button onClick={() => activateTool("line")}>Line</button>
           <button onClick={() => activateTool("text")}>Text</button>
           <button onClick={() => activateTool("laser")}>Laser Pointer</button>
-          {/* Button to switch to AI ops mode */}
           <button onClick={() => setMode("ai")}>AI ops</button>
         </>
       )}

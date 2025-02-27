@@ -1,4 +1,3 @@
-// MainToolbar.tsx
 import React from "react";
 import { useGlobalUI } from "./context/GlobalUIContext"; // Import the global context hook
 
@@ -36,14 +35,6 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     });
   };
 
-  const handleUndo = () => {
-    (document.querySelector(".undo-button-container button") as HTMLButtonElement)?.click();
-  };
-
-  const handleRedo = () => {
-    (document.querySelector(".redo-button-container button") as HTMLButtonElement)?.click();
-  };
-
   const handleImageUpload = () => {
     excalidrawAPI?.setActiveTool({
       type: "image",
@@ -76,8 +67,6 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
   return (
     <div className="main-toolbar">
       <button onClick={handleResetCanvas}>Reset</button>
-      <button onClick={handleUndo}>Undo</button>
-      <button onClick={handleRedo}>Redo</button>
       <button onClick={handleImageUpload}>Upload Image</button>
 
       {/* PDF Upload Button */}

@@ -1,3 +1,4 @@
+// PdfViewer.tsx
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import * as PDFJS from "pdfjs-dist";
 import type {
@@ -5,6 +6,8 @@ import type {
   RenderParameters,
 } from "pdfjs-dist/types/src/display/api";
 import "./css/PDFViewer.css";
+import InteractiveButton from "./utils/InteractiveButton";
+import { useGlobalUI } from "./context/GlobalUIContext"; // For displayMode toggle
 
 // Set up the PDF worker
 PDFJS.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.mjs`;
@@ -15,58 +18,47 @@ interface PdfViewerProps {
 }
 
 const PdfViewer: React.FC<PdfViewerProps> = ({ src, onClose }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  // Container for the PDF content (scrollable area)
-  const containerRef = useRef<HTMLDivElement>(null);
-
+  // PDF state
   const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [zoomLevel, setZoomLevel] = useState(1.0); // 50% -> 1.0x scale
 
+  // Refs for canvas and container
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const renderTaskRef = useRef<PDFJS.RenderTask | null>(null);
   const isMountedRef = useRef(true);
   const latestPageRef = useRef(currentPage);
 
-  // Disable native pinch-to-zoom
+  // Load PDF on src change
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const handleWheel = (e: WheelEvent) => {
-      // Prevent pinch-zoom if ctrlKey is pressed
-      if (e.ctrlKey) {
-        e.preventDefault();
+    let cancelled = false;
+    const loadingTask = PDFJS.getDocument({ url: src });
+    loadingTask.promise.then(
+      (loadedDoc) => {
+        if (cancelled) return;
+        setPdfDoc(loadedDoc);
+        setCurrentPage(1);
+      },
+      (error) => {
+        if (cancelled) return;
+        console.error("Error loading PDF:", error);
       }
-    };
-    container.addEventListener("wheel", handleWheel, { passive: false });
-
+    );
     return () => {
-      container.removeEventListener("wheel", handleWheel);
+      cancelled = true;
+      loadingTask.destroy?.();
     };
-  }, []);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-      renderTaskRef.current?.cancel();
-    };
-  }, []);
+  }, [src]);
 
   // Render the requested page
   const renderPage = useCallback(
     (pageNum: number, pdf = pdfDoc) => {
-      if (!canvasRef.current) {
-        console.error("Canvas not found!");
-        return;
-      }
-      if (!pdf) {
-        console.error("PDF document not available!");
+      if (!canvasRef.current || !pdf) {
+        console.error("Canvas or PDF not available!");
         return;
       }
       latestPageRef.current = pageNum;
-
       window.requestAnimationFrame(() => {
         const canvas = canvasRef.current!;
         const context = canvas.getContext("2d");
@@ -74,36 +66,24 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ src, onClose }) => {
           console.error("Canvas context is null!");
           return;
         }
-
-        // Clear the canvas
         context.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Get the PDF page
         pdf.getPage(pageNum)
           .then((page) => {
-            // Create viewport at current zoom
             const viewport = page.getViewport({ scale: zoomLevel });
             canvas.width = viewport.width;
             canvas.height = viewport.height;
-
             const updatedContext = canvas.getContext("2d");
             if (!updatedContext) {
               console.error("Canvas context is null after resizing!");
               return;
             }
-
-            // Cancel any previous render task
             renderTaskRef.current?.cancel();
-
-            // Render the page
             const renderContext: RenderParameters = {
               canvasContext: updatedContext,
               viewport,
             };
             const newRenderTask = page.render(renderContext);
             renderTaskRef.current = newRenderTask;
-
-            // Handle the render completion
             newRenderTask.promise.then(
               () => {
                 if (!isMountedRef.current) return;
@@ -111,22 +91,13 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ src, onClose }) => {
                   console.log("Discarding outdated render for page", pageNum);
                   return;
                 }
-                console.log(
-                  `Page ${pageNum} rendered successfully at zoom level ${zoomLevel}`
-                );
+                console.log(`Page ${pageNum} rendered at zoom level ${zoomLevel}`);
               },
               (error) => {
-                if (
-                  error &&
-                  error.name === "RenderingCancelledException"
-                ) {
+                if (error && error.name === "RenderingCancelledException") {
                   console.log("Rendering cancelled for page", pageNum);
                 } else {
-                  console.error(
-                    "Error during rendering page",
-                    pageNum,
-                    error
-                  );
+                  console.error("Error during rendering page", pageNum, error);
                 }
               }
             );
@@ -139,40 +110,22 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ src, onClose }) => {
     [pdfDoc, zoomLevel]
   );
 
-  // Load PDF on src change
-  useEffect(() => {
-    let cancelled = false;
-    console.log("Loading PDF from src:", src);
-
-    const loadingTask = PDFJS.getDocument({ url: src });
-    loadingTask.promise.then(
-      (loadedDoc) => {
-        if (cancelled) return;
-        console.log("PDF loaded successfully:", loadedDoc);
-        setPdfDoc(loadedDoc);
-        setCurrentPage(1);
-      },
-      (error) => {
-        if (cancelled) return;
-        console.error("Error loading PDF:", error);
-      }
-    );
-
-    return () => {
-      cancelled = true;
-      // Cancel the loading if needed
-      loadingTask.destroy?.();
-    };
-  }, [src]);
-
-  // Re-render page on page/zoom change
+  // Re-render when pdfDoc, currentPage, or zoomLevel changes
   useEffect(() => {
     if (pdfDoc) {
       renderPage(currentPage);
     }
   }, [pdfDoc, currentPage, zoomLevel, renderPage]);
 
-  // Navigation
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      renderTaskRef.current?.cancel();
+    };
+  }, []);
+
+  // Navigation callbacks
   const nextPage = () => {
     if (pdfDoc && currentPage < pdfDoc.numPages) {
       setCurrentPage(currentPage + 1);
@@ -189,72 +142,117 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ src, onClose }) => {
     }
   };
 
-  // Zoom
-  const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newPercent = Number(e.target.value);
-    setZoomLevel(newPercent / 50);
+  // Zoom callback
+  const handleZoomChange = (newZoom: number) => {
+    setZoomLevel(newZoom);
   };
 
   return (
+    <div className="pdf-viewer-container">
+      {/* PDF Content Component */}
+      <PdfViewerContent containerRef={containerRef} canvasRef={canvasRef} />
+      {/* PDF Controls Component (Rendered as a sibling) */}
+      <PdfViewerControls
+        currentPage={currentPage}
+        totalPages={pdfDoc ? pdfDoc.numPages : 0}
+        onPrev={prevPage}
+        onNext={nextPage}
+        onClose={() => {
+          onClose();
+          // When closing, reset zoom/page if needed
+        }}
+        zoomLevel={zoomLevel}
+        onZoomChange={handleZoomChange}
+      />
+    </div>
+  );
+};
+
+// ---------------------
+// PdfViewerContent Component: Renders the PDF canvas
+// ---------------------
+interface PdfViewerContentProps {
+  containerRef: React.RefObject<HTMLDivElement>;
+  canvasRef: React.RefObject<HTMLCanvasElement>;
+}
+const PdfViewerContent: React.FC<PdfViewerContentProps> = ({ containerRef, canvasRef }) => {
+  return (
     <div className="pdf-viewer-reorg1">
-      {/* 
-        1) Top row with three sections: 
-           - left box for PDF controls (prev/next/page info)
-           - center gap for main toolbar 
-           - right box for exit button 
-      */}
-      <div className="pdf-top-row">
-        <div className="pdf-controls-left-box">
-          <button onClick={prevPage} disabled={currentPage <= 1}>
-            Previous
-          </button>
-          <span className="page-info">
-            Page {currentPage} of {pdfDoc?.numPages ?? "?"}
-          </span>
-          <button
-            onClick={nextPage}
-            disabled={pdfDoc ? currentPage >= pdfDoc.numPages : true}
-          >
-            Next
-          </button>
-        </div>
-
-        <div className="pdf-top-center-box">
-          {/* 
-            Placeholder for the main toolbar area 
-            (left intentionally empty if your main app toolbar 
-            is a separate component) 
-          */}
-        </div>
-
-        <div className="pdf-controls-right-box">
-          <button onClick={onClose} className="exit-btn">
-            Exit PDF Viewer
-          </button>
-        </div>
-      </div>
-
-      {/* 2) Main space for the PDF canvas (scrollable if needed) */}
       <div className="pdf-main-area" ref={containerRef}>
         <canvas ref={canvasRef} className="pdf-canvas" />
       </div>
+    </div>
+  );
+};
 
-      {/* 
-        3) Bottom-right small rectangle for the zoom slider 
-        (fixed position or anchored in its own row, depending on your preference)
-      */}
-      <div className="pdf-zoom-area">
-        <div className="zoom-value">{Math.round(zoomLevel * 50)}%</div>
-        <input
-          type="range"
-          className="zoom-range"
-          min="10"
-          max="100"
-          step="10"
-          value={Math.round(zoomLevel * 50)}
-          onChange={handleZoomChange}
-        />
-        <div className="zoom-label">Zoom</div>
+// ---------------------
+// PdfViewerControls Component: Renders interactive controls (including Draw Toggle)
+// ---------------------
+interface PdfViewerControlsProps {
+  currentPage: number;
+  totalPages: number;
+  onPrev: () => void;
+  onNext: () => void;
+  onClose: () => void;
+  zoomLevel: number;
+  onZoomChange: (newZoom: number) => void;
+}
+const PdfViewerControls: React.FC<PdfViewerControlsProps> = ({
+  currentPage,
+  totalPages,
+  onPrev,
+  onNext,
+  onClose,
+  zoomLevel,
+  onZoomChange,
+}) => {
+  const sliderValue = Math.round(zoomLevel * 50);
+  // Use the global UI context to get displayMode toggle for the draw button
+  const { displayMode, setDisplayMode } = useGlobalUI();
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVal = Number(e.target.value);
+    onZoomChange(newVal / 50);
+  };
+
+  const handleDrawToggle = () => {
+    setDisplayMode(displayMode === "draw" ? "regular" : "draw");
+  };
+
+  return (
+    <div className="pdf-viewer-controls">
+      <div className="pdf-controls-left-box">
+        <InteractiveButton onClick={onPrev} style={{ minWidth: "80px" }} disabled={currentPage <= 1}>
+          Previous
+        </InteractiveButton>
+        <span className="page-info">
+          Page {currentPage} of {totalPages}
+        </span>
+        <InteractiveButton onClick={onNext} style={{ minWidth: "80px" }} disabled={currentPage >= totalPages}>
+          Next
+        </InteractiveButton>
+      </div>
+      <div className="pdf-controls-right-box">
+        <div className="zoom-area">
+          <span className="zoom-value">{sliderValue}%</span>
+          <input
+            type="range"
+            className="zoom-range"
+            min="10"
+            max="100"
+            step="10"
+            value={sliderValue}
+            onChange={handleSliderChange}
+          />
+          <span className="zoom-label">Zoom</span>
+        </div>
+        {/* Draw Toggle Button */}
+        <InteractiveButton onClick={handleDrawToggle} className="draw-btn">
+          {displayMode === "draw" ? "Exit Draw" : "Draw"}
+        </InteractiveButton>
+        <InteractiveButton onClick={onClose} className="exit-btn">
+          Exit PDF Viewer
+        </InteractiveButton>
       </div>
     </div>
   );

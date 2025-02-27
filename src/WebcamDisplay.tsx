@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useGlobalUI } from "./context/GlobalUIContext"; // Import the global context hook
 import "./css/WebcamDisplay.css";
+import InteractiveButton from "./utils/InteractiveButton"; // Import the shared button component
 
 // Define the unified display mode type.
 export type DisplayMode = "regular" | "draw";
 
 type WebcamDisplayProps = {
   onClose: () => void; // Callback to close the webcam view
-  // Removed webcamOn from props; it's now managed globally.
 };
 
 const WebcamDisplay: React.FC<WebcamDisplayProps> = ({ onClose }) => {
@@ -16,7 +16,7 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({ onClose }) => {
     displayMode,
     setDisplayMode,
     isStreamMode,
-    setIsStreamMode, 
+    setIsStreamMode,
     isWebcamOverlayVisible,
     setIsWebcamOverlayVisible,
     webcamOn,
@@ -83,39 +83,32 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({ onClose }) => {
         {/* Webcam Video */}
         <video ref={videoRef} autoPlay muted className="webcam-video" />
 
-        {/* Excalidraw Overlay */}
-        {displayMode === "draw" && (
-          <div className="excalidraw-overlay">
-            <button onClick={() => setDisplayMode("regular")}>Exit Drawing</button>
-          </div>
-        )}
+        {/* Excalidraw Overlay could be here if needed */}
       </div>
 
       {/* Webcam Controls: Render only in full-screen stream mode */}
       {isStreamMode && (
-        <div className="webcam-controls" style={{ zIndex: 1010 }}>
-          <button
+        <div className="webcam-controls">
+          <InteractiveButton
             onClick={() => {
               // Exit full-screen stream view without hiding the small overlay.
               setIsWebcamOverlayVisible(true); // Ensure small overlay remains visible.
-              // Exit stream mode.
-              // Note: setIsStreamMode should be available from the global context.
-              // (Make sure it is correctly destructured in the line above.)
-              // @ts-ignore - if TypeScript still complains, verify your GlobalUIContext.
               setIsStreamMode(false);
               onClose();
             }}
           >
             Exit Stream
-          </button>
-          <button onClick={handleSwitchCamera}>Switch Camera</button>
-          <button
+          </InteractiveButton>
+          <InteractiveButton onClick={handleSwitchCamera}>
+            Switch Camera
+          </InteractiveButton>
+          <InteractiveButton
             onClick={() =>
               setDisplayMode(displayMode === "draw" ? "regular" : "draw")
             }
           >
             {displayMode === "draw" ? "Exit Draw" : "Draw"}
-          </button>
+          </InteractiveButton>
         </div>
       )}
     </>

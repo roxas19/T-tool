@@ -5,7 +5,7 @@ import React from "react";
 import WebcamDisplay from "./WebcamDisplay";
 import VideoPlayer from "./VideoPlayer";
 import Recording from "./Recording";
-import ExcalidrawGeneral from "./ExcalidrawGeneral"; // Handles both canvas & toolbar (including AI mode)
+import ExcalidrawGeneral from "./ExcalidrawGeneral"; // Handles canvas & toolbar (including AI mode)
 import MeetingApp from "./MeetingApp";
 import MainToolbar from "./MainToolbar";
 import MinimizedMeetingPanel from "./Meeting/MinimizedMeetingPanel";
@@ -57,7 +57,8 @@ const AppContent: React.FC = () => {
     setWebcamOn,
     isWebcamOverlayVisible,
     setIsWebcamOverlayVisible,
-    displayMode, // "regular" or "draw"
+    displayMode,
+    setDisplayMode,
   } = useGlobalUI();
 
   // Local states
@@ -92,47 +93,30 @@ const AppContent: React.FC = () => {
         onPdfUpload={handlePdfUpload}
       />
 
-      {/* PDF Viewer Overlay */}
       {pdfViewerMode && pdfSrc ? (
-        <div
-          className="pdf-viewer-overlay"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "#fff",
-            zIndex: 1000,
+        // Render PdfViewer directly (it internally splits its content and controls as siblings)
+        <PdfViewer
+          src={pdfSrc}
+          onClose={() => {
+            setPdfViewerMode(false);
+            setPdfSrc(null);
+            // Reset draw mode when closing the PDF viewer.
+            setDisplayMode("regular");
           }}
-        >
-          <PdfViewer
-            src={pdfSrc}
-            onClose={() => {
-              setPdfViewerMode(false);
-              setPdfSrc(null);
-            }}
-          />
-        </div>
+        />
       ) : (
+        // When not in PDF viewer mode, render other app components.
         <>
-          {/* Webcam Overlay */}
           <WebcamDisplay onClose={handleWebcamClose} />
 
-          {/* Always render the ExcalidrawGeneral; its internal logic handles mode-specific styling */}
-          <ExcalidrawGeneral />
-
-          {/* Video Player */}
           {isVideoPlayerVisible && (
             <div className="floating-video">
               <VideoPlayer playbackMode={playbackMode} />
             </div>
           )}
 
-          {/* Recording Indicator */}
           <Recording isRecording={isRecording} />
 
-          {/* Meeting Overlay */}
           {isMeetingActive && (
             <>
               <MediaToggleProvider>
@@ -166,6 +150,9 @@ const AppContent: React.FC = () => {
           )}
         </>
       )}
+
+      {/* Always render ExcalidrawGeneral once */}
+      <ExcalidrawGeneral />
     </div>
   );
 };

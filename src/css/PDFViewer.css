@@ -1,88 +1,96 @@
-.pdf-viewer-reorg1 {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: grid;
-  /* Top row fixed at 75px, main area fills remaining space */
-  grid-template-rows: 85px 1fr;
-}
-
-/* Top row with three sections */
-.pdf-top-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  background-color: #f5f5f5; /* Example background color */
-  padding: 0 1rem; /* Horizontal padding */
-  border-bottom: 1px solid #ccc;
-}
-
-/* Left controls: page navigation */
-.pdf-controls-left-box {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-/* Center placeholder for main toolbar (if needed) */
-.pdf-top-center-box {
-  text-align: center;
-}
-
-/* Right controls: exit button */
-.pdf-controls-right-box {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-/* Main area for PDF canvas */
-.pdf-main-area {
-  position: relative;
-  overflow: auto;
-  background-color: #ddd; /* Optional background for visualization */
-}
-
-/* PDF canvas styling */
-.pdf-canvas {
-  display: block;
-  margin: 0 auto;
-}
-
-/* Zoom slider area anchored at bottom-right */
-.pdf-zoom-area {
-  position: absolute;
-  bottom: 1rem;
-  right: 1rem;
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 0.5rem 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.zoom-range {
-  width: 80px;
-}
-
-/* Page info styling */
-.page-info {
-  font-weight: bold;
-}
-
-/* Exit button styling */
-.exit-btn {
-  background-color: #f44336;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-/* Optional: styling for buttons on hover */
-button:hover {
-  opacity: 0.9;
-}
+/* --------------------------
+   PDF Viewer Container
+-------------------------- */
+/* New parent wrapper that holds both the PDF content and controls.
+   It uses a relative position and a base z-index. */
+   .pdf-viewer-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: var(--z-index-background);  /* e.g., 1000 */
+  }
+  
+  /* --------------------------
+     PDF Viewer Content
+  -------------------------- */
+  /* This section renders the PDF canvas and scrollable area.
+     We removed the grid layout from before. */
+  .pdf-viewer-reorg1 {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: #ddd; /* Optional background for visualization */
+  }
+  
+  .pdf-canvas {
+    display: block;
+    margin: 0 auto;
+  }
+  
+  /* --------------------------
+     PDF Viewer Controls
+  -------------------------- */
+  /* New controls container that is rendered as a sibling to the content.
+     Positioned fixed at the top with a high z-index to ensure interactivity 
+     even when overlays (like Excalidraw) are present. */
+  .pdf-viewer-controls {
+    position: fixed; /* Fixed so controls remain at the top of the viewport */
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: var(--z-index-extra);  /* e.g., 1100, ensuring it sits above other layers */
+    background-color: rgba(245, 245, 245, 0.95); /* Semi-transparent background */
+    padding: 0.5rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    pointer-events: auto; /* Ensure controls can receive clicks */
+  }
+  
+  /* Left Controls Container */
+  .pdf-controls-left-box {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  
+  /* Right Controls Container */
+  .pdf-controls-right-box {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  
+  /* Zoom Area inside Controls */
+  .zoom-area {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .zoom-range {
+    width: 80px;
+  }
+  
+  /* Page Info Styling */
+  .page-info {
+    font-weight: bold;
+  }
+  
+  /* Exit Button Styling */
+  .exit-btn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  /* Optional: styling for all buttons on hover */
+  button:hover {
+    opacity: 0.9;
+  }
+  

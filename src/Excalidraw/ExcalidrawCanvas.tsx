@@ -37,12 +37,10 @@ export type DisplayMode = "regular" | "draw";
 
 // Define the props for ExcalidrawCanvas.
 interface ExcalidrawCanvasProps {
-  onSelectedElementChange?: (selectedElement: any) => void;
+  // No additional props needed for our simplified version.
 }
 
-const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
-  onSelectedElementChange,
-}) => {
+const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = () => {
   const { displayMode, setExcalidrawAPI } = useGlobalUI();
   const [excalidrawAPI, setLocalExcalidrawAPI] = useState<CustomExcalidrawAPI | null>(null);
 
@@ -64,24 +62,6 @@ const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
     }
   }, [displayMode, excalidrawAPI]);
 
-  // onChange callback: capture the selected element and notify parent.
-  const handleChange = (
-    elements: readonly any[],
-    appState: any,
-    files: any
-  ) => {
-    let selEl = null;
-    if (appState.selectedElementIds && Object.keys(appState.selectedElementIds).length > 0) {
-      // Get the first selected element ID.
-      const selectedId = Object.keys(appState.selectedElementIds)[0];
-      // Find the element in the current scene.
-      selEl = elements.find((el) => el.id === selectedId) || null;
-    }
-    if (onSelectedElementChange) {
-      onSelectedElementChange(selEl);
-    }
-  };
-
   const wrapperClass = displayMode === "draw" ? "excalidraw-draw-mode" : "";
   const wrapperStyle: React.CSSProperties =
     displayMode === "draw"
@@ -98,10 +78,13 @@ const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
           height: "100%",
         };
 
+  // Set initialData if needed (applied at mount).
   const initialData = {
     appState: {
       viewBackgroundColor: displayMode === "draw" ? "transparent" : "#ffffff",
       gridSize: null,
+      // You can add additional defaults here if desired, but note that
+      // initialData only applies at mount time.
     },
   };
 
@@ -111,7 +94,6 @@ const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({
         <Excalidraw
           excalidrawAPI={handleExcalidrawAPI}
           initialData={initialData}
-          onChange={handleChange}
           UIOptions={{
             canvasActions: {
               changeViewBackgroundColor: false,

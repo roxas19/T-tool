@@ -1,0 +1,21 @@
+.interactive-button {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    background-color: #ffffff;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+    /* Ensure that interactive buttons always remain on top */
+    z-index: var(--z-index-extra);
+  }
+  
+  .interactive-button:hover {
+    background-color: #e0e0e0;
+  }
+  
+  .interactive-button:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(25, 118, 210, 0.5);
+  }
+  

@@ -1,37 +1,35 @@
-// ExcalidrawGeneral.tsx
 import React, { useState } from "react";
 import { useGlobalUI } from "./context/GlobalUIContext";
 import ExcalidrawCanvas from "./Excalidraw/ExcalidrawCanvas";
 import ExcalidrawToolbar from "./Excalidraw/ExcalidrawToolbar";
-import ExcalidrawElementEditor from "./Excalidraw/ExcalidrawElementEditor";
 import "./css/Excalidraw.css";
 
 const ExcalidrawGeneral: React.FC = () => {
   const { displayMode, isStreamMode, pdfViewerMode } = useGlobalUI();
 
+  // We no longer need to track selected element or custom editor state.
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
-  const [selectedElement, setSelectedElement] = useState<any | null>(null);
-  // New state to control whether the built-in "island" (App-menu__left) is visible.
+  // State to control whether the built-in "island" (editor panel) is visible.
   const [isIslandVisible, setIsIslandVisible] = useState<boolean>(true);
 
-  // Decide if we need to hide the entire Excalidraw UI.
-  const shouldHideExcalidraw = pdfViewerMode || (isStreamMode && displayMode !== "draw");
+  // Only hide Excalidraw if we're in PDF viewer mode or stream mode AND not in draw mode.
+  const shouldHideExcalidraw = ((pdfViewerMode || isStreamMode) && displayMode !== "draw");
 
   const handleToolSelect = (tool: string) => {
     setSelectedTool(tool);
   };
 
-  // Toggle the visibility of the built-in island UI.
+  // Toggle the visibility of the built-in island editor.
   const toggleIslandVisibility = () => {
     setIsIslandVisible((prev) => !prev);
   };
 
+  // When in draw mode, add a class to "hoist" the container
+  const containerClass = `excalidraw-general ${shouldHideExcalidraw ? "excalidraw-hidden" : ""} ${!isIslandVisible ? "hide-island" : ""} ${displayMode === "draw" ? "excalidraw-draw-active" : ""}`;
+
   return (
-    <div
-      className={`excalidraw-general ${shouldHideExcalidraw ? "excalidraw-hidden" : ""} ${!isIslandVisible ? "hide-island" : ""}`}
-      style={{ height: "100%", position: "relative" }}
-    >
-      {/* Overlay toggle button in the top-left corner */}
+    <div className={containerClass} style={{ height: "100%" }}>
+      {/* Toggle button for the built-in island editor */}
       <button
         onClick={toggleIslandVisibility}
         style={{
@@ -45,23 +43,11 @@ const ExcalidrawGeneral: React.FC = () => {
       >
         {isIslandVisible ? "Hide Island" : "Show Island"}
       </button>
-
-      {/* ExcalidrawCanvas passes the selected element via onSelectedElementChange */}
-      <ExcalidrawCanvas onSelectedElementChange={setSelectedElement} />
-
-      {/* Custom toolbar for selecting tools */}
+      <ExcalidrawCanvas />
       <ExcalidrawToolbar
         className={`custom-toolbar ${displayMode === "draw" ? "stream-toolbar" : ""}`}
         onToolSelect={handleToolSelect}
       />
-
-      {/* Render the custom editor panel only when an element is selected */}
-      {selectedElement && (
-        <ExcalidrawElementEditor
-          selectedElement={selectedElement}
-          onClose={() => setSelectedElement(null)}
-        />
-      )}
     </div>
   );
 };
