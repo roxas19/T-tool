@@ -5,42 +5,41 @@ import ExcalidrawToolbar from "./Excalidraw/ExcalidrawToolbar";
 import "./css/Excalidraw.css";
 
 const ExcalidrawGeneral: React.FC = () => {
-  const { displayMode, isStreamMode, pdfViewerMode } = useGlobalUI();
+  const { displayMode, isStreamMode, pdfViewerMode, overlayZIndices } = useGlobalUI();
 
-  // We no longer need to track selected element or custom editor state.
-  const [selectedTool, setSelectedTool] = useState<string | null>(null);
-  // State to control whether the built-in "island" (editor panel) is visible.
+  // Local state for the built-in "island" (editor panel)
   const [isIslandVisible, setIsIslandVisible] = useState<boolean>(true);
+  // No need to track the selected tool here beyond local usage.
+  const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
-  // Only hide Excalidraw if we're in PDF viewer mode or stream mode AND not in draw mode.
+  // Compute visibility: hide Excalidraw when in PDF or stream mode (unless in draw mode)
   const shouldHideExcalidraw = ((pdfViewerMode || isStreamMode) && displayMode !== "draw");
 
   const handleToolSelect = (tool: string) => {
     setSelectedTool(tool);
   };
 
-  // Toggle the visibility of the built-in island editor.
   const toggleIslandVisibility = () => {
     setIsIslandVisible((prev) => !prev);
   };
 
-  // When in draw mode, add a class to "hoist" the container
-  const containerClass = `excalidraw-general ${shouldHideExcalidraw ? "excalidraw-hidden" : ""} ${!isIslandVisible ? "hide-island" : ""} ${displayMode === "draw" ? "excalidraw-draw-active" : ""}`;
+  // Compose the container class based on current state
+  const containerClass = `excalidraw-general ${
+    shouldHideExcalidraw ? "excalidraw-hidden" : ""
+  } ${!isIslandVisible ? "hide-island" : ""} ${
+    displayMode === "draw" ? "excalidraw-draw-active" : ""
+  }`;
+
+  // If in draw mode, apply the overlay z-index from the context
+  const containerStyle: React.CSSProperties = {
+    height: "100%",
+    ...(displayMode === "draw" && { zIndex: overlayZIndices.overlay }),
+  };
 
   return (
-    <div className={containerClass} style={{ height: "100%" }}>
+    <div className={containerClass} style={containerStyle}>
       {/* Toggle button for the built-in island editor */}
-      <button
-        onClick={toggleIslandVisibility}
-        style={{
-          position: "absolute",
-          top: 10,
-          left: 10,
-          zIndex: 1200,
-          padding: "5px 10px",
-          fontSize: "14px",
-        }}
-      >
+      <button className="excalidraw-toggle-btn" onClick={toggleIslandVisibility}>
         {isIslandVisible ? "Hide Island" : "Show Island"}
       </button>
       <ExcalidrawCanvas />

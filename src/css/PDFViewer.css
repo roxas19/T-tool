@@ -1,96 +1,120 @@
 /* --------------------------
    PDF Viewer Container
 -------------------------- */
-/* New parent wrapper that holds both the PDF content and controls.
-   It uses a relative position and a base z-index. */
-   .pdf-viewer-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    z-index: var(--z-index-background);  /* e.g., 1000 */
-  }
-  
-  /* --------------------------
-     PDF Viewer Content
-  -------------------------- */
-  /* This section renders the PDF canvas and scrollable area.
-     We removed the grid layout from before. */
-  .pdf-viewer-reorg1 {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: #ddd; /* Optional background for visualization */
-  }
-  
-  .pdf-canvas {
-    display: block;
-    margin: 0 auto;
-  }
-  
-  /* --------------------------
-     PDF Viewer Controls
-  -------------------------- */
-  /* New controls container that is rendered as a sibling to the content.
-     Positioned fixed at the top with a high z-index to ensure interactivity 
-     even when overlays (like Excalidraw) are present. */
-  .pdf-viewer-controls {
-    position: fixed; /* Fixed so controls remain at the top of the viewport */
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: var(--z-index-extra);  /* e.g., 1100, ensuring it sits above other layers */
-    background-color: rgba(245, 245, 245, 0.95); /* Semi-transparent background */
-    padding: 0.5rem 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    pointer-events: auto; /* Ensure controls can receive clicks */
-  }
-  
-  /* Left Controls Container */
-  .pdf-controls-left-box {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-  }
-  
-  /* Right Controls Container */
-  .pdf-controls-right-box {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-  }
-  
-  /* Zoom Area inside Controls */
-  .zoom-area {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  
-  .zoom-range {
-    width: 80px;
-  }
-  
-  /* Page Info Styling */
-  .page-info {
-    font-weight: bold;
-  }
-  
-  /* Exit Button Styling */
-  .exit-btn {
-    background-color: #f44336;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-  
-  /* Optional: styling for all buttons on hover */
-  button:hover {
-    opacity: 0.9;
-  }
-  
+.pdf-viewer-container {
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* --------------------------
+   PDF Content Layer
+-------------------------- */
+.pdf-content-layer {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+/* Center the PDF canvas within its container */
+.pdf-main-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100%;
+}
+
+/* The PDF canvas itself */
+.pdf-canvas {
+  max-width: 100%;
+  max-height: 100%;
+  /* Optional: add a subtle border or shadow if desired */
+  /* border: 1px solid #ddd; */
+}
+
+/* --------------------------
+   PDF Controls Layer
+-------------------------- */
+.pdf-controls-layer {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-index-controls);
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* Ensure the controls don’t stretch across the entire width */
+  max-width: 90%;
+}
+
+/* Inner layout for control sections */
+.pdf-controls-left-box,
+.pdf-controls-right-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Page info styling */
+.page-info {
+  font-size: 14px;
+}
+
+/* --------------------------
+   Zoom Area Styles
+-------------------------- */
+.zoom-area {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.zoom-value,
+.zoom-label {
+  font-size: 14px;
+}
+
+.zoom-range {
+  width: 100px;
+}
+
+/* --------------------------
+   Button Styles for Draw and Exit
+-------------------------- */
+.draw-btn,
+.exit-btn {
+  padding: 8px 12px;
+  background-color: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.draw-btn:hover,
+.exit-btn:hover {
+  background-color: #0d47a1;
+}
+
+/* --------------------------
+   Utility Classes
+-------------------------- */
+.pointer-none {
+  pointer-events: none;
+}

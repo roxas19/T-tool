@@ -1,8 +1,8 @@
 :root {
-    --z-index-background: 1000;  /* Base layer for PDF viewer, fullscreen webcam */
-    --z-index-overlay: 1002;     /* Excalidraw overlay, to appear above background layers */
-    --z-index-toolbar: 1003;     /* Toolbars in stream or draw modes */
-    --z-index-controls: 1010;    /* Webcam controls, meeting buttons, etc. */
-    --z-index-extra: 1100;       /* Always-on-top elements like integrated Draw button */
+    --z-index-background: 1000; /* Base background elements (e.g. PDF viewer, fullscreen webcam background) */
+    --z-index-overlay: 1002;    /* Overlays (e.g. Excalidraw draw mode, webcam small container) */
+    --z-index-toolbar: 1050;    /* Toolbars (e.g. meeting controls) */
+    --z-index-controls: 1010;   /* Webcam controls, meeting buttons */
+    --z-index-extra: 1100;      /* Always-on-top elements (e.g. toggle buttons, main toolbar) */
   }
   

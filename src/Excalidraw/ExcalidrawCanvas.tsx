@@ -1,10 +1,8 @@
-// ExcalidrawCanvas.tsx
 import React, { useState, useEffect } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
 import { useGlobalUI } from "../context/GlobalUIContext";
-import "../css/Excalidraw.css"; // Import our custom CSS overrides
+import "../css/Excalidraw.css";
 
-// --- Types ---
 export type CustomExcalidrawAPI = {
   updateScene: (sceneData: any, opts?: { commitToStore?: boolean }) => void;
   getSceneElements: () => readonly any[];
@@ -35,23 +33,20 @@ export type CustomExcalidrawAPI = {
 
 export type DisplayMode = "regular" | "draw";
 
-// Define the props for ExcalidrawCanvas.
-interface ExcalidrawCanvasProps {
-  // No additional props needed for our simplified version.
-}
+interface ExcalidrawCanvasProps {}
 
 const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = () => {
-  const { displayMode, setExcalidrawAPI } = useGlobalUI();
+  const { displayMode, setExcalidrawAPI, overlayZIndices } = useGlobalUI();
   const [excalidrawAPI, setLocalExcalidrawAPI] = useState<CustomExcalidrawAPI | null>(null);
 
-  // Capture and forward the Excalidraw API to global context.
+  // Capture and forward the Excalidraw API to global state.
   const handleExcalidrawAPI = (api: any) => {
     const typedAPI = api as CustomExcalidrawAPI;
     setLocalExcalidrawAPI(typedAPI);
     setExcalidrawAPI(typedAPI);
   };
 
-  // Update the canvas background when displayMode changes.
+  // Update the canvas background color based on the display mode.
   useEffect(() => {
     if (excalidrawAPI) {
       excalidrawAPI.updateScene({
@@ -62,6 +57,7 @@ const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = () => {
     }
   }, [displayMode, excalidrawAPI]);
 
+  // Compute the wrapper style.
   const wrapperClass = displayMode === "draw" ? "excalidraw-draw-mode" : "";
   const wrapperStyle: React.CSSProperties =
     displayMode === "draw"
@@ -72,19 +68,18 @@ const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = () => {
           width: "100%",
           height: "100%",
           backgroundColor: "transparent",
+          zIndex: overlayZIndices.overlay,
         }
       : {
           width: "100%",
           height: "100%",
         };
 
-  // Set initialData if needed (applied at mount).
+  // Initial Excalidraw configuration
   const initialData = {
     appState: {
       viewBackgroundColor: displayMode === "draw" ? "transparent" : "#ffffff",
       gridSize: null,
-      // You can add additional defaults here if desired, but note that
-      // initialData only applies at mount time.
     },
   };
 

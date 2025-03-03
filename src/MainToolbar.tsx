@@ -1,11 +1,10 @@
 import React from "react";
-import { useGlobalUI } from "./context/GlobalUIContext"; // Import the global context hook
+import { useGlobalUI } from "./context/GlobalUIContext";
 
 type MainToolbarProps = {
   onToggleRecording: () => void;
   isRecording: boolean;
   setIsMeetingActive: React.Dispatch<React.SetStateAction<boolean>>;
-  // New prop for PDF upload callback
   onPdfUpload: (file: File) => void;
 };
 
@@ -15,14 +14,13 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
   setIsMeetingActive,
   onPdfUpload,
 }) => {
-  // Access global webcam, stream states, and the Excalidraw API from the global UI context.
   const {
     webcamOn,
     setWebcamOn,
     setIsStreamMode,
     isWebcamOverlayVisible,
     setIsWebcamOverlayVisible,
-    excalidrawAPI, // Now retrieved from global context
+    excalidrawAPI,
   } = useGlobalUI();
 
   const handleResetCanvas = () => {
@@ -43,17 +41,14 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     console.log("Image tool activated for upload.");
   };
 
-  // PDF file input handler
   const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       onPdfUpload(file);
-      // Clear the input value so that the same file can be re-uploaded if needed
       e.target.value = "";
     }
   };
 
-  // Toggle Webcam: When pressed, it flips the webcamOn state and updates overlay visibility accordingly.
   const toggleWebcam = () => {
     if (webcamOn) {
       setWebcamOn(false);
@@ -70,35 +65,21 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
       <button onClick={handleImageUpload}>Upload Image</button>
 
       {/* PDF Upload Button */}
-      <label
-        htmlFor="pdf-upload"
-        style={{
-          cursor: "pointer",
-          margin: "0 10px",
-          padding: "8px 16px",
-          backgroundColor: "#007bff",
-          color: "#fff",
-          borderRadius: "4px",
-          display: "inline-block",
-        }}
-      >
+      <label htmlFor="pdf-upload" className="pdf-upload-button">
         Upload PDF
         <input
           id="pdf-upload"
           type="file"
           accept="application/pdf"
-          style={{ display: "none" }}
           onChange={handlePdfChange}
+          style={{ display: "none" }}
         />
       </label>
 
-      {/* Webcam Toggle */}
       <button onClick={toggleWebcam}>Toggle Webcam</button>
 
-      {/* Stream View (Enables Stream Mode and Webcam) */}
       <button
         onClick={() => {
-          // Set stream mode to true, ensure webcam is on, and hide small overlay.
           setIsStreamMode(true);
           setWebcamOn(true);
           setIsWebcamOverlayVisible(false);
@@ -107,12 +88,10 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
         Stream View
       </button>
 
-      {/* Recording Toggle */}
       <button onClick={onToggleRecording}>
         {isRecording ? "Stop Recording" : "Start Recording"}
       </button>
 
-      {/* Start Meeting Button */}
       <button onClick={() => setIsMeetingActive(true)}>Start Meeting</button>
     </div>
   );

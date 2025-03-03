@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useGlobalUI } from "./context/GlobalUIContext"; // Import the global context hook
+import { useGlobalUI } from "./context/GlobalUIContext";
 import "./css/WebcamDisplay.css";
-import InteractiveButton from "./utils/InteractiveButton"; // Import the shared button component
+import InteractiveButton from "./utils/InteractiveButton";
 
 // Define the unified display mode type.
 export type DisplayMode = "regular" | "draw";
@@ -11,7 +11,7 @@ type WebcamDisplayProps = {
 };
 
 const WebcamDisplay: React.FC<WebcamDisplayProps> = ({ onClose }) => {
-  // Retrieve global states from GlobalUIContext.
+  // Retrieve global states including overlayZIndices for centralized layering.
   const {
     displayMode,
     setDisplayMode,
@@ -20,6 +20,7 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({ onClose }) => {
     isWebcamOverlayVisible,
     setIsWebcamOverlayVisible,
     webcamOn,
+    overlayZIndices,
   } = useGlobalUI();
 
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
@@ -73,22 +74,30 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({ onClose }) => {
   // Render only if the webcam is on and either we're in stream view or the small overlay is visible.
   if (!webcamOn || (!isStreamMode && !isWebcamOverlayVisible)) return null;
 
+  // For full-screen mode, use the background z-index from the overlay manager.
+  const containerStyle: React.CSSProperties = isStreamMode
+    ? { zIndex: overlayZIndices.background }
+    : {};
+
   return (
     <>
       <div
         className={`webcam-container ${isStreamMode ? "fullscreen" : ""} ${
           displayMode === "draw" ? "draw-mode" : "stream-mode"
         }`}
+        style={containerStyle}
       >
         {/* Webcam Video */}
         <video ref={videoRef} autoPlay muted className="webcam-video" />
-
-        {/* Excalidraw Overlay could be here if needed */}
       </div>
 
       {/* Webcam Controls: Render only in full-screen stream mode */}
       {isStreamMode && (
-        <div className="webcam-controls">
+        <div
+          className="webcam-controls"
+          // Inline style ensures controls use the centralized controls z-index.
+          style={{ zIndex: overlayZIndices.controls }}
+        >
           <InteractiveButton
             onClick={() => {
               // Exit full-screen stream view without hiding the small overlay.

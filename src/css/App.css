@@ -1,5 +1,22 @@
 @import "./Variables.css";
 
+/* --------------------------
+   Global Button & Element Styles
+-------------------------- */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+button:focus {
+  box-shadow: 0 0 5px rgba(25, 118, 210, 0.5);
+}
+
+/* --------------------------
+   Main Toolbar
+-------------------------- */
 .main-toolbar {
   position: fixed;
   top: 10px;
@@ -9,44 +26,61 @@
   padding: 10px 20px;
   border-radius: 8px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  z-index: 1003;
+  z-index: var(--z-index-extra);
   display: flex;
   gap: 10px;
 }
 
 .main-toolbar.stream-toolbar {
   background: rgba(0, 0, 0, 0.8);
-  z-index: 1003;
 }
 
 .main-toolbar button {
   padding: 8px 12px;
-  border: none;
   background-color: #1976d2;
-  color: #ffffff;
+  color: #fff;
   border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
   margin-right: 10px;
+  transition: background-color 0.2s ease-in-out;
 }
 
 .main-toolbar button:hover {
   background-color: #0d47a1;
 }
 
+/* PDF Upload Button */
+.pdf-upload-button {
+  cursor: pointer;
+  margin: 0 10px;
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: #fff;
+  border-radius: 4px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.pdf-upload-button:hover {
+  background-color: #0056b3;
+}
+
 /* --------------------------
    Tool Config Menu
 -------------------------- */
 .tool-config-menu {
-  position: absolute;
+  position: fixed; /* Fixed positioning to avoid stacking issues */
   top: 60px;
   right: 20px;
   background: rgba(255, 255, 255, 0.95);
   padding: 10px;
   border-radius: 8px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  z-index: var(--z-index-extra);
   width: 150px;
+}
+
+.tool-config-menu h4 {
+  margin: 0 0 5px;
+  font-size: 14px;
 }
 
 .color-options {
@@ -57,46 +91,7 @@
 .color-options button {
   width: 24px;
   height: 24px;
-  border: none;
   border-radius: 4px;
   cursor: pointer;
-}
-
-.tool-config-menu h4 {
-  margin: 0 0 5px;
-  font-size: 14px;
-}
-
-/* --------------------------
-   PDF Upload Button
--------------------------- */
-.pdf-upload-button {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  padding: 10px 15px;
-  font-size: 14px;
-  background-color: #007bff;
-  color: #fff;
   border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  z-index: 10;
-}
-
-.pdf-upload-button:hover {
-  background-color: #0056b3;
-}
-
-/* --------------------------
-   General Button Styles
--------------------------- */
-button {
-  font-family: inherit;
-  cursor: pointer;
-}
-
-button:focus {
-  outline: none;
-  box-shadow: 0 0 5px rgba(25, 118, 210, 0.5);
 }
