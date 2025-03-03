@@ -11,6 +11,7 @@ import MainToolbar from "./MainToolbar";
 import MinimizedMeetingPanel from "./Meeting/MinimizedMeetingPanel";
 import PdfViewer from "./PDFViewer";
 
+
 // Media toggle context provider
 import { MediaToggleProvider } from "./Meeting/MediaToggleContext";
 
@@ -126,6 +127,7 @@ const AppContent: React.FC = () => {
     setPdfSrc,
     isRecording,
     setIsRecording,
+    setIsMeetingActive
   } = useGlobalUI();
 
   // Local state for floating video player.
@@ -145,7 +147,7 @@ const AppContent: React.FC = () => {
       <MainToolbar 
         onToggleRecording={() => setIsRecording((prev) => !prev)}
         isRecording={isRecording}
-        setIsMeetingActive={() => {}}
+        setIsMeetingActive={() => setIsMeetingActive(true)}
         onPdfUpload={handlePdfUpload}
       />
 
