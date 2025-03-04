@@ -1,3 +1,5 @@
+// src/Excalidraw/ExcalidrawCanvas.tsx
+
 import React, { useState, useEffect } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
 import { useGlobalUI } from "../context/GlobalUIContext";
@@ -36,26 +38,30 @@ export type DisplayMode = "regular" | "draw";
 interface ExcalidrawCanvasProps {}
 
 const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = () => {
-  const { displayMode, setExcalidrawAPI, overlayZIndices } = useGlobalUI();
-  const [excalidrawAPI, setLocalExcalidrawAPI] = useState<CustomExcalidrawAPI | null>(null);
+  const { state, dispatch } = useGlobalUI();
+  const displayMode = state.displayMode;
+  const overlayZIndices = state.overlayZIndices;
+
+  // Local state if needed; you may also rely solely on global state.
+  const [localExcalidrawAPI, setLocalExcalidrawAPI] = useState<CustomExcalidrawAPI | null>(null);
 
   // Capture and forward the Excalidraw API to global state.
   const handleExcalidrawAPI = (api: any) => {
     const typedAPI = api as CustomExcalidrawAPI;
     setLocalExcalidrawAPI(typedAPI);
-    setExcalidrawAPI(typedAPI);
+    dispatch({ type: "SET_EXCALIDRAW_API", payload: typedAPI });
   };
 
   // Update the canvas background color based on the display mode.
   useEffect(() => {
-    if (excalidrawAPI) {
-      excalidrawAPI.updateScene({
+    if (localExcalidrawAPI) {
+      localExcalidrawAPI.updateScene({
         appState: {
           viewBackgroundColor: displayMode === "draw" ? "transparent" : "#ffffff",
         },
       });
     }
-  }, [displayMode, excalidrawAPI]);
+  }, [displayMode, localExcalidrawAPI]);
 
   // Compute the wrapper style.
   const wrapperClass = displayMode === "draw" ? "excalidraw-draw-mode" : "";

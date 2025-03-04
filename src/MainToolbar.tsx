@@ -1,46 +1,41 @@
+// src/MainToolbar.tsx
 import React from "react";
 import { useGlobalUI } from "./context/GlobalUIContext";
 
 type MainToolbarProps = {
   onToggleRecording: () => void;
   isRecording: boolean;
-  setIsMeetingActive: React.Dispatch<React.SetStateAction<boolean>>;
   onPdfUpload: (file: File) => void;
 };
 
 const MainToolbar: React.FC<MainToolbarProps> = ({
   onToggleRecording,
   isRecording,
-  setIsMeetingActive,
   onPdfUpload,
 }) => {
-  const {
-    webcamOn,
-    setWebcamOn,
-    setIsStreamMode,
-    isWebcamOverlayVisible,
-    setIsWebcamOverlayVisible,
-    excalidrawAPI,
-  } = useGlobalUI();
+  const { state, dispatch } = useGlobalUI();
 
+  // Reset the Excalidraw canvas.
   const handleResetCanvas = () => {
-    excalidrawAPI?.updateScene({
+    state.excalidrawAPI?.updateScene({
       elements: [],
       appState: {
-        ...excalidrawAPI.getAppState(),
+        ...state.excalidrawAPI.getAppState(),
         viewBackgroundColor: "#ffffff",
       },
     });
   };
 
+  // Activate the image upload tool.
   const handleImageUpload = () => {
-    excalidrawAPI?.setActiveTool({
+    state.excalidrawAPI?.setActiveTool({
       type: "image",
       insertOnCanvasDirectly: true,
     });
     console.log("Image tool activated for upload.");
   };
 
+  // Handle PDF file selection.
   const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -49,13 +44,14 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     }
   };
 
+  // Toggle the webcam on/off via dispatching actions.
   const toggleWebcam = () => {
-    if (webcamOn) {
-      setWebcamOn(false);
-      setIsWebcamOverlayVisible(false);
+    if (state.webcam.on) {
+      dispatch({ type: "SET_WEBCAM_ON", payload: false });
+      dispatch({ type: "SET_WEBCAM_OVERLAY_VISIBLE", payload: false });
     } else {
-      setWebcamOn(true);
-      setIsWebcamOverlayVisible(true);
+      dispatch({ type: "SET_WEBCAM_ON", payload: true });
+      dispatch({ type: "SET_WEBCAM_OVERLAY_VISIBLE", payload: true });
     }
   };
 
@@ -80,9 +76,9 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
 
       <button
         onClick={() => {
-          setIsStreamMode(true);
-          setWebcamOn(true);
-          setIsWebcamOverlayVisible(false);
+          dispatch({ type: "SET_WEBCAM_STREAM_MODE", payload: true });
+          dispatch({ type: "SET_WEBCAM_ON", payload: true });
+          dispatch({ type: "SET_WEBCAM_OVERLAY_VISIBLE", payload: false });
         }}
       >
         Stream View
@@ -92,7 +88,9 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
         {isRecording ? "Stop Recording" : "Start Recording"}
       </button>
 
-      <button onClick={() => setIsMeetingActive(true)}>Start Meeting</button>
+      <button onClick={() => dispatch({ type: "OPEN_MEETING" })}>
+        Start Meeting
+      </button>
     </div>
   );
 };

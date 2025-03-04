@@ -12,14 +12,20 @@ interface PdfContentProps {
   renderPage: (pageNum: number, canvas: HTMLCanvasElement) => void;
 }
 
-const PdfContent: React.FC<PdfContentProps> = ({ src, pdfDoc, currentPage, zoomLevel, renderPage }) => {
-  // Create a ref for the canvas element where the PDF page will be rendered.
+const PdfContent: React.FC<PdfContentProps> = ({
+  src,
+  pdfDoc,
+  currentPage,
+  zoomLevel,
+  renderPage,
+}) => {
+  // Create a ref for the canvas element.
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  // Access global UI state to check for display mode.
-  const { displayMode } = useGlobalUI();
+  // Extract the displayMode from the new global state.
+  const { state } = useGlobalUI();
+  const displayMode = state.displayMode;
 
-  // When the PDF document, current page, or zoom level changes,
-  // re-render the page on the canvas.
+  // Re-render the page when the PDF, current page, or zoom level changes.
   useEffect(() => {
     if (canvasRef.current && pdfDoc) {
       renderPage(currentPage, canvasRef.current);

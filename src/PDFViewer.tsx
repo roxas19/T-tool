@@ -7,20 +7,21 @@ import { usePdf } from "./PdfViewer/usePdf";
 import { useGlobalUI } from "./context/GlobalUIContext";
 import "./css/PDFViewer.css";
 
-
 interface PdfViewerProps {
   src: string;
   onClose: () => void;
 }
 
 const PdfViewer: React.FC<PdfViewerProps> = ({ src, onClose }) => {
-  // Retrieve the shared PDF state and functions using our custom hook.
+  // Use the specialized hook to manage PDF state locally.
   const { pdfDoc, currentPage, zoomLevel, nextPage, prevPage, setZoomLevel, renderPage } = usePdf(src);
-  const { overlayZIndices } = useGlobalUI();
+  // Get overlay z-indexes from global context.
+  const { state } = useGlobalUI();
+  const overlayZIndices = state.overlayZIndices;
 
   return (
     <div className="pdf-viewer-container">
-      {/* PdfContent receives the PDF document and render function to display the current page */}
+      {/* PdfContent renders the PDF page */}
       <PdfContent
         src={src}
         pdfDoc={pdfDoc}
@@ -28,7 +29,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ src, onClose }) => {
         zoomLevel={zoomLevel}
         renderPage={renderPage}
       />
-      {/* PdfControls handles navigation, zoom, and mode toggling */}
+      {/* PdfControls handles navigation and zoom */}
       <PdfControls
         currentPage={currentPage}
         totalPages={pdfDoc ? pdfDoc.numPages : 0}

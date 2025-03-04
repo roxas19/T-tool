@@ -1,4 +1,4 @@
-// App.tsx
+// src/App.tsx
 import React from "react";
 
 // Custom components
@@ -11,14 +11,13 @@ import MainToolbar from "./MainToolbar";
 import MinimizedMeetingPanel from "./Meeting/MinimizedMeetingPanel";
 import PdfViewer from "./PDFViewer";
 
-
-// Media toggle context provider
+// Media toggle context provider (if still used for meeting-specific toggles)
 import { MediaToggleProvider } from "./Meeting/MediaToggleContext";
 
 // Hooks
 import { usePageNavigation } from "./hooks/usePageNavigation";
 
-// Global UI Context
+// Global UI Context (our new reducer‑based implementation)
 import { GlobalUIProvider, useGlobalUI } from "./context/GlobalUIContext";
 
 // Styles
@@ -29,80 +28,52 @@ import "./css/Excalidraw.css"; // Import dedicated Excalidraw CSS
 // OverlayManager Component: Renders all overlays as siblings
 // ---------------------
 const OverlayManager: React.FC = () => {
-  const {
-    pdfViewerMode,
-    pdfSrc,
-    setPdfViewerMode,
-    setPdfSrc,
-    setDisplayMode,
-    isStreamMode,
-    setIsStreamMode,
-    webcamOn,
-    setWebcamOn,
-    isWebcamOverlayVisible,
-    setIsWebcamOverlayVisible,
-    isMeetingActive,
-    isMeetingMinimized,
-    setIsMeetingActive,
-    setIsMeetingMinimized,
-    setMeetingState,
-  } = useGlobalUI();
+  const { state, dispatch } = useGlobalUI();
 
   const handlePdfClose = () => {
-    setPdfViewerMode(false);
-    setPdfSrc(null);
-    setDisplayMode("regular");
+    dispatch({ type: "CLOSE_PDF_VIEWER" });
+    dispatch({ type: "SET_DISPLAY_MODE", payload: "regular" });
   };
 
   const handleWebcamClose = () => {
-    if (isStreamMode) {
-      setIsStreamMode(false);
-      if (webcamOn) setIsWebcamOverlayVisible(true);
-    } else {
-      setWebcamOn(false);
-      setIsWebcamOverlayVisible(false);
-    }
+    dispatch({ type: "SET_WEBCAM_STREAM_MODE", payload: false });
+    dispatch({ type: "SET_WEBCAM_ON", payload: false });
+    dispatch({ type: "SET_WEBCAM_OVERLAY_VISIBLE", payload: false });
   };
 
   return (
     <>
       {/* PDF Viewer Overlay */}
-      {pdfViewerMode && pdfSrc && (
-        <PdfViewer src={pdfSrc} onClose={handlePdfClose} />
+      {state.pdf.isViewerActive && state.pdf.src && (
+        <PdfViewer src={state.pdf.src} onClose={handlePdfClose} />
       )}
 
       {/* Webcam Overlay */}
-      {(webcamOn && (isStreamMode || isWebcamOverlayVisible)) && (
+      {(state.webcam.on && (state.webcam.isStreamMode || state.webcam.isOverlayVisible)) && (
         <WebcamDisplay onClose={handleWebcamClose} />
       )}
 
       {/* Meeting Overlay */}
-      {isMeetingActive && (
+      {state.meeting.isActive && (
         <MediaToggleProvider>
-          <div className={`meeting-overlay ${isMeetingMinimized ? "hidden" : ""}`}>
+          <div className={`meeting-overlay ${state.meeting.isMinimized ? "hidden" : ""}`}>
             <div className="meeting-header">
               <span>Meeting in Progress</span>
-              <button onClick={() => setIsMeetingMinimized(true)}>Minimize</button>
-              <button
-                onClick={() => {
-                  setIsMeetingActive(false);
-                  setMeetingState("setup");
-                }}
-              >
+              <button onClick={() => dispatch({ type: "MINIMIZE_MEETING" })}>
+                Minimize
+              </button>
+              <button onClick={() => dispatch({ type: "CLOSE_MEETING" })}>
                 Close Meeting
               </button>
             </div>
             <MeetingApp
-              isMeetingMinimized={isMeetingMinimized}
-              onMeetingStart={() => setMeetingState("inProgress")}
-              onClose={() => {
-                setIsMeetingActive(false);
-                setMeetingState("setup");
-              }}
+              isMeetingMinimized={state.meeting.isMinimized}
+              onMeetingStart={() => dispatch({ type: "OPEN_MEETING" })}
+              onClose={() => dispatch({ type: "CLOSE_MEETING" })}
             />
           </div>
-          {isMeetingMinimized && (
-            <MinimizedMeetingPanel onMaximize={() => setIsMeetingMinimized(false)} />
+          {state.meeting.isMinimized && (
+            <MinimizedMeetingPanel onMaximize={() => dispatch({ type: "OPEN_MEETING" })} />
           )}
         </MediaToggleProvider>
       )}
@@ -116,20 +87,11 @@ const OverlayManager: React.FC = () => {
 // AppContent Component: Main layout & base content
 // ---------------------
 const AppContent: React.FC = () => {
-  // Page navigation hook.
   const { savePage, loadPage, currentPage, setCurrentPage } = usePageNavigation(null);
+  const { state, dispatch } = useGlobalUI();
 
-  // Retrieve global states from the UI context, including PDF-related setters.
-  const {
-    pdfViewerMode,
-    pdfSrc,
-    setPdfViewerMode,
-    setPdfSrc,
-    isRecording,
-    setIsRecording,
-    setIsMeetingActive
-  } = useGlobalUI();
-
+  // Local state for recording (managed locally rather than via global context)
+  const [isRecording, setIsRecording] = React.useState(false);
   // Local state for floating video player.
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = React.useState(false);
   const [playbackMode, setPlaybackMode] = React.useState<"youtube" | "local">("youtube");
@@ -137,8 +99,7 @@ const AppContent: React.FC = () => {
   // Handler for PDF uploads.
   const handlePdfUpload = (file: File) => {
     const fileUrl = URL.createObjectURL(file);
-    setPdfSrc(fileUrl);
-    setPdfViewerMode(true);
+    dispatch({ type: "OPEN_PDF_VIEWER", payload: fileUrl });
   };
 
   return (
@@ -147,7 +108,6 @@ const AppContent: React.FC = () => {
       <MainToolbar 
         onToggleRecording={() => setIsRecording((prev) => !prev)}
         isRecording={isRecording}
-        setIsMeetingActive={() => setIsMeetingActive(true)}
         onPdfUpload={handlePdfUpload}
       />
 

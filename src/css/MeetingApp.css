@@ -30,7 +30,7 @@
     width: 100vw;
     min-height: 100vh;
     background-color: #fff;
-    z-index: 9999;
+    z-index: 1000;
     display: grid;
     grid-template-rows: auto 1fr auto;
     gap: 8px;

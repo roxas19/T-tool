@@ -1,13 +1,8 @@
-// GlobalUIContext.tsx
-import React, { createContext, useContext, useState } from "react";
+// src/context/GlobalUIContext.tsx
+import React, { createContext, useContext, useReducer } from "react";
 
-// Optionally, you could import proper types from Excalidraw if available.
-// import { ExcalidrawElement, AppState, BinaryFiles } from "@excalidraw/excalidraw";
-
-/**
- * Updated CustomExcalidrawAPI type to match Excalidraw's latest API.
- * We use `any` for simplicity, but you can replace these with proper types if available.
- */
+// ---------------------
+// Excalidraw API type (unchanged for now)
 export type CustomExcalidrawAPI = {
   updateScene: (sceneData: any, opts?: { commitToStore?: boolean }) => void;
   getSceneElements: () => readonly any[];
@@ -36,14 +31,8 @@ export type CustomExcalidrawAPI = {
   ) => () => void;
 };
 
-/**
- * OverlayZIndices defines the stacking order for various UI layers.
- * The recommended usage is:
- * - background: For big behind-the-scenes overlays (PDF viewer, fullscreen webcam)
- * - overlay: For content overlays (Excalidraw in draw mode, small webcam overlay, etc.)
- * - controls: For UI controls that must appear above overlays (toolbars, meeting controls)
- * - extra: For absolutely top-level elements (e.g., emergency modals)
- */
+// ---------------------
+// Overlay Z-Indices
 export interface OverlayZIndices {
   background: number;
   overlay: number;
@@ -51,124 +40,112 @@ export interface OverlayZIndices {
   extra: number;
 }
 
-interface GlobalUIState {
-  pdfViewerMode: boolean;
-  setPdfViewerMode: React.Dispatch<React.SetStateAction<boolean>>;
-  pdfSrc: string | null;
-  setPdfSrc: React.Dispatch<React.SetStateAction<string | null>>;
-  isRecording: boolean;
-  setIsRecording: React.Dispatch<React.SetStateAction<boolean>>;
-  isMeetingActive: boolean;
-  setIsMeetingActive: React.Dispatch<React.SetStateAction<boolean>>;
-  isMeetingMinimized: boolean;
-  setIsMeetingMinimized: React.Dispatch<React.SetStateAction<boolean>>;
-  meetingState: "setup" | "inProgress";
-  setMeetingState: React.Dispatch<React.SetStateAction<"setup" | "inProgress">>;
-  displayMode: "regular" | "draw";
-  setDisplayMode: React.Dispatch<React.SetStateAction<"regular" | "draw">>;
-  isStreamMode: boolean;
-  setIsStreamMode: React.Dispatch<React.SetStateAction<boolean>>;
-  isWebcamOverlayVisible: boolean;
-  setIsWebcamOverlayVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  webcamOn: boolean;
-  setWebcamOn: React.Dispatch<React.SetStateAction<boolean>>;
-  // New state for Excalidraw API
+// ---------------------
+// Global UI State: Grouped by domain (recording removed)
+export type GlobalUIState = {
+  pdf: {
+    isViewerActive: boolean;
+    src: string | null;
+  };
+  meeting: {
+    isActive: boolean;
+    isMinimized: boolean;
+    state: "setup" | "inProgress";
+  };
+  displayMode: "regular" | "draw"; // "draw" mode means Excalidraw overlay is active.
+  webcam: {
+    on: boolean;
+    isOverlayVisible: boolean;
+    isStreamMode: boolean;
+  };
   excalidrawAPI: CustomExcalidrawAPI | null;
-  setExcalidrawAPI: React.Dispatch<React.SetStateAction<CustomExcalidrawAPI | null>>;
-  // Overlay manager state for centralized z-index handling
   overlayZIndices: OverlayZIndices;
-  setOverlayZIndices: React.Dispatch<React.SetStateAction<OverlayZIndices>>;
-  // Optional helper for retrieving a specific z-index by name
-  getZIndex: (layer: keyof OverlayZIndices) => number;
+};
+
+// ---------------------
+// Initial state definition (recording removed)
+const initialState: GlobalUIState = {
+  pdf: { isViewerActive: false, src: null },
+  meeting: { isActive: false, isMinimized: false, state: "setup" },
+  displayMode: "regular",
+  webcam: { on: false, isOverlayVisible: false, isStreamMode: false },
+  excalidrawAPI: null,
+  overlayZIndices: {
+    background: 1000, // background components (e.g. current main view)
+    overlay: 1002,    // Excalidraw draw mode overlay
+    controls: 1010,   // controls, meeting buttons, toolbars, etc.
+    extra: 1100,      // absolutely top-level elements (emergency modals, toggle buttons)
+  },
+};
+
+// ---------------------
+// Define actions for state transitions (recording actions removed)
+type Action =
+  | { type: "OPEN_PDF_VIEWER"; payload: string }
+  | { type: "CLOSE_PDF_VIEWER" }
+  | { type: "OPEN_MEETING" }
+  | { type: "MINIMIZE_MEETING" }
+  | { type: "CLOSE_MEETING" }
+  | { type: "SET_DISPLAY_MODE"; payload: "regular" | "draw" }
+  | { type: "SET_WEBCAM_ON"; payload: boolean }
+  | { type: "SET_WEBCAM_OVERLAY_VISIBLE"; payload: boolean }
+  | { type: "SET_WEBCAM_STREAM_MODE"; payload: boolean }
+  | { type: "SET_EXCALIDRAW_API"; payload: CustomExcalidrawAPI | null }
+  | { type: "SET_OVERLAY_ZINDICES"; payload: OverlayZIndices };
+
+// ---------------------
+// Reducer: Handles all state transitions (recording actions removed)
+function globalUIReducer(state: GlobalUIState, action: Action): GlobalUIState {
+  switch (action.type) {
+    case "OPEN_PDF_VIEWER":
+      return { ...state, pdf: { isViewerActive: true, src: action.payload } };
+    case "CLOSE_PDF_VIEWER":
+      return { ...state, pdf: { isViewerActive: false, src: null } };
+    case "OPEN_MEETING":
+      return { ...state, meeting: { isActive: true, isMinimized: false, state: "setup" } };
+    case "MINIMIZE_MEETING":
+      return { ...state, meeting: { ...state.meeting, isMinimized: true } };
+    case "CLOSE_MEETING":
+      return { ...state, meeting: { isActive: false, isMinimized: false, state: "setup" } };
+    case "SET_DISPLAY_MODE":
+      return { ...state, displayMode: action.payload };
+    case "SET_WEBCAM_ON":
+      return { ...state, webcam: { ...state.webcam, on: action.payload } };
+    case "SET_WEBCAM_OVERLAY_VISIBLE":
+      return { ...state, webcam: { ...state.webcam, isOverlayVisible: action.payload } };
+    case "SET_WEBCAM_STREAM_MODE":
+      return { ...state, webcam: { ...state.webcam, isStreamMode: action.payload } };
+    case "SET_EXCALIDRAW_API":
+      return { ...state, excalidrawAPI: action.payload };
+    case "SET_OVERLAY_ZINDICES":
+      return { ...state, overlayZIndices: action.payload };
+    default:
+      return state;
+  }
 }
 
-const GlobalUIContext = createContext<GlobalUIState | undefined>(undefined);
+// ---------------------
+// Create context with state and dispatch
+type GlobalUIDispatch = React.Dispatch<Action>;
+const GlobalUIContext = createContext<{ state: GlobalUIState; dispatch: GlobalUIDispatch } | undefined>(undefined);
 
+// ---------------------
+// GlobalUIProvider component
 export const GlobalUIProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // UI states
-  const [pdfViewerMode, setPdfViewerMode] = useState(false);
-  const [pdfSrc, setPdfSrc] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isMeetingActive, setIsMeetingActive] = useState(false);
-  const [isMeetingMinimized, setIsMeetingMinimized] = useState(false);
-  const [meetingState, setMeetingState] = useState<"setup" | "inProgress">("setup");
-  const [displayMode, setDisplayMode] = useState<"regular" | "draw">("regular");
-  const [isStreamMode, setIsStreamMode] = useState(false);
-  const [isWebcamOverlayVisible, setIsWebcamOverlayVisible] = useState(false);
-  const [webcamOn, setWebcamOn] = useState(false);
-  // Excalidraw API reference
-  const [excalidrawAPI, setExcalidrawAPI] = useState<CustomExcalidrawAPI | null>(null);
-  
-  // Centralized overlay manager state (z-index definitions).
-  const [overlayZIndices, setOverlayZIndices] = useState<OverlayZIndices>({
-    background: 1000, // e.g., PDF viewer, fullscreen webcam
-    overlay: 1002,    // e.g., Excalidraw in draw mode, small webcam overlay
-    controls: 1010,   // e.g., meeting controls, main toolbar
-    extra: 1100,      // e.g., absolutely top-level elements (emergency modals)
-  });
-
-  // Optional convenience helper to get a specific z-index
-  const getZIndex = (layer: keyof OverlayZIndices) => overlayZIndices[layer];
-
+  const [state, dispatch] = useReducer(globalUIReducer, initialState);
   return (
-    <GlobalUIContext.Provider
-      value={{
-        pdfViewerMode,
-        setPdfViewerMode,
-        pdfSrc,
-        setPdfSrc,
-        isRecording,
-        setIsRecording,
-        isMeetingActive,
-        setIsMeetingActive,
-        isMeetingMinimized,
-        setIsMeetingMinimized,
-        meetingState,
-        setMeetingState,
-        displayMode,
-        setDisplayMode,
-        isStreamMode,
-        setIsStreamMode,
-        isWebcamOverlayVisible,
-        setIsWebcamOverlayVisible,
-        webcamOn,
-        setWebcamOn,
-        excalidrawAPI,
-        setExcalidrawAPI,
-        overlayZIndices,
-        setOverlayZIndices,
-        getZIndex,
-      }}
-    >
+    <GlobalUIContext.Provider value={{ state, dispatch }}>
       {children}
     </GlobalUIContext.Provider>
   );
 };
 
+// ---------------------
+// Custom hook for accessing Global UI context
 export const useGlobalUI = () => {
   const context = useContext(GlobalUIContext);
   if (context === undefined) {
     throw new Error("useGlobalUI must be used within a GlobalUIProvider");
   }
   return context;
-};
-
-/**
- * (Optional) A hook to quickly get booleans for each overlay.
- * You can import and use this in other components for convenience.
- */
-export const useActiveOverlays = () => {
-  const {
-    pdfViewerMode,
-    isMeetingActive,
-    isStreamMode,
-    isWebcamOverlayVisible,
-  } = useGlobalUI();
-
-  return {
-    pdfActive: pdfViewerMode,
-    meetingActive: isMeetingActive,
-    streamActive: isStreamMode,
-    webcamOverlayActive: isWebcamOverlayVisible,
-  };
 };

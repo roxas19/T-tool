@@ -23,8 +23,10 @@ const PdfControls: React.FC<PdfControlsProps> = ({
   zoomLevel,
   onZoomChange,
 }) => {
-  // Access global UI state to get the current display mode and a setter for it.
-  const { displayMode, setDisplayMode } = useGlobalUI();
+  // Extract state and dispatch from our global context.
+  const { state, dispatch } = useGlobalUI();
+  const displayMode = state.displayMode;
+
   // Compute a slider value from the zoom level (multiplying by 50 for percentage-style display).
   const sliderValue = Math.round(zoomLevel * 50);
 
@@ -34,9 +36,12 @@ const PdfControls: React.FC<PdfControlsProps> = ({
     onZoomChange(newVal / 50);
   };
 
-  // Toggle between "draw" and "regular" display modes.
+  // Toggle between "draw" and "regular" display modes using a dispatch action.
   const handleDrawToggle = () => {
-    setDisplayMode(displayMode === "draw" ? "regular" : "draw");
+    dispatch({
+      type: "SET_DISPLAY_MODE",
+      payload: displayMode === "draw" ? "regular" : "draw",
+    });
   };
 
   return (

@@ -5,14 +5,18 @@ import ExcalidrawToolbar from "./Excalidraw/ExcalidrawToolbar";
 import "./css/Excalidraw.css";
 
 const ExcalidrawGeneral: React.FC = () => {
-  const { displayMode, isStreamMode, pdfViewerMode, overlayZIndices } = useGlobalUI();
+  const { state } = useGlobalUI();
+  const displayMode = state.displayMode; // "regular" or "draw"
+  const pdfViewerMode = state.pdf.isViewerActive; // from our new grouped pdf state
+  const isStreamMode = state.webcam.isStreamMode; // from our new grouped webcam state
+  const overlayZIndices = state.overlayZIndices;
 
   // Local state for the built-in "island" (editor panel)
   const [isIslandVisible, setIsIslandVisible] = useState<boolean>(true);
-  // No need to track the selected tool here beyond local usage.
+  // Local state for the currently selected tool
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
-  // Compute visibility: hide Excalidraw when in PDF or stream mode (unless in draw mode)
+  // Hide Excalidraw if PDF viewer is active or if stream mode is active—unless we're in "draw" mode.
   const shouldHideExcalidraw = ((pdfViewerMode || isStreamMode) && displayMode !== "draw");
 
   const handleToolSelect = (tool: string) => {
@@ -23,14 +27,14 @@ const ExcalidrawGeneral: React.FC = () => {
     setIsIslandVisible((prev) => !prev);
   };
 
-  // Compose the container class based on current state
+  // Build the container class based on current state.
   const containerClass = `excalidraw-general ${
     shouldHideExcalidraw ? "excalidraw-hidden" : ""
   } ${!isIslandVisible ? "hide-island" : ""} ${
     displayMode === "draw" ? "excalidraw-draw-active" : ""
   }`;
 
-  // If in draw mode, apply the overlay z-index from the context
+  // When in draw mode, apply the overlay z-index.
   const containerStyle: React.CSSProperties = {
     height: "100%",
     ...(displayMode === "draw" && { zIndex: overlayZIndices.overlay }),

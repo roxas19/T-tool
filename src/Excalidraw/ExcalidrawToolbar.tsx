@@ -1,4 +1,4 @@
-// ExcalidrawToolbar.tsx
+// src/Excalidraw/ExcalidrawToolbar.tsx
 import React, { useState } from "react";
 import { useGlobalUI } from "../context/GlobalUIContext";
 import AIDiagrammingPanel from "./AIDiagrammingPanel";
@@ -18,12 +18,13 @@ const ExcalidrawToolbar: React.FC<ExcalidrawToolbarProps> = ({
   className = "custom-toolbar",
   onToolSelect,
 }) => {
-  const { excalidrawAPI } = useGlobalUI();
+  const { state } = useGlobalUI();
+  const excalidrawAPI = state.excalidrawAPI;
   const [mode, setMode] = useState<"normal" | "ai">("normal");
 
   const activateTool = (tool: string) => {
     if (excalidrawAPI) {
-      // Simply set the active tool.
+      // Set the active tool using the Excalidraw API.
       excalidrawAPI.setActiveTool({ type: tool });
     }
     onToolSelect(tool);
