@@ -2,9 +2,9 @@
    Webcam Container
 -------------------------- */
 .webcam-container {
-  position: fixed; /* Fixed so it sits on top of the main app layout */
-  top: 10px;
-  right: 10px;
+  /* Remove hardcoded z-index; let the Overlay Manager or inline styles handle it */
+  position: fixed; /* Still fixed by default so it floats over main layout */
+  /* No default top/right; those can be set inline or by overlay manager if desired */
   width: 200px;
   height: 150px;
   border: 2px solid #1976d2;
@@ -12,10 +12,10 @@
   overflow: hidden;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   background-color: black;
-  pointer-events: auto;
-  z-index: var(--z-index-overlay);
+  pointer-events: auto; /* Allows interaction with webcam container */
 }
 
+/* Fullscreen mode can still override everything */
 .webcam-container.fullscreen {
   top: 0;
   left: 0;
@@ -31,12 +31,12 @@
    Webcam Controls
 -------------------------- */
 .webcam-controls {
+  /* Remove hardcoded z-index; let inline style or manager handle it */
   position: fixed;
   bottom: 10px;
   left: 10px;
   display: flex;
   gap: 10px;
-  z-index: var(--z-index-controls);
   pointer-events: auto;
 }
 
@@ -59,7 +59,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  pointer-events: none;
+  pointer-events: none; /* Typically you don't want the user to click the video itself */
 }
 
 /* --------------------------
@@ -71,7 +71,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: var(--z-index-overlay);
+  /* Let the overlay manager handle z-index */
   background-color: transparent;
   pointer-events: auto;
 }

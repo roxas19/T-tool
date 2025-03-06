@@ -1,8 +1,8 @@
 // src/Excalidraw/ExcalidrawCanvas.tsx
-
 import React, { useState, useEffect } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
-import { useGlobalUI } from "../context/GlobalUIContext";
+import { useExcalidrawContext } from "../context/ExcalidrawContext";
+import { useOverlayManager } from "../context/OverlayManagerContext";
 import "../css/Excalidraw.css";
 
 export type CustomExcalidrawAPI = {
@@ -38,21 +38,24 @@ export type DisplayMode = "regular" | "draw";
 interface ExcalidrawCanvasProps {}
 
 const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = () => {
-  const { state, dispatch } = useGlobalUI();
-  const displayMode = state.displayMode;
-  const overlayZIndices = state.overlayZIndices;
+  // Retrieve the Excalidraw API from its specialized context.
+  const { excalidrawState, excalidrawDispatch } = useExcalidrawContext();
+  // Retrieve display mode and overlay z-index values from the overlay manager context.
+  const { overlayState } = useOverlayManager();
+  const displayMode = overlayState.displayMode; // assumed to be "regular" or "draw"
+  const overlayZIndices = overlayState.overlayZIndices; // assumed to be part of the overlay state
 
-  // Local state if needed; you may also rely solely on global state.
+  // Local state for the Excalidraw API reference.
   const [localExcalidrawAPI, setLocalExcalidrawAPI] = useState<CustomExcalidrawAPI | null>(null);
 
-  // Capture and forward the Excalidraw API to global state.
+  // Capture and forward the Excalidraw API to the Excalidraw context.
   const handleExcalidrawAPI = (api: any) => {
     const typedAPI = api as CustomExcalidrawAPI;
     setLocalExcalidrawAPI(typedAPI);
-    dispatch({ type: "SET_EXCALIDRAW_API", payload: typedAPI });
+    excalidrawDispatch({ type: "SET_EXCALIDRAW_API", payload: typedAPI });
   };
 
-  // Update the canvas background color based on the display mode.
+  // Update the canvas background color based on display mode.
   useEffect(() => {
     if (localExcalidrawAPI) {
       localExcalidrawAPI.updateScene({
@@ -76,12 +79,9 @@ const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = () => {
           backgroundColor: "transparent",
           zIndex: overlayZIndices.overlay,
         }
-      : {
-          width: "100%",
-          height: "100%",
-        };
+      : { width: "100%", height: "100%" };
 
-  // Initial Excalidraw configuration
+  // Initial Excalidraw configuration.
   const initialData = {
     appState: {
       viewBackgroundColor: displayMode === "draw" ? "transparent" : "#ffffff",

@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from "react";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
-import { useGlobalUI } from "../context/GlobalUIContext";
+import { useOverlayManager } from "../context/OverlayManagerContext";
 
 interface PdfContentProps {
   src: string;
@@ -21,11 +21,13 @@ const PdfContent: React.FC<PdfContentProps> = ({
 }) => {
   // Create a ref for the canvas element.
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  // Extract the displayMode from the new global state.
-  const { state } = useGlobalUI();
-  const displayMode = state.displayMode;
+  
+  // Extract displayMode from the Overlay Manager context.
+  const { overlayState } = useOverlayManager();
+  const displayMode = overlayState.displayMode;
+  const overlayZIndices = overlayState.overlayZIndices;
 
-  // Re-render the page when the PDF, current page, or zoom level changes.
+  // Re-render the page when the PDF document, current page, or zoom level changes.
   useEffect(() => {
     if (canvasRef.current && pdfDoc) {
       renderPage(currentPage, canvasRef.current);
@@ -33,7 +35,7 @@ const PdfContent: React.FC<PdfContentProps> = ({
   }, [pdfDoc, currentPage, zoomLevel, renderPage]);
 
   return (
-    <div className={`pdf-content-layer ${displayMode === "draw" ? "pointer-none" : ""}`}>
+    <div className={`pdf-content-layer ${displayMode === "draw" ? "pointer-none" : ""}`} style={{ zIndex: overlayZIndices.background }}>
       <div className="pdf-main-area">
         <canvas ref={canvasRef} className="pdf-canvas" />
       </div>

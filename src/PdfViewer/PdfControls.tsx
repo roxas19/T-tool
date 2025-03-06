@@ -1,8 +1,7 @@
 // src/pdfviewer/PdfControls.tsx
-
 import React from "react";
 import InteractiveButton from "../utils/InteractiveButton";
-import { useGlobalUI } from "../context/GlobalUIContext";
+import { useOverlayManager } from "../context/OverlayManagerContext";
 
 interface PdfControlsProps {
   currentPage: number;
@@ -23,29 +22,30 @@ const PdfControls: React.FC<PdfControlsProps> = ({
   zoomLevel,
   onZoomChange,
 }) => {
-  // Extract state and dispatch from our global context.
-  const { state, dispatch } = useGlobalUI();
-  const displayMode = state.displayMode;
+  // Extract display mode and dispatch from the Overlay Manager context.
+  const { overlayState, overlayDispatch } = useOverlayManager();
+  const displayMode = overlayState.displayMode;
+  const overlayZIndices = overlayState.overlayZIndices;
 
-  // Compute a slider value from the zoom level (multiplying by 50 for percentage-style display).
+  // Compute a slider value from the zoom level (multiplying by 50 for a percentage-style display).
   const sliderValue = Math.round(zoomLevel * 50);
 
-  // Handler to update zoom level based on the slider value.
+  // Handler to update the zoom level.
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVal = Number(e.target.value);
     onZoomChange(newVal / 50);
   };
 
-  // Toggle between "draw" and "regular" display modes using a dispatch action.
+  // Toggle between "draw" and "regular" display modes by dispatching an action.
   const handleDrawToggle = () => {
-    dispatch({
+    overlayDispatch({
       type: "SET_DISPLAY_MODE",
       payload: displayMode === "draw" ? "regular" : "draw",
     });
   };
 
   return (
-    <div className="pdf-controls-layer">
+    <div className="pdf-controls-layer" style={{ zIndex: overlayZIndices.controls }}>
       <div className="pdf-controls-left-box">
         <InteractiveButton onClick={onPrev} disabled={currentPage <= 1}>
           Previous
