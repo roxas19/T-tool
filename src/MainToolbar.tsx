@@ -92,7 +92,8 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
           webcamDispatch({ type: "SET_WEBCAM_STREAM_MODE", payload: true });
           webcamDispatch({ type: "SET_WEBCAM_ON", payload: true });
           webcamDispatch({ type: "SET_WEBCAM_OVERLAY_VISIBLE", payload: false });
-          overlayDispatch({ type: "SET_ACTIVE_BACKGROUND", payload: "webcam" });
+          // Push the webcam overlay onto the stack.
+          overlayDispatch({ type: "PUSH_OVERLAY", payload: "webcam" });
         }}
       >
         Stream View
@@ -102,7 +103,13 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
         {isRecording ? "Stop Recording" : "Start Recording"}
       </button>
 
-      <button onClick={() => meetingDispatch({ type: "OPEN_MEETING" })}>
+      {/* Updated Meeting Button: Dispatch meeting action and push "meeting" overlay */}
+      <button
+        onClick={() => {
+          meetingDispatch({ type: "OPEN_MEETING" });
+          overlayDispatch({ type: "PUSH_OVERLAY", payload: "meeting" });
+        }}
+      >
         Start Meeting
       </button>
     </div>

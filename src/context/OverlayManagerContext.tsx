@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer } from "react";
 
-export type OverlayType = "pdf" | "webcam" | "excalidraw" | "meeting" | null;
+export type OverlayType = "pdf" | "webcam" | "excalidraw" | "meeting";
 
 export interface OverlayZIndices {
   background: number;
@@ -9,16 +9,16 @@ export interface OverlayZIndices {
   extra: number;
 }
 
-// Extend the state to include displayMode and overlayZIndices.
 export type OverlayManagerState = {
-  activeBackground: OverlayType;
+  // Stack of overlays; the last item is the active (visible) overlay.
+  activeStack: OverlayType[];
   displayMode: "regular" | "draw";
   overlayZIndices: OverlayZIndices;
 };
 
 const initialOverlayManagerState: OverlayManagerState = {
-  activeBackground: null,
-  displayMode: "regular", // default mode
+  activeStack: [],
+  displayMode: "regular",
   overlayZIndices: {
     background: 1000,
     overlay: 1002,
@@ -28,7 +28,8 @@ const initialOverlayManagerState: OverlayManagerState = {
 };
 
 type OverlayManagerAction =
-  | { type: "SET_ACTIVE_BACKGROUND"; payload: OverlayType }
+  | { type: "PUSH_OVERLAY"; payload: OverlayType }
+  | { type: "POP_OVERLAY" }
   | { type: "SET_DISPLAY_MODE"; payload: "regular" | "draw" }
   | { type: "SET_OVERLAY_ZINDICES"; payload: OverlayZIndices };
 
@@ -37,8 +38,12 @@ function overlayManagerReducer(
   action: OverlayManagerAction
 ): OverlayManagerState {
   switch (action.type) {
-    case "SET_ACTIVE_BACKGROUND":
-      return { ...state, activeBackground: action.payload };
+    case "PUSH_OVERLAY":
+      return { ...state, activeStack: [...state.activeStack, action.payload] };
+    case "POP_OVERLAY": {
+      const newStack = state.activeStack.slice(0, -1);
+      return { ...state, activeStack: newStack };
+    }
     case "SET_DISPLAY_MODE":
       return { ...state, displayMode: action.payload };
     case "SET_OVERLAY_ZINDICES":

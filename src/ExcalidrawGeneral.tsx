@@ -8,9 +8,10 @@ import "./css/Excalidraw.css";
 import { useOverlayManager } from "./context/OverlayManagerContext";
 import { usePdfContext } from "./context/PdfContext";
 import { useWebcamContext } from "./context/WebcamContext";
+import { useMeetingContext } from "./context/MeetingContext"; // NEW
 
 const ExcalidrawGeneral: React.FC = () => {
-  // Get display mode and overlay z-indices from the Overlay Manager context.
+  
   const { overlayState } = useOverlayManager();
   const displayMode = overlayState.displayMode; // "regular" or "draw"
   const overlayZIndices = overlayState.overlayZIndices;
@@ -23,14 +24,17 @@ const ExcalidrawGeneral: React.FC = () => {
   const { webcamState } = useWebcamContext();
   const isStreamMode = webcamState.isStreamMode;
 
+  // Get meeting state from MeetingContext.
+  const { meetingState } = useMeetingContext();
+
   // Local state for the built-in "island" (editor panel)
   const [isIslandVisible, setIsIslandVisible] = useState<boolean>(true);
   // Local state for the currently selected tool.
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
-  // Compute whether to hide Excalidraw: if the PDF viewer is active or in stream mode,
-  // and we're not in "draw" mode.
-  const shouldHideExcalidraw = ((pdfViewerMode || isStreamMode) && displayMode !== "draw");
+  // Compute whether to hide Excalidraw:
+  // Hide if PDF viewer, stream mode, or meeting is active and we are not in "draw" mode.
+  const shouldHideExcalidraw = ((pdfViewerMode || isStreamMode || meetingState.isActive) && displayMode !== "draw");
 
   const handleToolSelect = (tool: string) => {
     setSelectedTool(tool);

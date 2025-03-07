@@ -37,12 +37,20 @@ const AppContent: React.FC = () => {
   const { webcamState, webcamDispatch } = useWebcamContext();
   const { overlayState, overlayDispatch } = useOverlayManager();
 
+  // Determine the active overlay (top of the stack)
+  const activeOverlay =
+    overlayState.activeStack[overlayState.activeStack.length - 1];
+
+  // Derive whether the meeting overlay is minimized:
+  // If meeting is active but the active overlay is not "meeting", it's minimized.
+  const isMeetingMinimized = meetingState.isActive && activeOverlay !== "meeting";
+
   // Handler for PDF uploads.
   const handlePdfUpload = (file: File) => {
     const fileUrl = URL.createObjectURL(file);
     pdfDispatch({ type: "OPEN_PDF_VIEWER", payload: fileUrl });
-    // Mark the PDF overlay as active.
-    overlayDispatch({ type: "SET_ACTIVE_BACKGROUND", payload: "pdf" });
+    // Push the PDF overlay onto the stack.
+    overlayDispatch({ type: "PUSH_OVERLAY", payload: "pdf" });
   };
 
   return (
@@ -54,50 +62,77 @@ const AppContent: React.FC = () => {
         onPdfUpload={handlePdfUpload}
       />
 
-      {/* Render overlays based on active overlay from Overlay Manager */}
-      {pdfState.isViewerActive && pdfState.src && overlayState.activeBackground === "pdf" && (
-        <PdfViewer
-          src={pdfState.src}
-          onClose={() => {
-            pdfDispatch({ type: "CLOSE_PDF_VIEWER" });
-            overlayDispatch({ type: "SET_ACTIVE_BACKGROUND", payload: null });
-          }}
-        />
+      {/* Render PDF overlay */}
+      {pdfState.isViewerActive && pdfState.src && (
+        <div className={`pdf-viewer-wrapper ${activeOverlay === "pdf" ? "" : "hidden"}`}>
+          <PdfViewer
+            src={pdfState.src}
+            onClose={() => {
+              pdfDispatch({ type: "CLOSE_PDF_VIEWER" });
+              overlayDispatch({ type: "POP_OVERLAY" });
+            }}
+          />
+        </div>
       )}
 
-      {(webcamState.on &&
-        (webcamState.isStreamMode || webcamState.isOverlayVisible) &&
-        overlayState.activeBackground === "webcam") && (
-        <WebcamDisplay
-          onClose={() => {
-            webcamDispatch({ type: "SET_WEBCAM_STREAM_MODE", payload: false });
-            webcamDispatch({ type: "SET_WEBCAM_ON", payload: false });
-            webcamDispatch({ type: "SET_WEBCAM_OVERLAY_VISIBLE", payload: false });
-            overlayDispatch({ type: "SET_ACTIVE_BACKGROUND", payload: null });
-          }}
-        />
+      {/* Render Webcam overlay */}
+      {webcamState.on && (webcamState.isStreamMode || webcamState.isOverlayVisible) && (
+        <div className={`webcam-overlay-wrapper ${activeOverlay === "webcam" ? "" : "hidden"}`}>
+          <WebcamDisplay
+            onClose={() => {
+              webcamDispatch({ type: "SET_WEBCAM_STREAM_MODE", payload: false });
+              webcamDispatch({ type: "SET_WEBCAM_ON", payload: false });
+              webcamDispatch({ type: "SET_WEBCAM_OVERLAY_VISIBLE", payload: false });
+              overlayDispatch({ type: "POP_OVERLAY" });
+            }}
+          />
+        </div>
       )}
 
-      {meetingState.isActive && overlayState.activeBackground === "meeting" && (
+      {/* Render Meeting overlay; visibility is based on the active overlay */}
+      {meetingState.isActive && (
         <MediaToggleProvider>
-          <div className={`meeting-overlay ${meetingState.isMinimized ? "hidden" : ""}`}>
+          <div className={`meeting-overlay ${activeOverlay === "meeting" ? "" : "hidden"}`}>
             <div className="meeting-header">
               <span>Meeting in Progress</span>
-              <button onClick={() => meetingDispatch({ type: "MINIMIZE_MEETING" })}>
+              {/* You can still dispatch internal meeting actions if needed.
+                  Note: Minimization is now derived from the overlay manager. */}
+              <button
+                onClick={() => {
+                  // Optionally, you might want to pop the meeting overlay to minimize it.
+                  overlayDispatch({ type: "POP_OVERLAY" });
+                }}
+              >
                 Minimize
               </button>
-              <button onClick={() => meetingDispatch({ type: "CLOSE_MEETING" })}>
+              <button
+                onClick={() => {
+                  meetingDispatch({ type: "CLOSE_MEETING" });
+                  overlayDispatch({ type: "POP_OVERLAY" });
+                }}
+              >
                 Close Meeting
               </button>
             </div>
             <MeetingApp
-              isMeetingMinimized={meetingState.isMinimized}
-              onMeetingStart={() => meetingDispatch({ type: "OPEN_MEETING" })}
-              onClose={() => meetingDispatch({ type: "CLOSE_MEETING" })}
+              isMeetingMinimized={isMeetingMinimized}
+              onMeetingStart={() => {
+                meetingDispatch({ type: "OPEN_MEETING" });
+                // When restarting the meeting, push it onto the overlay stack.
+                overlayDispatch({ type: "PUSH_OVERLAY", payload: "meeting" });
+              }}
+              onClose={() => {
+                meetingDispatch({ type: "CLOSE_MEETING" });
+                overlayDispatch({ type: "POP_OVERLAY" });
+              }}
             />
           </div>
-          {meetingState.isMinimized && (
-            <MinimizedMeetingPanel onMaximize={() => meetingDispatch({ type: "OPEN_MEETING" })} />
+          {isMeetingMinimized && (
+            <MinimizedMeetingPanel
+              onMaximize={() =>
+                overlayDispatch({ type: "PUSH_OVERLAY", payload: "meeting" })
+              }
+            />
           )}
         </MediaToggleProvider>
       )}

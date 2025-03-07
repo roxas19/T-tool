@@ -2,10 +2,11 @@
 import React, { useState } from "react";
 import { DailyProvider } from "@daily-co/daily-react";
 import { startMeeting } from "./Meeting/meetingFunctions";
-import MeetingUI from "./Meeting/MeetingUI"; // Import the updated MeetingUI component
+import MeetingUI from "./Meeting/MeetingUI"; // Updated MeetingUI component
 import "./css/MeetingApp.css";
 
 interface MeetingAppProps {
+  // The minimized state is now derived externally (via the overlay manager)
   isMeetingMinimized: boolean;
   onMeetingStart: () => void;
   onClose: () => void;
@@ -23,14 +24,15 @@ const MeetingApp: React.FC<MeetingAppProps> = ({
     const url = await startMeeting(meetingName);
     if (url) {
       setRoomUrl(url);
-      onMeetingStart(); // Notify parent that meeting started
+      onMeetingStart(); // Notify parent that meeting started.
     } else {
       alert("Failed to start the meeting.");
     }
   };
 
+  // If there is no room URL, render the setup modal.
+  // The modal is hidden when isMeetingMinimized is true.
   if (!roomUrl) {
-    // Render setup modal
     return (
       <div className={`modal ${isMeetingMinimized ? "hidden" : ""}`}>
         <div className="modal-content">
@@ -47,7 +49,8 @@ const MeetingApp: React.FC<MeetingAppProps> = ({
     );
   }
 
-  // Render ongoing meeting UI without an extra wrapper.
+  // Once the meeting has started, render the meeting UI.
+  // The meeting UI will also be controlled externally by the overlay manager.
   return (
     <DailyProvider>
       <MeetingUI roomUrl={roomUrl} onStop={onClose} meetingName={meetingName} />

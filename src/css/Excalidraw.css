@@ -27,10 +27,13 @@
 
 /* Hide Excalidraw canvas when not active */
 .excalidraw-hidden {
-  opacity: 0;
+  visibility: hidden;
+  z-index: -10; /* Push it behind everything */
   pointer-events: none;
-  transition: opacity 0.2s ease-in-out;
+  transition: visibility 0.2s ease-in-out, opacity 0.2s ease-in-out;
+  opacity: 0;
 }
+
 
 /* --------------------------
    Custom Toolbar for Excalidraw

@@ -1,8 +1,8 @@
 // MeetingUI.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   useDaily,
-  useLocalParticipant,
+  useLocalSessionId, // Updated hook
   DailyVideo,
   useScreenShare,
 } from "@daily-co/daily-react";
@@ -20,7 +20,7 @@ export interface MeetingUIProps {
 
 const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) => {
   const daily = useDaily();
-  const localParticipant = useLocalParticipant();
+  const localSessionId = useLocalSessionId(); // Using new hook which returns a string
   const { isSharingScreen, startScreenShare, stopScreenShare } = useScreenShare();
 
   // Global permission state: maps participantId to granted permissions.
@@ -29,46 +29,66 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) =
   }>({});
 
   const [showParticipants, setShowParticipants] = useState(false);
-
-  // New state to track which video tile is expanded (clicked)
   const [expandedParticipantId, setExpandedParticipantId] = useState<string | null>(null);
 
-  // Derive granted participant IDs (those with either audio or video granted).
-  const grantedParticipantIds = Object.keys(grantedPermissions).filter(
-    (id) => grantedPermissions[id].audio || grantedPermissions[id].video
+  // Memoize granted participant IDs.
+  const grantedParticipantIds = useMemo(
+    () =>
+      Object.keys(grantedPermissions).filter(
+        (id) => grantedPermissions[id].audio || grantedPermissions[id].video
+      ),
+    [grantedPermissions]
   );
 
-  // Active grid: always include the host's session ID first,
-  // then include up to three granted participant IDs.
-  const activeParticipants = localParticipant
-    ? [localParticipant.session_id, ...grantedParticipantIds].slice(0, 4)
-    : grantedParticipantIds.slice(0, 4);
+  // Memoize active participants: host first, then include up to three granted participants.
+  const activeParticipants = useMemo(() => {
+    return localSessionId
+      ? [localSessionId, ...grantedParticipantIds].slice(0, 4)
+      : grantedParticipantIds.slice(0, 4);
+  }, [localSessionId, grantedParticipantIds]);
 
-  // Join meeting and enable local audio/video.
+  // Join meeting and enable local audio/video with cleanup.
   useEffect(() => {
     if (!daily || !roomUrl) return;
-    daily.join({ url: roomUrl }).then(() => {
-      daily.setLocalAudio(true);
-      daily.setLocalVideo(true);
-    });
-    // No automatic cleanup here; meeting stops only via the explicit Stop Meeting button.
+    let cancelled = false;
+    daily
+      .join({ url: roomUrl })
+      .then(() => {
+        if (!cancelled) {
+          daily.setLocalAudio(true);
+          daily.setLocalVideo(true);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to join meeting:", error);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [daily, roomUrl]);
 
   const handleStopMeeting = async () => {
     if (daily) {
-      await daily.leave();
+      try {
+        await daily.leave();
+      } catch (error) {
+        console.error("Error leaving meeting:", error);
+      }
     }
-    await stopMeeting(meetingName);
+    try {
+      await stopMeeting(meetingName);
+    } catch (error) {
+      console.error("Error stopping meeting:", error);
+    }
     onStop();
   };
 
   // Callback to update permissions from ParticipantList.
-  // Enforces that only up to 3 non-host participants can have permissions.
   const handlePermissionChange = (
     participantId: string,
     permission: ParticipantPermission
   ) => {
-    const isAlreadyGranted = grantedPermissions.hasOwnProperty(participantId);
+    const isAlreadyGranted = Object.prototype.hasOwnProperty.call(grantedPermissions, participantId);
     const currentGrantedCount = Object.keys(grantedPermissions).filter(
       (id) => grantedPermissions[id].audio || grantedPermissions[id].video
     ).length;
@@ -95,10 +115,9 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) =
     }
   };
 
-  // Render function to generate a video tile for a given participant ID.
-  // The tile is wrapped in an onClick handler to trigger expansion.
-  const renderTile = (participantId: string, index: number) => {
-    const isLocal = participantId === localParticipant?.session_id;
+  // Render function for a video tile.
+  const renderTile = (participantId: string) => {
+    const isLocal = participantId === localSessionId;
     const tileClass =
       isSharingScreen && isLocal ? "grid-slot screen-share-adjust" : "grid-slot";
     return (
@@ -122,10 +141,7 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) =
     <div className="meeting-content">
       {/* Video Grid Container */}
       <div className="video-grid-container">
-        <ActiveVideoGrid
-          activeParticipants={activeParticipants}
-          renderTile={renderTile}
-        />
+        <ActiveVideoGrid activeParticipants={activeParticipants} renderTile={renderTile} />
       </div>
 
       {/* Meeting Controls */}
@@ -136,10 +152,10 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) =
           isSharingScreen ? stopScreenShare() : startScreenShare()
         }
         showParticipants={showParticipants}
-        onToggleParticipants={() => setShowParticipants(!showParticipants)}
+        onToggleParticipants={() => setShowParticipants((prev) => !prev)}
       />
 
-      {/* Participant List (if toggled) */}
+      {/* Participant List */}
       {showParticipants && (
         <ParticipantList
           onPermissionChange={handlePermissionChange}
@@ -150,13 +166,12 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) =
       {/* Expanded Video Overlay */}
       {expandedParticipantId && (
         <div className="expanded-video-overlay">
-          {/* Reuse the one-tile grid structure to mimic the single-participant layout */}
           <div className="participant-grid one-tile">
             <div className="grid-slot">
               <DailyVideo
                 sessionId={expandedParticipantId}
                 type={
-                  isSharingScreen && expandedParticipantId === localParticipant?.session_id
+                  isSharingScreen && expandedParticipantId === localSessionId
                     ? "screenVideo"
                     : "video"
                 }
