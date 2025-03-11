@@ -1,45 +1,43 @@
-// src/WebcamDisplay.tsx
+// src/RealView.tsx
 import React, { useEffect, useRef, useState } from "react";
-import { useWebcamContext } from "./context/WebcamContext";
+import { useRealViewContext } from "./context/RealViewContext";
 import { useOverlayManager } from "./context/OverlayManagerContext";
-import "./css/WebcamDisplay.css";
+import "./css/RealView.css"; // Ensure your CSS file is updated accordingly.
 import InteractiveButton from "./utils/InteractiveButton";
 
 export type DisplayMode = "regular" | "draw";
 
-type WebcamDisplayProps = {
-  onClose: () => void; // Callback to close the webcam view
+type RealViewProps = {
+  onClose: () => void; // Callback to close the RealView overlay
 };
 
-const WebcamDisplay: React.FC<WebcamDisplayProps> = ({ onClose }) => {
-  // Use specialized context for webcam state.
-  const { webcamState, webcamDispatch } = useWebcamContext();
-  // Use Overlay Manager context for display mode and overlay z-indices.
+const RealView: React.FC<RealViewProps> = ({ onClose }) => {
+  // Get RealView state and dispatch from our context.
+  const { realViewState, realViewDispatch } = useRealViewContext();
+  // Get overlay state and dispatch.
   const { overlayState, overlayDispatch } = useOverlayManager();
 
   const displayMode = overlayState.displayMode;
-  const overlayZIndices = overlayState.overlayZIndices; // "regular" or "draw"
-  const isStreamMode = webcamState.isStreamMode;
-  const isWebcamOverlayVisible = webcamState.isOverlayVisible;
-  const webcamOn = webcamState.on;
-  
+  const overlayZIndices = overlayState.overlayZIndices;
+  const isStreamMode = realViewState.isStreamMode;
+  const realViewOn = realViewState.on;
 
-  // Local state for the media source: false means webcam, true means screen share.
+  // Local state: false = use webcam; true = use screen share.
   const [isScreenShare, setIsScreenShare] = useState(false);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Effect to initialize or stop the media stream based on webcamOn and source type.
+  // Effect to initialize/stop media stream based on realView state and source type.
   useEffect(() => {
     const startMedia = async () => {
       try {
-        // Stop existing stream, if any.
+        // Stop any existing stream.
         if (videoStream) {
           videoStream.getTracks().forEach((track) => track.stop());
           setVideoStream(null);
         }
-        if (webcamOn) {
+        if (realViewOn) {
           let stream: MediaStream;
           if (isScreenShare) {
             // Use screen sharing API.
@@ -70,9 +68,9 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({ onClose }) => {
       videoStream?.getTracks().forEach((track) => track.stop());
       setVideoStream(null);
     };
-  }, [webcamOn, isScreenShare, facingMode]);
+  }, [realViewOn, isScreenShare, facingMode]);
 
-  // Function to switch camera facing mode (only for webcam, not screen share).
+  // Function to switch camera (only for webcam, not for screen share).
   const handleSwitchCamera = async () => {
     if (isScreenShare) return; // Do nothing if in screen share mode.
     try {
@@ -88,10 +86,10 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({ onClose }) => {
     }
   };
 
-  // Render only if the webcam is on and either in stream mode or overlay mode.
-  if (!webcamOn || (!isStreamMode && !isWebcamOverlayVisible)) return null;
+  // Render RealView only if RealView is on and in stream mode.
+  if (!realViewOn || !isStreamMode) return null;
 
-  // For full-screen mode, use the background z-index.
+  // For full-screen mode, apply the background z-index.
   const containerStyle: React.CSSProperties = isStreamMode
     ? { zIndex: overlayZIndices.background }
     : {};
@@ -99,25 +97,24 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({ onClose }) => {
   return (
     <>
       <div
-        className={`webcam-container ${isStreamMode ? "fullscreen" : ""} ${
-          displayMode === "draw" ? "draw-mode" : "stream-mode"
+        className={`realview-container ${isStreamMode ? "fullscreen" : ""} ${
+          displayMode === "draw" ? "draw-mode" : "regular-mode"
         }`}
         style={containerStyle}
       >
-        <video ref={videoRef} autoPlay muted className="webcam-video" />
+        <video ref={videoRef} autoPlay muted className="realview-video" />
       </div>
 
       {isStreamMode && (
-        <div className="webcam-controls" style={{ zIndex: overlayZIndices.controls }}>
+        <div className="realview-controls" style={{ zIndex: overlayZIndices.controls }}>
           <InteractiveButton
             onClick={() => {
-              // Exit full-screen stream view: set overlay visible and disable stream mode.
-              webcamDispatch({ type: "SET_WEBCAM_OVERLAY_VISIBLE", payload: true });
-              webcamDispatch({ type: "SET_WEBCAM_STREAM_MODE", payload: false });
+              // Exit full-screen RealView: disable stream mode, then trigger onClose.
+              realViewDispatch({ type: "SET_REALVIEW_STREAM_MODE", payload: false });
               onClose();
             }}
           >
-            Exit Stream
+            Exit RealView
           </InteractiveButton>
           {!isScreenShare && (
             <InteractiveButton onClick={handleSwitchCamera}>
@@ -126,7 +123,7 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({ onClose }) => {
           )}
           <InteractiveButton
             onClick={() => {
-              // Toggle display mode (draw vs regular).
+              // Toggle display mode between draw and regular.
               overlayDispatch({
                 type: "SET_DISPLAY_MODE",
                 payload: displayMode === "draw" ? "regular" : "draw",
@@ -137,7 +134,7 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({ onClose }) => {
           </InteractiveButton>
           <InteractiveButton
             onClick={() => {
-              // Toggle the media source between webcam and screen share.
+              // Toggle between webcam and screen share.
               setIsScreenShare((prev) => !prev);
             }}
           >
@@ -149,4 +146,4 @@ const WebcamDisplay: React.FC<WebcamDisplayProps> = ({ onClose }) => {
   );
 };
 
-export default WebcamDisplay;
+export default RealView;

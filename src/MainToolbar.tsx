@@ -1,7 +1,7 @@
 // src/MainToolbar.tsx
 import React from "react";
 import { useExcalidrawContext } from "./context/ExcalidrawContext";
-import { useWebcamContext } from "./context/WebcamContext";
+import { useRealViewContext } from "./context/RealViewContext";
 import { useMeetingContext } from "./context/MeetingContext";
 import { useOverlayManager } from "./context/OverlayManagerContext";
 
@@ -9,44 +9,26 @@ type MainToolbarProps = {
   onToggleRecording: () => void;
   isRecording: boolean;
   onPdfUpload: (file: File) => void;
+  onToggleSmallWebcam: () => void;
 };
 
 const MainToolbar: React.FC<MainToolbarProps> = ({
   onToggleRecording,
   isRecording,
   onPdfUpload,
+  onToggleSmallWebcam,
 }) => {
-  // Excalidraw: Use specialized context for API.
+  // Excalidraw context for canvas API (reset and image upload are now handled in the side toolbar).
   const { excalidrawState } = useExcalidrawContext();
 
-  // Webcam: Use specialized context for webcam state and dispatch.
-  const { webcamState, webcamDispatch } = useWebcamContext();
+  // RealView context now replaces the old webcam context.
+  const { realViewState, realViewDispatch } = useRealViewContext();
 
-  // Meeting: Use specialized context for meeting state and dispatch.
+  // Meeting context for meeting state.
   const { meetingDispatch } = useMeetingContext();
 
-  // Overlay Manager: Use specialized context for active overlay.
+  // Overlay Manager to coordinate active overlays.
   const { overlayDispatch } = useOverlayManager();
-
-  // Reset the Excalidraw canvas.
-  const handleResetCanvas = () => {
-    excalidrawState.api?.updateScene({
-      elements: [],
-      appState: {
-        ...excalidrawState.api.getAppState(),
-        viewBackgroundColor: "#ffffff",
-      },
-    });
-  };
-
-  // Activate the image upload tool.
-  const handleImageUpload = () => {
-    excalidrawState.api?.setActiveTool({
-      type: "image",
-      insertOnCanvasDirectly: true,
-    });
-    console.log("Image tool activated for upload.");
-  };
 
   // Handle PDF file selection.
   const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,22 +39,17 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     }
   };
 
-  // Toggle the webcam on/off via dispatching actions.
-  const toggleWebcam = () => {
-    if (webcamState.on) {
-      webcamDispatch({ type: "SET_WEBCAM_ON", payload: false });
-      webcamDispatch({ type: "SET_WEBCAM_OVERLAY_VISIBLE", payload: false });
+  // Toggle RealView on/off.
+  const toggleRealView = () => {
+    if (realViewState.on) {
+      realViewDispatch({ type: "SET_REALVIEW_ON", payload: false });
     } else {
-      webcamDispatch({ type: "SET_WEBCAM_ON", payload: true });
-      webcamDispatch({ type: "SET_WEBCAM_OVERLAY_VISIBLE", payload: true });
+      realViewDispatch({ type: "SET_REALVIEW_ON", payload: true });
     }
   };
 
   return (
     <div className="main-toolbar">
-      <button onClick={handleResetCanvas}>Reset</button>
-      <button onClick={handleImageUpload}>Upload Image</button>
-
       {/* PDF Upload Button */}
       <label htmlFor="pdf-upload" className="pdf-upload-button">
         Upload PDF
@@ -85,25 +62,25 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
         />
       </label>
 
-      <button onClick={toggleWebcam}>Toggle Webcam</button>
+      {/* Toggle Small Webcam Overlay */}
+      <button onClick={onToggleSmallWebcam}>Toggle Webcam</button>
 
       <button
         onClick={() => {
-          webcamDispatch({ type: "SET_WEBCAM_STREAM_MODE", payload: true });
-          webcamDispatch({ type: "SET_WEBCAM_ON", payload: true });
-          webcamDispatch({ type: "SET_WEBCAM_OVERLAY_VISIBLE", payload: false });
-          // Push the webcam overlay onto the stack.
-          overlayDispatch({ type: "PUSH_OVERLAY", payload: "webcam" });
+          realViewDispatch({ type: "SET_REALVIEW_STREAM_MODE", payload: true });
+          realViewDispatch({ type: "SET_REALVIEW_ON", payload: true });
+          // Push the RealView overlay onto the stack.
+          overlayDispatch({ type: "PUSH_OVERLAY", payload: "realview" });
         }}
       >
-        Stream View
+        Real View
       </button>
 
       <button onClick={onToggleRecording}>
         {isRecording ? "Stop Recording" : "Start Recording"}
       </button>
 
-      {/* Updated Meeting Button: Dispatch meeting action and push "meeting" overlay */}
+      {/* Meeting Button: Opens meeting overlay */}
       <button
         onClick={() => {
           meetingDispatch({ type: "OPEN_MEETING" });

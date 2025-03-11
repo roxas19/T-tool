@@ -34,7 +34,6 @@
   opacity: 0;
 }
 
-
 /* --------------------------
    Custom Toolbar for Excalidraw
 -------------------------- */
@@ -49,7 +48,7 @@
   padding: 10px;
   border-radius: 8px;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-  z-index: var(--z-index-extra);
+  z-index: var(--z-index-controls);
 }
 
 .custom-toolbar.stream-toolbar {
@@ -71,6 +70,35 @@
 
 .custom-toolbar button:hover {
   background-color: #e0e0e0;
+}
+
+/* --------------------------
+   Shapes Sidebar Panel
+   This panel attaches to the left of the main toolbar and slides in/out.
+-------------------------- */
+.shapes-panel {
+  position: absolute;
+  right: 100%; /* attach directly to left of toolbar */
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 5px;
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  /* Minimal animation for smooth open/close */
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: var(--z-index-controls);
+}
+
+/* Optionally, if you need a hidden state */
+.shapes-panel.hidden {
+  opacity: 0;
+  transform: translateX(-10px);
+  pointer-events: none;
 }
 
 /* --------------------------

@@ -1,56 +1,55 @@
-// src/context/WebcamContext.tsx
+// src/context/WebcamOverlayContext.tsx
 import React, { createContext, useContext, useReducer } from "react";
 
-export type WebcamState = {
-  on: boolean;
-  isOverlayVisible: boolean;
-  isStreamMode: boolean;
+export type WebcamOverlayState = {
+  active: boolean;
 };
 
-const initialWebcamState: WebcamState = {
-  on: false,
-  isOverlayVisible: false,
-  isStreamMode: false,
+const initialWebcamOverlayState: WebcamOverlayState = {
+  active: false,
 };
 
-type WebcamAction =
-  | { type: "SET_WEBCAM_ON"; payload: boolean }
-  | { type: "SET_WEBCAM_OVERLAY_VISIBLE"; payload: boolean }
-  | { type: "SET_WEBCAM_STREAM_MODE"; payload: boolean };
+type WebcamOverlayAction =
+  | { type: "SET_ACTIVE"; payload: boolean }
+  | { type: "TOGGLE" };
 
-function webcamReducer(state: WebcamState, action: WebcamAction): WebcamState {
+function webcamOverlayReducer(
+  state: WebcamOverlayState,
+  action: WebcamOverlayAction
+): WebcamOverlayState {
   switch (action.type) {
-    case "SET_WEBCAM_ON":
-      return { ...state, on: action.payload };
-    case "SET_WEBCAM_OVERLAY_VISIBLE":
-      return { ...state, isOverlayVisible: action.payload };
-    case "SET_WEBCAM_STREAM_MODE":
-      return { ...state, isStreamMode: action.payload };
+    case "SET_ACTIVE":
+      return { ...state, active: action.payload };
+    case "TOGGLE":
+      return { ...state, active: !state.active };
     default:
       return state;
   }
 }
 
-type WebcamContextType = {
-  webcamState: WebcamState;
-  webcamDispatch: React.Dispatch<WebcamAction>;
+type WebcamOverlayContextType = {
+  webcamOverlayState: WebcamOverlayState;
+  webcamOverlayDispatch: React.Dispatch<WebcamOverlayAction>;
 };
 
-const WebcamContext = createContext<WebcamContextType | undefined>(undefined);
+const WebcamOverlayContext = createContext<WebcamOverlayContextType | undefined>(undefined);
 
-export const WebcamProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [webcamState, webcamDispatch] = useReducer(webcamReducer, initialWebcamState);
+export const WebcamOverlayProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [webcamOverlayState, webcamOverlayDispatch] = useReducer(
+    webcamOverlayReducer,
+    initialWebcamOverlayState
+  );
   return (
-    <WebcamContext.Provider value={{ webcamState, webcamDispatch }}>
+    <WebcamOverlayContext.Provider value={{ webcamOverlayState, webcamOverlayDispatch }}>
       {children}
-    </WebcamContext.Provider>
+    </WebcamOverlayContext.Provider>
   );
 };
 
-export const useWebcamContext = () => {
-  const context = useContext(WebcamContext);
+export const useWebcamOverlay = () => {
+  const context = useContext(WebcamOverlayContext);
   if (!context) {
-    throw new Error("useWebcamContext must be used within a WebcamProvider");
+    throw new Error("useWebcamOverlay must be used within a WebcamOverlayProvider");
   }
   return context;
 };

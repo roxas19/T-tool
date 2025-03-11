@@ -1,7 +1,8 @@
 import React from "react";
 import { MeetingProvider } from "./MeetingContext";
 import { PdfProvider } from "./PdfContext";
-import { WebcamProvider } from "./WebcamContext";
+import { RealViewProvider } from "./RealViewContext";
+// Removed WebcamOverlayProvider since we're managing the small webcam locally.
 import { ExcalidrawProvider } from "./ExcalidrawContext";
 import { OverlayManagerProvider } from "./OverlayManagerContext";
 
@@ -9,13 +10,13 @@ export const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <MeetingProvider>
       <PdfProvider>
-        <WebcamProvider>
+        <RealViewProvider>
           <ExcalidrawProvider>
             <OverlayManagerProvider>
               {children}
             </OverlayManagerProvider>
           </ExcalidrawProvider>
-        </WebcamProvider>
+        </RealViewProvider>
       </PdfProvider>
     </MeetingProvider>
   );

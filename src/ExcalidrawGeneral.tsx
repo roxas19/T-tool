@@ -7,11 +7,10 @@ import "./css/Excalidraw.css";
 // Import specialized hooks:
 import { useOverlayManager } from "./context/OverlayManagerContext";
 import { usePdfContext } from "./context/PdfContext";
-import { useWebcamContext } from "./context/WebcamContext";
-import { useMeetingContext } from "./context/MeetingContext"; // NEW
+import { useRealViewContext } from "./context/RealViewContext";
+import { useMeetingContext } from "./context/MeetingContext";
 
 const ExcalidrawGeneral: React.FC = () => {
-  
   const { overlayState } = useOverlayManager();
   const displayMode = overlayState.displayMode; // "regular" or "draw"
   const overlayZIndices = overlayState.overlayZIndices;
@@ -20,9 +19,9 @@ const ExcalidrawGeneral: React.FC = () => {
   const { pdfState } = usePdfContext();
   const pdfViewerMode = pdfState.isViewerActive;
 
-  // Get stream mode from WebcamContext.
-  const { webcamState } = useWebcamContext();
-  const isStreamMode = webcamState.isStreamMode;
+  // Get RealView state from RealViewContext.
+  const { realViewState } = useRealViewContext();
+  const isStreamMode = realViewState.isStreamMode;
 
   // Get meeting state from MeetingContext.
   const { meetingState } = useMeetingContext();
@@ -33,7 +32,7 @@ const ExcalidrawGeneral: React.FC = () => {
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
   // Compute whether to hide Excalidraw:
-  // Hide if PDF viewer, stream mode, or meeting is active and we are not in "draw" mode.
+  // Hide if PDF viewer, RealView stream mode, or meeting is active, and we're not in "draw" mode.
   const shouldHideExcalidraw = ((pdfViewerMode || isStreamMode || meetingState.isActive) && displayMode !== "draw");
 
   const handleToolSelect = (tool: string) => {

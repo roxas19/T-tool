@@ -1,0 +1,40 @@
+<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Red-to-Orange Gradient for the "AI" text -->
+    <linearGradient id="aiGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="red" />
+      <stop offset="100%" stop-color="orange" />
+    </linearGradient>
+  </defs>
+
+  <!-- Microchip Body (Black) -->
+  <rect x="8" y="8" width="32" height="32" fill="black" rx="4" ry="4" />
+
+  <!-- Chip Pins (Black) - 2 on each side, total 8 pins -->
+  <!-- Left Pins -->
+  <rect x="6"  y="14" width="2" height="4" fill="black" />
+  <rect x="6"  y="24" width="2" height="4" fill="black" />
+  <!-- Right Pins -->
+  <rect x="40" y="14" width="2" height="4" fill="black" />
+  <rect x="40" y="24" width="2" height="4" fill="black" />
+  <!-- Top Pins -->
+  <rect x="18" y="6"  width="4" height="2" fill="black" />
+  <rect x="28" y="6"  width="4" height="2" fill="black" />
+  <!-- Bottom Pins -->
+  <rect x="18" y="40" width="4" height="2" fill="black" />
+  <rect x="28" y="40" width="4" height="2" fill="black" />
+
+  <!-- "AI" Text (Red-to-Orange Gradient) -->
+  <text
+    x="24"
+    y="24"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    fill="url(#aiGrad)"
+    font-family="Arial, sans-serif"
+    font-size="14"
+    font-weight="bold"
+  >
+    AI
+  </text>
+</svg>

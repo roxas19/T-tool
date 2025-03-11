@@ -1,0 +1,13 @@
+<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="red" />
+      <stop offset="100%" stop-color="orange" />
+    </linearGradient>
+  </defs>
+  <!-- Wavy, curvy freehand drawing line -->
+  <path d="M6,30 C10,20 18,40 24,28 C30,16 38,32 42,22" fill="none" stroke="black" stroke-width="2"/>
+  
+  <!-- Slanted pen tip at the end of the curve -->
+  <polygon points="40,20 44,18 46,22 42,24" fill="url(#grad2)" stroke="black" stroke-width="1"/>
+</svg>

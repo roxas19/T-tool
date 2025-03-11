@@ -1,6 +1,7 @@
+// src/context/OverlayManagerContext.tsx
 import React, { createContext, useContext, useReducer } from "react";
 
-export type OverlayType = "pdf" | "webcam" | "excalidraw" | "meeting";
+export type OverlayType = "pdf" | "realview" | "excalidraw" | "meeting";
 
 export interface OverlayZIndices {
   background: number;
