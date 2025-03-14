@@ -1,52 +1,21 @@
-@import "./Variables.css";
-
-/* --------------------------
-   Global Button & Element Styles
--------------------------- */
-button {
-  font-family: inherit;
-  cursor: pointer;
-  border: none;
-  outline: none;
+:root {
+  --z-index-background: 1000; /* Base background elements (e.g. PDF viewer, fullscreen webcam background) */
+  --z-index-overlay: 1002;    /* Overlays (e.g. Excalidraw draw mode, webcam small container) */
+  --z-index-toolbar: 1050;    /* Toolbars (e.g. meeting controls) */
+  --z-index-controls: 1010;   /* Webcam controls, meeting buttons */
+  --z-index-extra: 1100;      /* Always-on-top elements (e.g. toggle buttons, main toolbar) */
+  --sidebar-bg: #0a0a0a;         /* Deep black for sidebar background */
+  --primary-color: #8B0000;      /* Dark blood red for active buttons */
+  --secondary-color: #FF4500;    /* Vibrant orange for hover effects */
+  --accent-color: #FFD700;       /* Bright yellow accent */
+  --button-bg-default: transparent;
+  --border-color: rgba(255, 165, 0, 0.5); /* Semi-transparent orange */
+  --text-color: #f0f0f0;         /* Light text for readability */
+  --toolbar-height: 75px;
 }
 
-button:focus {
-  box-shadow: 0 0 5px rgba(25, 118, 210, 0.5);
-}
 
-/* --------------------------
-   Main Toolbar
--------------------------- */
-.main-toolbar {
-  position: fixed;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.9);
-  padding: 10px 20px;
-  border-radius: 8px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  z-index: var(--z-index-extra);
-  display: flex;
-  gap: 10px;
-}
 
-.main-toolbar.stream-toolbar {
-  background: rgba(0, 0, 0, 0.8);
-}
-
-.main-toolbar button {
-  padding: 8px 12px;
-  background-color: #1976d2;
-  color: #fff;
-  border-radius: 4px;
-  margin-right: 10px;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.main-toolbar button:hover {
-  background-color: #0d47a1;
-}
 
 /* PDF Upload Button */
 .pdf-upload-button {

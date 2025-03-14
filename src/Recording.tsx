@@ -12,7 +12,7 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
   const streamRef = useRef<MediaStream | null>(null);
   const recordingQueue = useRef<Blob[]>([]);
 
-  // Initialize a single IndexedDB for recording (no PlaybackDB)
+  // Initialize IndexedDB for recording
   useEffect(() => {
     const initDB = async () => {
       try {
@@ -62,7 +62,6 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
       streamRef.current = stream;
 
       const recorder = new MediaRecorder(stream, { mimeType: "video/webm; codecs=vp9" });
-
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           console.log("New video chunk recorded:", event.data);
@@ -79,13 +78,12 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
     }
   };
 
-  // Stop recording and force a final flush of any pending data
+  // Stop recording and flush any pending data
   const stopRecording = async () => {
     try {
       if (mediaRecorderRef.current) {
-        // Force any pending data (which might be less than 10 seconds) to be available
+        // Request any pending data and then stop the recorder.
         mediaRecorderRef.current.requestData();
-        // Wait briefly (200ms) to ensure the ondataavailable event fires
         await new Promise((resolve) => setTimeout(resolve, 200));
         mediaRecorderRef.current.stop();
       }
@@ -109,13 +107,11 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
     }
   };
 
-  // Flush the in-memory recording queue into the IndexedDB ("chunks" store)
+  // Flush the in-memory recording queue into the IndexedDB store ("chunks")
   const flushQueueToIndexedDB = async () => {
     if (!db || recordingQueue.current.length === 0) return;
-
     const tx = db.transaction("chunks", "readwrite");
     const store = tx.store;
-
     while (recordingQueue.current.length > 0) {
       const chunk = recordingQueue.current.shift();
       if (chunk) {
@@ -125,43 +121,23 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
     await tx.done;
   };
 
-  // Stitch together chunks from IndexedDB.
-  // If lastMinutes is provided, only include chunks recorded within that time window.
+  // Stitch together chunks from IndexedDB; if lastMinutes is provided, only include chunks within that time window.
   const stitchChunks = async (lastMinutes = 0): Promise<Blob | null> => {
     if (!db) return null;
-
     const tx = db.transaction("chunks", "readonly");
     const store = tx.store;
-
     const now = Date.now();
     const timeLimit = lastMinutes ? now - lastMinutes * 60 * 1000 : 0;
-
     const chunks: Blob[] = [];
     let cursor = await store.openCursor();
-
     while (cursor) {
       if (!lastMinutes || cursor.value.timestamp >= timeLimit) {
         chunks.push(cursor.value.data);
       }
       cursor = await cursor.continue();
     }
-
     if (chunks.length === 0) return null;
-
     return new Blob(chunks, { type: "video/webm" });
-  };
-
-  // For the "Download Last 15 Minutes" button.
-  // If still recording, force a flush of any pending partial chunk.
-  const getPlaybackBlob = async (): Promise<Blob | null> => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
-      mediaRecorderRef.current.requestData();
-      await new Promise((resolve) => setTimeout(resolve, 200));
-    }
-    await flushQueueToIndexedDB();
-    // Stitch only chunks from the last 15 minutes based on timestamp
-    const blob = await stitchChunks(15);
-    return blob;
   };
 
   // Create a temporary anchor to download the blob as a file.
@@ -174,7 +150,7 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
     URL.revokeObjectURL(url);
   };
 
-  // Clear the IndexedDB store ("chunks") after downloading
+  // Clear the IndexedDB store ("chunks") after downloading.
   const clearIndexedDBs = async () => {
     if (db) {
       const tx = db.transaction("chunks", "readwrite");
@@ -182,26 +158,9 @@ const Recording: React.FC<RecordingProps> = ({ isRecording }) => {
     }
   };
 
-  return (
-    <>
-      {isRecording && (
-        <div className="recording-toolbar">
-          <div className="recording-status">Recording in progress...</div>
-          <button
-            onClick={async () => {
-              const blob = await getPlaybackBlob();
-              if (blob) downloadBlob(blob, `last-15-minutes-${Date.now()}.webm`);
-              else console.warn("No video data available for the last 15 minutes.");
-            }}
-            disabled={!isRecording}
-            className="recording-button"
-          >
-            Download Last 15 Minutes
-          </button>
-        </div>
-      )}
-    </>
-  );
+  // This component is now headless; it does not render any UI.
+  // All recording UI is handled by the main toolbar's RecordButton.
+  return null;
 };
 
 export default Recording;

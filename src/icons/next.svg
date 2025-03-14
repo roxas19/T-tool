@@ -1,0 +1,16 @@
+<svg width="32" height="32" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="trademarkGradNext" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="red"/>
+      <stop offset="100%" stop-color="orange"/>
+    </linearGradient>
+  </defs>
+  <!-- Scale up the arrow around the center (24,24) by a factor of 1.2 -->
+  <g transform="translate(24,24) scale(1.6) translate(-24,-24)">
+    <!-- Simple right arrow -->
+    <path d="M18 16 L30 24 L18 32" 
+          stroke="black" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Trademark circle at the arrow tip -->
+    <circle cx="30" cy="24" r="3" fill="url(#trademarkGradNext)" stroke="black" stroke-width="1"/>
+  </g>
+</svg>

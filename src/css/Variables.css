@@ -4,5 +4,12 @@
     --z-index-toolbar: 1050;    /* Toolbars (e.g. meeting controls) */
     --z-index-controls: 1010;   /* Webcam controls, meeting buttons */
     --z-index-extra: 1100;      /* Always-on-top elements (e.g. toggle buttons, main toolbar) */
+    --sidebar-bg: #0a0a0a;         /* Deep black for sidebar background */
+    --primary-color: #8B0000;      /* Dark blood red for active buttons */
+    --secondary-color: #FF4500;    /* Vibrant orange for hover effects */
+    --accent-color: #FFD700;       /* Bright yellow accent */
+    --button-bg-default: transparent;
+    --border-color: rgba(255, 165, 0, 0.5); /* Semi-transparent orange */
+    --text-color: #f0f0f0;         /* Light text for readability */
   }
   

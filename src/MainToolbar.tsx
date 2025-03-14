@@ -1,9 +1,11 @@
-// src/MainToolbar.tsx
-import React from "react";
+import React, { useRef } from "react";
 import { useExcalidrawContext } from "./context/ExcalidrawContext";
 import { useRealViewContext } from "./context/RealViewContext";
 import { useMeetingContext } from "./context/MeetingContext";
 import { useOverlayManager } from "./context/OverlayManagerContext";
+import { usePdfContext } from "./context/PdfContext";
+import RecordButton from "./utils/RecordButton"; // Import the dynamic record button component
+import "./css/MainToolbar.css";
 
 type MainToolbarProps = {
   onToggleRecording: () => void;
@@ -18,24 +20,37 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
   onPdfUpload,
   onToggleSmallWebcam,
 }) => {
-  // Excalidraw context for canvas API (reset and image upload are now handled in the side toolbar).
   const { excalidrawState } = useExcalidrawContext();
-
-  // RealView context now replaces the old webcam context.
   const { realViewState, realViewDispatch } = useRealViewContext();
-
-  // Meeting context for meeting state.
   const { meetingDispatch } = useMeetingContext();
-
-  // Overlay Manager to coordinate active overlays.
   const { overlayDispatch } = useOverlayManager();
+  const { pdfState, pdfDispatch } = usePdfContext();
 
-  // Handle PDF file selection.
+  // Use a ref for the file input.
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle file selection.
   const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       onPdfUpload(file);
       e.target.value = "";
+    }
+  };
+
+  // Programmatically trigger the file input.
+  const triggerFileUpload = () => {
+    pdfInputRef.current?.click();
+  };
+
+  // Handle PDF button click based on current state.
+  const handlePdfButtonClick = () => {
+    if (pdfState.isViewerActive) {
+      // Exit PDF viewer.
+      pdfDispatch({ type: "CLOSE_PDF_VIEWER" });
+    } else {
+      // Trigger file upload.
+      triggerFileUpload();
     }
   };
 
@@ -50,17 +65,17 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
 
   return (
     <div className="main-toolbar">
-      {/* PDF Upload Button */}
-      <label htmlFor="pdf-upload" className="pdf-upload-button">
-        Upload PDF
-        <input
-          id="pdf-upload"
-          type="file"
-          accept="application/pdf"
-          onChange={handlePdfChange}
-          style={{ display: "none" }}
-        />
-      </label>
+      {/* Dynamic PDF Button */}
+      <button onClick={handlePdfButtonClick} className="pdf-upload-button">
+        {pdfState.isViewerActive ? "Exit PDF" : "Upload PDF"}
+      </button>
+      <input
+        ref={pdfInputRef}
+        type="file"
+        accept="application/pdf"
+        onChange={handlePdfChange}
+        style={{ display: "none" }}
+      />
 
       {/* Toggle Small Webcam Overlay */}
       <button onClick={onToggleSmallWebcam}>Toggle Webcam</button>
@@ -69,18 +84,22 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
         onClick={() => {
           realViewDispatch({ type: "SET_REALVIEW_STREAM_MODE", payload: true });
           realViewDispatch({ type: "SET_REALVIEW_ON", payload: true });
-          // Push the RealView overlay onto the stack.
           overlayDispatch({ type: "PUSH_OVERLAY", payload: "realview" });
         }}
       >
         Real View
       </button>
 
-      <button onClick={onToggleRecording}>
-        {isRecording ? "Stop Recording" : "Start Recording"}
-      </button>
+      {/* Dynamic Record Button */}
+      <RecordButton
+        isRecording={isRecording}
+        onToggleRecording={onToggleRecording}
+        onDownloadLast15={() => {
+          // This function should trigger the download of the last 15 minutes.
+          console.log("Download last 15 minutes triggered.");
+        }}
+      />
 
-      {/* Meeting Button: Opens meeting overlay */}
       <button
         onClick={() => {
           meetingDispatch({ type: "OPEN_MEETING" });

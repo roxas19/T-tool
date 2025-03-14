@@ -12,7 +12,7 @@ export const usePdf = (src: string) => {
   const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy | null>(null);
   // State to track the current page number.
   const [currentPage, setCurrentPage] = useState(1);
-  // State for zoom level.
+  // State for zoom level (kept for user adjustments; will be combined with auto-fit scale elsewhere).
   const [zoomLevel, setZoomLevel] = useState(1.0);
 
   // Ref to store the current render task so we can cancel it if needed.
@@ -43,9 +43,9 @@ export const usePdf = (src: string) => {
     };
   }, [src]);
 
-  // Function to render a specific page on a given canvas.
+  // Function to render a specific page on a given canvas using an effective scale.
   const renderPage = useCallback(
-    (pageNum: number, canvas: HTMLCanvasElement) => {
+    (pageNum: number, canvas: HTMLCanvasElement, scale: number) => {
       if (!pdfDoc) return;
       // Save the latest page we want to render.
       latestPageRef.current = pageNum;
@@ -59,14 +59,14 @@ export const usePdf = (src: string) => {
       context.clearRect(0, 0, canvas.width, canvas.height);
       // Get the page from the PDF document.
       pdfDoc.getPage(pageNum).then((page) => {
-        const viewport = page.getViewport({ scale: zoomLevel });
+        const viewport = page.getViewport({ scale });
         // Resize the canvas to match the viewport dimensions.
         canvas.width = viewport.width;
         canvas.height = viewport.height;
         // Cancel any ongoing render task before starting a new one.
         renderTaskRef.current?.cancel();
         const renderContext: RenderParameters = {
-          canvasContext: canvas.getContext("2d")!,
+          canvasContext: context,
           viewport,
         };
         // Start rendering the page.
@@ -80,7 +80,7 @@ export const usePdf = (src: string) => {
               console.log("Discarding outdated render for page", pageNum);
               return;
             }
-            console.log(`Page ${pageNum} rendered at zoom level ${zoomLevel}`);
+            console.log(`Page ${pageNum} rendered at effective scale ${scale}`);
           },
           (error) => {
             if (error && error.name === "RenderingCancelledException") {
@@ -94,7 +94,7 @@ export const usePdf = (src: string) => {
         console.error("Error getting page", pageNum, error);
       });
     },
-    [pdfDoc, zoomLevel]
+    [pdfDoc]
   );
 
   // Cleanup effect: Cancel render tasks when the component using the hook unmounts.
@@ -126,6 +126,6 @@ export const usePdf = (src: string) => {
     setCurrentPage,
     nextPage,
     prevPage,
-    renderPage,
+    renderPage, // Updated to expect an extra "scale" parameter
   };
 };

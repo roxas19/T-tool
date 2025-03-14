@@ -1,14 +1,18 @@
-// src/pdfviewer/PdfControls.tsx
-import React from "react";
-import InteractiveButton from "../utils/InteractiveButton";
+import React, { useRef } from "react";
 import { useOverlayManager } from "../context/OverlayManagerContext";
+import { usePdfContext } from "../context/PdfContext";
+
+// Import SVG icons for PDF controls
+import PrevIcon from "../icons/previous.svg";
+import NextIcon from "../icons/next.svg";
+import DrawIcon from "../icons/draw.svg";
 
 interface PdfControlsProps {
   currentPage: number;
   totalPages: number;
   onPrev: () => void;
   onNext: () => void;
-  onClose: () => void;
+  onClose: () => void; // still used if needed elsewhere (e.g. a separate exit action)
   zoomLevel: number;
   onZoomChange: (newZoom: number) => void;
 }
@@ -27,6 +31,12 @@ const PdfControls: React.FC<PdfControlsProps> = ({
   const displayMode = overlayState.displayMode;
   const overlayZIndices = overlayState.overlayZIndices;
 
+  // Get PDF context dispatch for changing the PDF.
+  const { pdfDispatch } = usePdfContext();
+
+  // Create a ref for the hidden file input for changing PDFs.
+  const changePdfInputRef = useRef<HTMLInputElement>(null);
+
   // Compute a slider value from the zoom level (multiplying by 50 for a percentage-style display).
   const sliderValue = Math.round(zoomLevel * 50);
 
@@ -44,18 +54,43 @@ const PdfControls: React.FC<PdfControlsProps> = ({
     });
   };
 
+  // Trigger file selection for changing the PDF.
+  const handleChangePdfClick = () => {
+    changePdfInputRef.current?.click();
+  };
+
+  // Handle new PDF file selection.
+  const handleChangePdf = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Create a URL for the new PDF and dispatch the OPEN_PDF_VIEWER action.
+      const fileUrl = URL.createObjectURL(file);
+      pdfDispatch({ type: "OPEN_PDF_VIEWER", payload: fileUrl });
+      // Clear the input value so the same file can be re-uploaded if needed.
+      e.target.value = "";
+    }
+  };
+
   return (
     <div className="pdf-controls-layer" style={{ zIndex: overlayZIndices.controls }}>
       <div className="pdf-controls-left-box">
-        <InteractiveButton onClick={onPrev} disabled={currentPage <= 1}>
-          Previous
-        </InteractiveButton>
+        <button
+          onClick={onPrev}
+          disabled={currentPage <= 1}
+          className="pdf-control-btn icon-button"
+        >
+          <img src={PrevIcon} alt="Previous" />
+        </button>
         <span className="page-info">
           Page {currentPage} of {totalPages}
         </span>
-        <InteractiveButton onClick={onNext} disabled={currentPage >= totalPages}>
-          Next
-        </InteractiveButton>
+        <button
+          onClick={onNext}
+          disabled={currentPage >= totalPages}
+          className="pdf-control-btn icon-button"
+        >
+          <img src={NextIcon} alt="Next" />
+        </button>
       </div>
       <div className="pdf-controls-right-box">
         <div className="zoom-area">
@@ -71,12 +106,23 @@ const PdfControls: React.FC<PdfControlsProps> = ({
           />
           <span className="zoom-label">Zoom</span>
         </div>
-        <InteractiveButton onClick={handleDrawToggle} className="draw-btn">
-          {displayMode === "draw" ? "Exit Draw" : "Draw"}
-        </InteractiveButton>
-        <InteractiveButton onClick={onClose} className="exit-btn">
-          Exit PDF Viewer
-        </InteractiveButton>
+        <button onClick={handleDrawToggle} className="pdf-control-btn draw-btn">
+          <img
+            src={DrawIcon}
+            alt={displayMode === "draw" ? "Exit Draw" : "Draw"}
+          />
+        </button>
+        <button onClick={handleChangePdfClick} className="pdf-control-btn exit-btn">
+          Change PDF
+        </button>
+        {/* Hidden file input for changing PDFs */}
+        <input
+          ref={changePdfInputRef}
+          type="file"
+          accept="application/pdf"
+          onChange={handleChangePdf}
+          style={{ display: "none" }}
+        />
       </div>
     </div>
   );

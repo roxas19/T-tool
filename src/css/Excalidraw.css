@@ -27,79 +27,121 @@
 
 /* Hide Excalidraw canvas when not active */
 .excalidraw-hidden {
-  visibility: hidden;
-  z-index: -10; /* Push it behind everything */
-  pointer-events: none;
-  transition: visibility 0.2s ease-in-out, opacity 0.2s ease-in-out;
   opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
 }
 
 /* --------------------------
-   Custom Toolbar for Excalidraw
+   Sidebar Container
+-------------------------- */
+/* --------------------------
+   Sidebar Container
 -------------------------- */
 .custom-toolbar {
   position: fixed;
-  right: 10px;
-  top: 50px;
+  top: 50%;
+  right: 10px; /* Positioned on the right */
+  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  background: #f8f9fa;
-  padding: 10px;
+  gap: 12px;
+  padding: 12px;
+  background: var(--sidebar-bg); /* Deep black */
   border-radius: 8px;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-  z-index: var(--z-index-controls);
-}
-
-.custom-toolbar.stream-toolbar {
-  background: rgba(0, 0, 0, 0.8);
-  color: #fff;
-}
-
-.custom-toolbar button {
-  padding: 8px;
-  border: 1px solid #ccc;
-  background-color: #fff;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  text-align: center;
-  width: 80px;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.custom-toolbar button:hover {
-  background-color: #e0e0e0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  width: fit-content;
+  z-index: var(--z-index-extra);
 }
 
 /* --------------------------
-   Shapes Sidebar Panel
-   This panel attaches to the left of the main toolbar and slides in/out.
+   Toolbar Buttons
 -------------------------- */
-.shapes-panel {
-  position: absolute;
-  right: 100%; /* attach directly to left of toolbar */
-  top: 0;
+.toolbar-button {
+  width: 38px;
+  height: 38px;
+  background: #ffffff; /* White background for the button circle */
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
   display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 5px;
-  background: #f0f0f0;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  /* Minimal animation for smooth open/close */
-  opacity: 1;
-  transform: translateX(0);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  z-index: var(--z-index-controls);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
-/* Optionally, if you need a hidden state */
-.shapes-panel.hidden {
-  opacity: 0;
-  transform: translateX(-10px);
-  pointer-events: none;
+.toolbar-button:hover {
+  background: linear-gradient(135deg, #FFA500, #FFD700); /* Gradient of orangish yellow */
+  box-shadow: 0 0 8px #FFD700;
 }
+
+/* Active state for toolbar buttons */
+.toolbar-button.active {
+  background: radial-gradient(circle, #ffffff 10%, #ffcc00 100%);
+  box-shadow: 0 0 8px rgba(255, 3, 3, 0.8); /* Optional red glow */
+  color: #fff;
+}
+
+/* Ensure SVG icons size and alignment */
+.toolbar-button img {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+/* --------------------------
+   AI Mode Specific Styles (if needed)
+-------------------------- */
+.custom-toolbar.ai-mode {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  padding: 8px;
+}
+
+/* --------------------------
+   Shapes Panel
+-------------------------- */
+.shapes-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  background: var(--sidebar-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px;
+}
+
+/* Shapes Panel Buttons */
+.shapes-panel-button {
+  background: var(--button-bg-default);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 4px 8px;
+  color: var(--text-color);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+}
+
+.shapes-panel-button:hover {
+  background: var(--secondary-color);
+}
+
+/* --------------------------
+   Responsive Adjustments
+-------------------------- */
+@media (max-width: 480px) {
+  .custom-toolbar {
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px;
+  }
+  .toolbar-button {
+    width: 38px;
+    height: 38px;
+  }
+}
+
 
 /* --------------------------
    Toggle Button for the Island Editor
@@ -110,9 +152,26 @@
   top: 10px;
   left: 10px;
   z-index: var(--z-index-extra);
-  padding: 5px 10px;
+  background-color: #ffffff; /* White background */
+  color: #000;               /* Dark text */
+  border: 3px solid #000;    /* 3px solid black border */
+  padding: 8px 16px;
+  border-radius: 8px;       /* Increased border-radius for a more rounded look */
+  font-weight: bold;
   font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   pointer-events: auto;
+}
+
+.excalidraw-toggle-btn:hover {
+  background: linear-gradient(135deg, #FFA500, #FFD700); /* Orangish yellow gradient */
+  color: #000;
+}
+
+.excalidraw-toggle-btn:active {
+  background: var(--secondary-color);
+  color: #000;
 }
 
 /* Hide sidebar if island is hidden */

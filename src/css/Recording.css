@@ -1,42 +1,52 @@
-.recording-toolbar {
-  position: fixed;
-  bottom: 10px;
+.record-button-container {
+  position: relative;
+  display: inline-block;
+}
+
+.record-button {
+  background-color: #ffffff; /* Default state */
+  color: #000;
+  border: 3px solid #414141;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+/* Active (recording) state */
+.record-button.active {
+  background-color: #ff0000; /* Red background when recording */
+  animation: blink 1s infinite;
+  color: #fff;
+}
+
+/* (Optional) Hover adjustments for active state */
+/* You can change the text via JavaScript on hover if desired */
+
+/* Blinking animation keyframes */
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* Download Dropdown Styles (appears beneath record button when active and hovered) */
+.record-dropdown {
+  position: absolute;
+  top: 110%; /* Positioned just below the button */
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-  width: 90%;
-  max-width: 600px;
-}
-
-.recording-status {
-  font-size: 14px;
-  font-weight: bold;
-  margin-right: 20px;
-}
-
-.recording-button {
-  background-color: #007bff;
-  color: white;
-  padding: 8px 16px;
-  border: none;
+  background: #ffffff;
+  border: 1px solid #414141;
+  padding: 8px 12px;
   border-radius: 4px;
+  font-size: 14px;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  display: none;
 }
 
-.recording-button:hover {
-  background-color: #0056b3;
-}
-
-.recording-button:disabled {
-  background-color: #888;
-  cursor: not-allowed;
+.record-button-container.recording-hover .record-dropdown {
+  display: block;
 }

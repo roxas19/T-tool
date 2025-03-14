@@ -1,0 +1,78 @@
+/* --------------------------
+   Main Toolbar Container
+-------------------------- */
+.main-toolbar {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85); /* Dark overlay for focus */
+    color: var(--text-light);
+    padding: 10px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    z-index: var(--z-index-extra);
+    display: flex;
+    gap: 12px;
+  }
+  
+  /* --------------------------
+     Main Toolbar Button Base Styles
+  -------------------------- */
+  .main-toolbar button {
+    background-color: #ffffff; /* White background for buttons */
+    color: #000;               /* Dark text for readability */
+    border: 3px solid transparent; /* Establish border width */
+    border-color: #414141; /* Thinner yellow accent border */
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+  
+  /* --------------------------
+     Hover & Active States
+  -------------------------- */
+  .main-toolbar button:hover {
+    background: linear-gradient(135deg, #FFA500, #FFD700); /* Gradient of orangish yellow */
+    box-shadow: 0 0 8px #FFD700;
+    color: #000;
+  }
+  
+  .main-toolbar button:active {
+    background: var(--secondary-color);
+    box-shadow: 0 0 4px var(--accent-color);
+    color: #000;
+  }
+  
+  /* --------------------------
+     Optional: Utility Classes for Button Tiers
+  -------------------------- */
+  .btn-primary {
+    background-color: #ffffff;
+    border-color: var(--accent-color);
+    color: #000;
+  }
+  
+  .btn-secondary {
+    background-color: var(--secondary-color);
+    border-color: var(--accent-color);
+    color: #000;
+  }
+  
+  /* --------------------------
+     Responsive Adjustments
+  -------------------------- */
+  @media (max-width: 480px) {
+    .main-toolbar {
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px;
+    }
+  
+    .main-toolbar button {
+      padding: 6px 12px;
+    }
+  }
+  
