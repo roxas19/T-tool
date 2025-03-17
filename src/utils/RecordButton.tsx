@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import "../css/RecordButton.css";
 
 type RecordButtonProps = {
   isRecording: boolean;
@@ -15,7 +16,7 @@ const RecordButton: React.FC<RecordButtonProps> = ({
 
   return (
     <div
-      className="record-button-container"
+      className={`record-button-container ${hover ? "recording-hover" : ""}`}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
@@ -25,7 +26,7 @@ const RecordButton: React.FC<RecordButtonProps> = ({
       >
         {isRecording ? (hover ? "Stop Recording" : "Recording") : "Start Recording"}
       </button>
-      {isRecording && hover && (
+      {isRecording && (
         <div className="record-dropdown">
           <button onClick={onDownloadLast15} className="dropdown-btn">
             Download Last 15 Minutes

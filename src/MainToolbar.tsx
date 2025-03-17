@@ -12,6 +12,7 @@ type MainToolbarProps = {
   isRecording: boolean;
   onPdfUpload: (file: File) => void;
   onToggleSmallWebcam: () => void;
+  onDownloadLast15: () => void;
 };
 
 const MainToolbar: React.FC<MainToolbarProps> = ({
@@ -19,17 +20,15 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
   isRecording,
   onPdfUpload,
   onToggleSmallWebcam,
+  onDownloadLast15,
 }) => {
-  const { excalidrawState } = useExcalidrawContext();
+  const { pdfState, pdfDispatch } = usePdfContext();
   const { realViewState, realViewDispatch } = useRealViewContext();
   const { meetingDispatch } = useMeetingContext();
   const { overlayDispatch } = useOverlayManager();
-  const { pdfState, pdfDispatch } = usePdfContext();
 
-  // Use a ref for the file input.
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
-  // Handle file selection.
   const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -38,34 +37,20 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     }
   };
 
-  // Programmatically trigger the file input.
   const triggerFileUpload = () => {
     pdfInputRef.current?.click();
   };
 
-  // Handle PDF button click based on current state.
   const handlePdfButtonClick = () => {
     if (pdfState.isViewerActive) {
-      // Exit PDF viewer.
       pdfDispatch({ type: "CLOSE_PDF_VIEWER" });
     } else {
-      // Trigger file upload.
       triggerFileUpload();
-    }
-  };
-
-  // Toggle RealView on/off.
-  const toggleRealView = () => {
-    if (realViewState.on) {
-      realViewDispatch({ type: "SET_REALVIEW_ON", payload: false });
-    } else {
-      realViewDispatch({ type: "SET_REALVIEW_ON", payload: true });
     }
   };
 
   return (
     <div className="main-toolbar">
-      {/* Dynamic PDF Button */}
       <button onClick={handlePdfButtonClick} className="pdf-upload-button">
         {pdfState.isViewerActive ? "Exit PDF" : "Upload PDF"}
       </button>
@@ -77,7 +62,6 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
         style={{ display: "none" }}
       />
 
-      {/* Toggle Small Webcam Overlay */}
       <button onClick={onToggleSmallWebcam}>Toggle Webcam</button>
 
       <button
@@ -90,14 +74,10 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
         Real View
       </button>
 
-      {/* Dynamic Record Button */}
       <RecordButton
         isRecording={isRecording}
         onToggleRecording={onToggleRecording}
-        onDownloadLast15={() => {
-          // This function should trigger the download of the last 15 minutes.
-          console.log("Download last 15 minutes triggered.");
-        }}
+        onDownloadLast15={onDownloadLast15}
       />
 
       <button

@@ -1,9 +1,9 @@
 // src/App.tsx
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { AppProviders } from "./context/AppProviders";
 import MainToolbar from "./MainToolbar";
 import ExcalidrawGeneral from "./ExcalidrawGeneral";
-import Recording from "./Recording";
+import Recording, { RecordingHandle } from "./Recording";
 import VideoPlayer from "./VideoPlayer";
 import PdfViewer from "./PDFViewer";
 import WebcamDisplay from "./RealView";
@@ -22,13 +22,13 @@ import { useOverlayManager } from "./context/OverlayManagerContext";
 
 import "./css/App.css";
 
-
 const AppContent: React.FC = () => {
   // Page navigation hook.
   const { currentPage } = usePageNavigation(null);
 
   // Local state for recording and video player.
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingStream, setRecordingStream] = useState<MediaStream | null>(null);
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
   const [playbackMode, setPlaybackMode] = useState<"youtube" | "local">("youtube");
 
@@ -49,7 +49,6 @@ const AppContent: React.FC = () => {
   const isMeetingMinimized = meetingState.isActive && activeOverlay !== "meeting";
 
   // Compute the effective visibility of the small webcam overlay.
-  // It should be visible if toggled on, unless a meeting or RealView overlay is active.
   const smallWebcamVisible = useSmallWebcamVisibility(isSmallWebcamActive, overlayState.activeStack);
 
   // Handler for PDF uploads.
@@ -57,17 +56,45 @@ const AppContent: React.FC = () => {
     const fileUrl = URL.createObjectURL(file);
     pdfDispatch({ type: "OPEN_PDF_VIEWER", payload: fileUrl });
     overlayDispatch({ type: "PUSH_OVERLAY", payload: "pdf" });
-    // In this design, we do not force the small webcam off when PDF is active.
   };
+
+  // New onToggleRecording handler that manages permission and stream state.
+  const handleToggleRecording = async () => {
+    if (!isRecording) {
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: { echoCancellation: true },
+        });
+        setRecordingStream(stream);
+        setIsRecording(true);
+      } catch (error) {
+        console.error("Permission denied or error:", error);
+      }
+    } else {
+      setIsRecording(false);
+      if (recordingStream) {
+        recordingStream.getTracks().forEach((track) => track.stop());
+        setRecordingStream(null);
+      }
+    }
+  };
+
+  // Create a ref to call the Recording component's methods.
+  const recordingRef = useRef<RecordingHandle>(null);
 
   return (
     <div className="app-container" style={{ height: "100vh", position: "relative" }}>
       {/* Main Toolbar always rendered */}
       <MainToolbar
-        onToggleRecording={() => setIsRecording((prev) => !prev)}
+        onToggleRecording={handleToggleRecording}
         isRecording={isRecording}
         onPdfUpload={handlePdfUpload}
         onToggleSmallWebcam={() => setIsSmallWebcamActive((prev) => !prev)}
+        onDownloadLast15={() => {
+          // Call the exposed function from the Recording component.
+          recordingRef.current?.downloadLast15Minutes();
+        }}
       />
 
       {/* Render PDF overlay */}
@@ -158,7 +185,7 @@ const AppContent: React.FC = () => {
       )}
 
       {/* Recording component is managed locally */}
-      <Recording isRecording={isRecording} />
+      <Recording ref={recordingRef} isRecording={isRecording} stream={recordingStream} />
     </div>
   );
 };
