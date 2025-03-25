@@ -1,5 +1,4 @@
-// src/Excalidraw/ExcalidrawGeneral.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ExcalidrawCanvas from "./Excalidraw/ExcalidrawCanvas";
 import ExcalidrawToolbar from "./Excalidraw/ExcalidrawToolbar";
 import "./css/Excalidraw.css";
@@ -17,11 +16,11 @@ const ExcalidrawGeneral: React.FC = () => {
 
   // Get PDF viewer state from PdfContext.
   const { pdfState } = usePdfContext();
-  const pdfViewerMode = pdfState.isViewerActive;
+  const pdfViewerActive = pdfState.isViewerActive;
 
   // Get RealView state from RealViewContext.
   const { realViewState } = useRealViewContext();
-  const isStreamMode = realViewState.isStreamMode;
+  const realViewActive = realViewState.isStreamMode;
 
   // Get meeting state from MeetingContext.
   const { meetingState } = useMeetingContext();
@@ -31,16 +30,46 @@ const ExcalidrawGeneral: React.FC = () => {
   // Local state for the currently selected tool.
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
-  // Compute whether to hide Excalidraw:
-  // Hide if PDF viewer, RealView stream mode, or meeting is active, and we're not in "draw" mode.
-  const shouldHideExcalidraw = ((pdfViewerMode || isStreamMode || meetingState.isActive) && displayMode !== "draw");
+  // State to track if any overlay is active
+  const [isAnyOverlayActive, setIsAnyOverlayActive] = useState<boolean>(false);
+
+  // Recompute isAnyOverlayActive whenever relevant states change
+  useEffect(() => {
+    const isMeetingActive = meetingState.isActive && !meetingState.isMinimized;
+    const newIsAnyOverlayActive = pdfViewerActive || realViewActive || isMeetingActive;
+
+    console.log("Recomputing isAnyOverlayActive:");
+    console.log("  pdfViewerActive:", pdfViewerActive);
+    console.log("  realViewActive:", realViewActive);
+    console.log("  meetingState.isActive:", meetingState.isActive);
+    console.log("  meetingState.isMinimized:", meetingState.isMinimized); // Log isMinimized
+    console.log("  isMeetingActive:", isMeetingActive);
+    console.log("  newIsAnyOverlayActive:", newIsAnyOverlayActive);
+
+    setIsAnyOverlayActive(newIsAnyOverlayActive);
+  }, [pdfViewerActive, realViewActive, meetingState.isActive, meetingState.isMinimized]);
+
+  // We hide ExcalidrawGeneral when any overlay is active and we're not in draw mode.
+  const shouldHideExcalidraw = isAnyOverlayActive && displayMode !== "draw";
+
+  console.log("Rendering ExcalidrawGeneral:");
+  console.log("  meetingState.isMinimized:", meetingState.isMinimized); // Log isMinimized during render
+  console.log("  displayMode:", displayMode);
+  console.log("  isAnyOverlayActive:", isAnyOverlayActive);
+  console.log("  shouldHideExcalidraw:", shouldHideExcalidraw);
+  console.log("  isIslandVisible:", isIslandVisible);
 
   const handleToolSelect = (tool: string) => {
+    console.log("Tool selected:", tool);
     setSelectedTool(tool);
   };
 
   const toggleIslandVisibility = () => {
-    setIsIslandVisible((prev) => !prev);
+    setIsIslandVisible((prev) => {
+      const newVisibility = !prev;
+      console.log("Toggling island visibility:", newVisibility);
+      return newVisibility;
+    });
   };
 
   // Build the container class based on the current state.
@@ -50,11 +79,15 @@ const ExcalidrawGeneral: React.FC = () => {
     displayMode === "draw" ? "excalidraw-draw-active" : ""
   }`;
 
+  console.log("Computed containerClass:", containerClass);
+
   // Apply the overlay z-index when in draw mode.
   const containerStyle: React.CSSProperties = {
     height: "100%",
     ...(displayMode === "draw" && { zIndex: overlayZIndices.overlay }),
   };
+
+  console.log("Computed containerStyle:", containerStyle);
 
   return (
     <div className={containerClass} style={containerStyle}>

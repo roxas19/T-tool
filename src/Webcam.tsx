@@ -2,11 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./css/Webcam.css";
 
-type SmallWebcamProps = {
-  onClose: () => void;
-};
-
-const SmallWebcam: React.FC<SmallWebcamProps> = ({ onClose }) => {
+const SmallWebcam: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
@@ -61,7 +57,6 @@ const SmallWebcam: React.FC<SmallWebcamProps> = ({ onClose }) => {
       <video ref={videoRef} autoPlay muted className="small-webcam-video" />
       <div className="small-webcam-controls">
         <button onClick={handleSwitchCamera}>Switch Camera</button>
-        <button onClick={onClose}>Close</button>
       </div>
     </>
   );

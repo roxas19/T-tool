@@ -15,17 +15,17 @@ const initialMeetingState: MeetingState = {
 
 type MeetingAction =
   | { type: "OPEN_MEETING" }
-  | { type: "MINIMIZE_MEETING" }
-  | { type: "CLOSE_MEETING" };
+  | { type: "CLOSE_MEETING" }
+  | { type: "SET_MINIMIZED"; payload: boolean };
 
 function meetingReducer(state: MeetingState, action: MeetingAction): MeetingState {
   switch (action.type) {
     case "OPEN_MEETING":
       return { ...state, isActive: true, isMinimized: false, state: "setup" };
-    case "MINIMIZE_MEETING":
-      return { ...state, isMinimized: true };
     case "CLOSE_MEETING":
       return { ...state, isActive: false, isMinimized: false, state: "setup" };
+    case "SET_MINIMIZED":
+      return { ...state, isMinimized: action.payload };
     default:
       return state;
   }

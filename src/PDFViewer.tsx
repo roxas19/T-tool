@@ -3,7 +3,7 @@ import React from "react";
 import PdfContent from "./PdfViewer/PdfContent";
 import PdfControls from "./PdfViewer/PdfControls";
 import { usePdf } from "./PdfViewer/usePdf";
-import "./css/PDFViewer.css";
+import "./PdfViewer/PDFViewer.css";
 
 interface PdfViewerProps {
   src: string;

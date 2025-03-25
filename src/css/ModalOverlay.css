@@ -1,0 +1,82 @@
+/* ModalOverlay.css */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7); /* Slightly transparent overlay */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-index-overlay, 1100);
+  }
+  
+  .modal-overlay-content {
+    background: #121212; /* Dark gray background (less stark than pure black) */
+    color: #fff;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+    max-width: 400px;
+    width: 90%;
+    font-family: sans-serif;
+    text-align: center;
+    position: relative;
+  }
+  
+  /* Heading */
+  .modal-overlay-content h2 {
+    margin: 0 0 16px;
+    font-size: 22px;
+    line-height: 1.2;
+    font-weight: 600;
+  }
+  
+  /* Input Field */
+  .modal-overlay-content input {
+    width: 100%;
+    padding: 12px;
+    margin: 12px 0;
+    border: 2px solid #414141;
+    border-radius: 8px;
+    font-size: 15px;
+    background: #f7f7f7; /* Subtle off-white */
+    color: #000;
+    box-sizing: border-box;
+  }
+  
+  /* Button */
+  .modal-overlay-content button {
+    display: inline-block;
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    border: 2px solid #414141;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    color: #000;
+    cursor: pointer;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .modal-overlay-content button:hover {
+    background: linear-gradient(135deg, #FFB347, #FFCC80);
+    box-shadow: 0 0 8px rgba(255, 204, 128, 0.8);
+    color: #000;
+  }
+  
+  /* Close Button */
+  .modal-overlay-close-button {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: transparent;
+    border: none;
+    font-size: 28px;
+    color: #fff;
+    cursor: pointer;
+  }
+  

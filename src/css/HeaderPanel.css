@@ -1,0 +1,43 @@
+/* Shared styles for circular header panels */
+.header-panel-circle {
+    position: fixed;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.85);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1020;
+    cursor: pointer;
+    transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.header-panel-left {
+    top: 20px;
+    left: 20px;
+}
+
+.header-panel-right {
+    top: 20px;
+    right: 20px;
+}
+
+/* Icon styles inside the circles */
+.header-panel-icon {
+    width: 24px; /* Adjust icon size */
+    height: 24px;
+    background-color: #ffffff; /* White background for the icon */
+    border: 2px solid #000; /* Black border around the icon */
+    border-radius: 50%; /* Circular background for the icon */
+    padding: 4px; /* Padding inside the circle */
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.header-panel-icon:hover {
+    transform: scale(1.1); /* Slight zoom effect on hover */
+    background-color: #f0f0f0; /* Light gray background on hover */
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.2); /* Subtle shadow effect */
+}

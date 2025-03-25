@@ -8,49 +8,45 @@ interface ActiveVideoGridProps {
 }
 
 const ActiveVideoGrid: React.FC<ActiveVideoGridProps> = ({ activeParticipants, renderTile }) => {
-  // Compute grid styles based on the number of active participants.
-  let gridStyle: React.CSSProperties = {};
+  // Base grid style shared across layouts.
+  const baseGridStyle: React.CSSProperties = {
+    display: "grid",
+    gap: "20px",
+  };
+
+  // Adjust grid template based on participant count.
+  let gridTemplateStyles: React.CSSProperties = {};
 
   switch (activeParticipants.length) {
     case 1:
-      gridStyle = {
-        display: "grid",
+      gridTemplateStyles = {
         gridTemplateColumns: "1fr",
         gridTemplateRows: "1fr",
-        height: "80vh",
-        gap: "20px",
       };
       break;
     case 2:
-      gridStyle = {
-        display: "grid",
+      gridTemplateStyles = {
         gridTemplateColumns: "1fr 1fr",
         gridTemplateRows: "1fr",
-        height: "80vh",
-        gap: "20px",
       };
       break;
     case 3:
-      // For three participants, use a two-row layout with the third tile spanning two columns.
-      gridStyle = {
-        display: "grid",
+      gridTemplateStyles = {
         gridTemplateColumns: "1fr 1fr",
         gridTemplateRows: "1fr 1fr",
-        height: "80vh",
-        gap: "20px",
       };
       break;
     default:
       // Four or more participants: use a standard 2×2 grid.
-      gridStyle = {
-        display: "grid",
+      gridTemplateStyles = {
         gridTemplateColumns: "1fr 1fr",
         gridTemplateRows: "1fr 1fr",
-        height: "80vh",
-        gap: "20px",
       };
       break;
   }
+
+  // Merge base styles with template-specific styles.
+  const gridStyle: React.CSSProperties = { ...baseGridStyle, ...gridTemplateStyles };
 
   return (
     <div className="participant-grid" style={gridStyle}>

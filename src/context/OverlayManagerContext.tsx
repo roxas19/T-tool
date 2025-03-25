@@ -11,7 +11,6 @@ export interface OverlayZIndices {
 }
 
 export type OverlayManagerState = {
-  // Stack of overlays; the last item is the active (visible) overlay.
   activeStack: OverlayType[];
   displayMode: "regular" | "draw";
   overlayZIndices: OverlayZIndices;
@@ -40,11 +39,15 @@ function overlayManagerReducer(
 ): OverlayManagerState {
   switch (action.type) {
     case "PUSH_OVERLAY":
-      return { ...state, activeStack: [...state.activeStack, action.payload] };
-    case "POP_OVERLAY": {
-      const newStack = state.activeStack.slice(0, -1);
-      return { ...state, activeStack: newStack };
-    }
+      return {
+        ...state,
+        activeStack: [
+          ...state.activeStack.filter((o) => o !== action.payload),
+          action.payload,
+        ],
+      };
+    case "POP_OVERLAY":
+      return { ...state, activeStack: state.activeStack.slice(0, -1) };
     case "SET_DISPLAY_MODE":
       return { ...state, displayMode: action.payload };
     case "SET_OVERLAY_ZINDICES":

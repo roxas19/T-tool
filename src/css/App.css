@@ -1,66 +1,47 @@
+
+
+/*************************************************************
+ * Root Variables
+ *************************************************************/
 :root {
-  --z-index-background: 1000; /* Base background elements (e.g. PDF viewer, fullscreen webcam background) */
-  --z-index-overlay: 1002;    /* Overlays (e.g. Excalidraw draw mode, webcam small container) */
-  --z-index-toolbar: 1050;    /* Toolbars (e.g. meeting controls) */
-  --z-index-controls: 1010;   /* Webcam controls, meeting buttons */
-  --z-index-extra: 1100;      /* Always-on-top elements (e.g. toggle buttons, main toolbar) */
-  --sidebar-bg: #0a0a0a;         /* Deep black for sidebar background */
-  --primary-color: #8B0000;      /* Dark blood red for active buttons */
-  --secondary-color: #FF4500;    /* Vibrant orange for hover effects */
-  --accent-color: #FFD700;       /* Bright yellow accent */
+  --z-index-background: 1000;
+  --z-index-overlay: 1002;
+  --z-index-toolbar: 1050;
+  --z-index-controls: 1010;
+  --z-index-extra: 1100;
+
+  --sidebar-bg: #0a0a0a;
+  --primary-color: #8B0000;
+  --secondary-color: #FF4500;
+  --accent-color: #FFD700;
   --button-bg-default: transparent;
-  --border-color: rgba(255, 165, 0, 0.5); /* Semi-transparent orange */
-  --text-color: #f0f0f0;         /* Light text for readability */
-  --toolbar-height: 75px;
+  --border-color: rgba(255, 165, 0, 0.5);
+  --text-color: #f0f0f0;
+  --maintoolbar-height: 65px;
+
+  /* Button sizing */
+  --btn-width: 32px;
+  --btn-height: 32px;
+  --btn-padding: 8px 16px;
+  --btn-font-size: 14px;
+
+  --maintoolbar-height: 60px;
+  --border-radius-sm: 5px;
+  --border-radius-md: 10px;
+  --border-radius-lg: 15px;
+  
+  --spacing-xs: 5px;
+  --spacing-sm: 10px;
+  --spacing-md: 15px;
+  --spacing-lg: 20px;
+  
+  --transition-speed: 0.2s;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+  
+  --video-aspect-ratio: 16 / 9;
+  --video-max-height: 90vh;
+  --video-container-padding: 10px;
 }
 
-
-
-
-/* PDF Upload Button */
-.pdf-upload-button {
-  cursor: pointer;
-  margin: 0 10px;
-  padding: 8px 16px;
-  background-color: #007bff;
-  color: #fff;
-  border-radius: 4px;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.pdf-upload-button:hover {
-  background-color: #0056b3;
-}
-
-/* --------------------------
-   Tool Config Menu
--------------------------- */
-.tool-config-menu {
-  position: fixed; /* Fixed positioning to avoid stacking issues */
-  top: 60px;
-  right: 20px;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  z-index: var(--z-index-extra);
-  width: 150px;
-}
-
-.tool-config-menu h4 {
-  margin: 0 0 5px;
-  font-size: 14px;
-}
-
-.color-options {
-  display: flex;
-  gap: 5px;
-}
-
-.color-options button {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  cursor: pointer;
-  border: none;
-}

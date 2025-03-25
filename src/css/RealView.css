@@ -2,56 +2,31 @@
    RealView Container
 -------------------------- */
 .realview-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: black;
-    overflow: hidden;
-  }
-  
-  /* Optional modifier for full-screen mode (if needed) */
-  .realview-container.fullscreen {
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-  }
-  
-  /* --------------------------
-     RealView Video
-  -------------------------- */
-  .realview-video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    pointer-events: none;
-  }
-  
-  /* --------------------------
-     RealView Controls
-  -------------------------- */
-  .realview-controls {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    display: flex;
-    gap: 10px;
-    pointer-events: auto;
-  }
-  
-  .realview-controls button,
-  .realview-controls .interactive-button {
-    padding: 8px 12px;
-    background-color: #1976d2;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    font-size: 14px;
-  }
-  
-  .realview-controls button:hover,
-  .realview-controls .interactive-button:hover {
-    background-color: #0d47a1;
-  }
-  
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000; /* Black background for RealView */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* --------------------------
+   RealView Video Element
+-------------------------- */
+.realview-video {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+
+/* --------------------------
+   Utility Classes
+-------------------------- */
+.pointer-none {
+  pointer-events: none;
+}

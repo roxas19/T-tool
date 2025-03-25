@@ -1,396 +1,373 @@
-/* ==========================================================================
-   Global Settings
-   ========================================================================== */
-   body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f0f0f0;
-  }
-  
-  /* ==========================================================================
-     App & Main Containers
-     ========================================================================== */
-  .app-container {
-    height: 100vh;
-    overflow: hidden;
-    position: relative;
-  }
-  
-  /* ==========================================================================
-     Persistent Meeting Overlay & Header (Managed in App.tsx)
-     ========================================================================== */
-  /* We now structure the overlay as a grid with three rows:
-     header, meeting-content, and control-panel, with an 8px gap between rows.
-  */
-  .meeting-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    min-height: 100vh;
-    background-color: #fff;
-    z-index: 1000;
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-    gap: 8px;
-    overflow: hidden;
-  }
-  
-  /* Persistent header that always appears at the top */
-  .meeting-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #007bff;
-    color: #fff;
-    padding: 10px 20px;  /* top and sides */
-    font-size: 18px;
-    flex-shrink: 0;
-    /* The 8px gap below is now handled by the grid gap */
-  }
-  
-  .meeting-header button {
-    background: none;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    font-size: 16px;
-  }
-  
-  /* ==========================================================================
-     Meeting Content Area (Rendered by MeetingUI.tsx)
-     This container sits directly between the header and the control panel.
-     ========================================================================== */
-  .meeting-content {
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    height: 100%;  /* Fill the available grid row */
-    overflow-y: auto;
-    background-color: #f8f9fa;
-  }
-  
-  /* ==========================================================================
-     Video Grid & Related Containers
-     ========================================================================== */
-  .video-grid-container {
-    width: 100%;
-    height: 100%; /* Let it fill the meeting-content area */
-    display: grid; /* Use grid so the participant-grid can fill available space */
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    margin-bottom: 8px;
-  }
-  
-  .participant-grid {
-    display: grid;
-    width: 100%;
-    height: 100%;
-    gap: 0;  /* No gap so that video tiles can fill the area */
-    grid-template-rows: 1fr;  /* Default for one tile */
-    grid-template-columns: 1fr;
-    overflow: hidden;
-  }
-  
-  /* Additional classes for dynamic tile layout (to be applied via JavaScript):
-     .one-tile: for one video tile (full area)
-     .two-tiles: for two tiles (vertically stacked: 2 rows, 1 column)
-     .grid-2x2: for three or four tiles (2×2 grid)
-  */
-  .participant-grid.one-tile {
-    grid-template-rows: 1fr;
-    grid-template-columns: 1fr;
-  }
-  
-  .participant-grid.two-tiles {
-    grid-template-rows: 1fr 1fr;
-    grid-template-columns: 1fr;
-  }
-  
-  .participant-grid.grid-2x2 {
-    grid-template-rows: 1fr 1fr;
-    grid-template-columns: 1fr 1fr;
-  }
-  
-  .grid-slot {
-    background-color: #000;
-    border-radius: 10px;
-    overflow: hidden;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .grid-slot video {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-  
-  /* Adjustments when the local participant is sharing screen */
-  .screen-share-adjust {
-    width: 100%;
-    height: 100%;
-    /* Removed aspect-ratio so it fills its container */
-  }
-  
-  /* Placeholder for empty grid cells */
-  .grid-slot.placeholder {
-    background-color: #e9ecef;
-    border: 1px dashed #ced4da;
-    color: #6c757d;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  /* ==========================================================================
-     Meeting Controls Panel
-     ========================================================================== */
-  /* Now part of the grid in the meeting-overlay (third row) */
-  .control-panel {
-    background-color: #f8f9fa;
-    padding: 0;  /* No extra padding */
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-    /* It will automatically be placed at the bottom row of the grid */
-  }
-  
-  .control-button {
-    padding: 12px 20px;
-    font-size: 16px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .stop-button {
-    background-color: #dc3545;
-    color: #fff;
-  }
-  
-  .share-button {
-    background-color: #28a745;
-    color: #fff;
-  }
-  
-  .participants-button {
-    background-color: #007bff;
-    color: #fff;
-  }
-  
-  /* ==========================================================================
-     Modal (Meeting Setup)
-     ========================================================================== */
-  .modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-  }
-  
-  .modal-content {
-    background-color: #fff;
-    padding: 20px;
-    width: 300px;
-    border-radius: 10px;
-    text-align: center;
-  }
-  
-  .modal-content h2 {
-    margin-bottom: 15px;
-  }
-  
-  .modal-content input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
-  
-  .modal-content button {
-    padding: 10px 15px;
-    background-color: #007bff;
-    border: none;
-    border-radius: 5px;
-    color: #fff;
-    cursor: pointer;
-  }
-  
-  /* ==========================================================================
-     Minimized State
-     ========================================================================== */
-  .hidden {
-    display: none;
-  }
-  
-  .minimized {
-    width: 300px;
-    height: 50px;
-    padding: 0;
-    overflow: hidden;
-    border: 1px solid #ccc;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #007bff;
-    color: #fff;
-    cursor: pointer;
-  }
-  
-  /* ==========================================================================
-     New Minimized Meeting Panel Styles
-     ========================================================================== */
-  .minimized-panel {
-    position: fixed;
-    bottom: 10px;
-    left: 10px;
-    padding: 5px 10px;
-    background-color: #007bff;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    z-index: 10000;
-  }
-  
-  .minimized-panel .control-button {
-    padding: 5px 10px;
-    font-size: 14px;
-  }
-  
-  /* ==========================================================================
-     Additional Controls & UI Elements
-     ========================================================================== */
-  .meeting-status {
-    font-size: 1.5rem;
-    color: #6c757d;
-    text-align: center;
-    margin-top: 20px;
-  }
-  
-  .controls {
-    display: flex;
-    gap: 1rem;
-    margin-top: 20px;
-  }
-  
-  .controls button {
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    color: #fff;
-    background-color: #007bff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .controls button:hover {
-    background-color: #0056b3;
-  }
-  
-  .screen-share {
-    background-color: #ffc107;
-    color: #212529;
-    padding: 0.5rem;
-    border-radius: 5px;
-    margin-top: 10px;
-  }
-  
-  /* ==========================================================================
-     Participant List & Controls
-     ========================================================================== */
-  .participant-list {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 15px;
-    max-height: 300px;
-    overflow-y: auto;
-  }
-  
-  .participant-list h3 {
-    margin: 0 0 10px;
-    font-size: 18px;
-    text-align: center;
-  }
-  
-  .participant-list ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .participant-list li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px;
-    background-color: #f8f9fa;
-    border-radius: 5px;
-    margin-bottom: 5px;
-  }
-  
-  .participant-list li span {
-    font-size: 14px;
-  }
-  
-  .muted {
-    color: gray;
-    font-size: 12px;
-  }
-  
-  .grant-controls {
-    margin-top: 5px;
-  }
-  
-  .grant-controls .control-button {
-    margin-right: 5px;
-  }
-  
-  .expanded-video-overlay {
-    position: absolute; /* or fixed if you prefer */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    /* No additional background so it mimics the one-tile layout */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-  }
-  
-  .close-button {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.8);
-    border: none;
-    padding: 10px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    z-index: 10001;
-  }
-  
+
+/*************************************************************
+ * Meeting Overlay & Content
+ *************************************************************/
+ .meeting-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #ffffff;
+  z-index: var(--z-index-background);
+  display: flex;
+  flex-direction: column;
+}
+
+.meeting-content {
+  position: absolute;
+  top: var(--maintoolbar-height);
+  bottom: var(--maintoolbar-height);
+  left: 10px;
+  right: 10px;
+  background-color: #ffffff;
+  overflow: hidden; /* Prevent scrollbars on the meeting area */
+  z-index: var(--z-index-overlay);
+}
+
+/*************************************************************
+ * Video Grid & Participant Grid
+ *************************************************************/
+/* Container for the video grid (green background) */
+.video-grid-container {
+  width: 100%;
+  height: 100%;
+  background-color: #ffffff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 10px;
+  /* Add this to ensure proper sizing */
+  position: relative;
+}
+
+/* The participant grid itself */
+.participant-grid {
+  background-color: #ffffff;
+  display: grid;
+  gap: 10px;
+  /* Change to these dimensions */
+  width: 100%;
+  height: 100%;
+  max-width: 1200px; /* Add a max-width */
+  margin: 0 auto;
+  aspect-ratio: 16 / 9; /* Maintain video aspect ratio */
+}
+
+/* Layout Variations for the Participant Grid */
+.participant-grid.one-tile {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+.participant-grid.two-tiles {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+}
+
+.participant-grid.grid-2x2 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+/* Each video tile */
+.grid-slot {
+  background-color: #000;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  /* Add this to ensure proper sizing */
+  position: relative;
+}
+
+.grid-slot video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background-color: #000;
+  /* Add this to ensure video respects container */
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* For screen sharing adjustments */
+.screen-share-adjust {
+  width: 100%;
+  height: 100%;
+}
+
+/* Placeholder for empty tiles */
+.grid-slot.placeholder {
+  background-color: #e9ecef;
+  border: 1px dashed #ced4da;
+  color: #6c757d;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/*************************************************************
+ * Meeting Controls
+ *************************************************************/
+.control-button {
+  padding: 12px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.control-button:hover {
+  background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+  color: #000;
+}
+
+.stop-button {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.share-button {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.participants-button {
+  background-color: #007bff;
+  color: #fff;
+}
+
+/*************************************************************
+ * Modal (Meeting Setup)
+ *************************************************************/
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-index-extra);
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 20px;
+  width: 300px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.modal-content h2 {
+  margin-bottom: 15px;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.modal-content button {
+  padding: 10px 15px;
+  background-color: #007bff;
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+}
+
+/*************************************************************
+ * Minimized / Hidden States
+ *************************************************************/
+.hidden {
+  display: none;
+}
+
+.minimized {
+  width: 300px;
+  height: 50px;
+  overflow: hidden;
+  border: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #007bff;
+  color: #fff;
+  cursor: pointer;
+}
+
+/*************************************************************
+ * Minimized Panel
+ *************************************************************/
+.minimized-panel {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  padding: 5px 10px;
+  background-color: #007bff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  z-index: var(--z-index-extra);
+}
+
+.minimized-panel .control-button {
+  padding: 5px 10px;
+  font-size: 14px;
+}
+
+/*************************************************************
+ * Additional Controls & UI
+ *************************************************************/
+.meeting-status {
+  font-size: 1.5rem;
+  color: #6c757d;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.controls {
+  display: flex;
+  gap: 1rem;
+  margin-top: 20px;
+}
+
+.controls button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.controls button:hover {
+  background-color: #0056b3;
+}
+
+.screen-share {
+  background-color: #ffc107;
+  color: #212529;
+  padding: 0.5rem;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+/*************************************************************
+ * Participant List & Controls
+ *************************************************************/
+.participant-list {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: var(--z-index-controls);
+}
+
+.participant-list h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  text-align: center;
+}
+
+.participant-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.participant-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  margin-bottom: 5px;
+}
+
+.participant-list li span {
+  font-size: 14px;
+}
+
+.muted {
+  color: gray;
+  font-size: 12px;
+}
+
+.grant-controls {
+  margin-top: 5px;
+}
+
+.grant-controls .control-button {
+  margin-right: 5px;
+}
+
+/*************************************************************
+ * Expanded Video Overlay
+ *************************************************************/
+.expanded-video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: var(--z-index-extra);
+}
+
+.close-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: calc(var(--z-index-extra) + 1);
+}
+
+.expanded-video-overlay.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: calc(var(--z-index-extra) + 1);
+}

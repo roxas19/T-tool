@@ -1,54 +1,46 @@
-// src/App.tsx
-import React, { useState, useRef } from "react";
+// App.tsx
+import React, { useState } from "react";
 import { AppProviders } from "./context/AppProviders";
-import MainToolbar from "./MainToolbar";
+import MainToolbar from "./MainToolBar/MainToolbar";
 import ExcalidrawGeneral from "./ExcalidrawGeneral";
-import Recording, { RecordingHandle } from "./Recording";
+import Recording from "./Recording";
 import VideoPlayer from "./VideoPlayer";
 import PdfViewer from "./PDFViewer";
 import WebcamDisplay from "./RealView";
 import MeetingApp from "./MeetingApp";
-import MinimizedMeetingPanel from "./Meeting/MinimizedMeetingPanel";
 import SmallWebcam from "./Webcam"; // Small webcam component
 import { MediaToggleProvider } from "./Meeting/MediaToggleContext";
 import { usePageNavigation } from "./hooks/usePageNavigation";
 import { useSmallWebcamVisibility } from "./hooks/useWebcamVisibility";
 
 // Import specialized context hooks
-import { useMeetingContext } from "./context/MeetingContext";
 import { usePdfContext } from "./context/PdfContext";
 import { useRealViewContext } from "./context/RealViewContext";
 import { useOverlayManager } from "./context/OverlayManagerContext";
+import { useMeetingContext } from "./context/MeetingContext";
 
 import "./css/App.css";
+import "./css/MeetingApp.css";
 
 const AppContent: React.FC = () => {
   // Page navigation hook.
   const { currentPage } = usePageNavigation(null);
 
-  // Local state for recording and video player.
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingStream, setRecordingStream] = useState<MediaStream | null>(null);
+  // Local state for video player and small webcam.
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
   const [playbackMode, setPlaybackMode] = useState<"youtube" | "local">("youtube");
-
-  // Local state for the small webcam overlay.
   const [isSmallWebcamActive, setIsSmallWebcamActive] = useState(false);
 
   // Use specialized contexts.
   const { pdfState, pdfDispatch } = usePdfContext();
-  const { meetingState, meetingDispatch } = useMeetingContext();
   const { realViewState, realViewDispatch } = useRealViewContext();
   const { overlayState, overlayDispatch } = useOverlayManager();
+  const { meetingState } = useMeetingContext();
 
-  // Determine the active overlay (for PDF, RealView, Meeting) via the overlay manager.
-  const activeOverlay =
-    overlayState.activeStack[overlayState.activeStack.length - 1];
+  // Determine the active overlay from the overlay manager's stack.
+  const activeOverlay = overlayState.activeStack[overlayState.activeStack.length - 1];
 
-  // Derive whether the meeting overlay is minimized.
-  const isMeetingMinimized = meetingState.isActive && activeOverlay !== "meeting";
-
-  // Compute the effective visibility of the small webcam overlay.
+  // Compute the effective visibility for the small webcam overlay.
   const smallWebcamVisible = useSmallWebcamVisibility(isSmallWebcamActive, overlayState.activeStack);
 
   // Handler for PDF uploads.
@@ -58,43 +50,13 @@ const AppContent: React.FC = () => {
     overlayDispatch({ type: "PUSH_OVERLAY", payload: "pdf" });
   };
 
-  // New onToggleRecording handler that manages permission and stream state.
-  const handleToggleRecording = async () => {
-    if (!isRecording) {
-      try {
-        const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-          audio: { echoCancellation: true },
-        });
-        setRecordingStream(stream);
-        setIsRecording(true);
-      } catch (error) {
-        console.error("Permission denied or error:", error);
-      }
-    } else {
-      setIsRecording(false);
-      if (recordingStream) {
-        recordingStream.getTracks().forEach((track) => track.stop());
-        setRecordingStream(null);
-      }
-    }
-  };
-
-  // Create a ref to call the Recording component's methods.
-  const recordingRef = useRef<RecordingHandle>(null);
-
   return (
     <div className="app-container" style={{ height: "100vh", position: "relative" }}>
       {/* Main Toolbar always rendered */}
       <MainToolbar
-        onToggleRecording={handleToggleRecording}
-        isRecording={isRecording}
         onPdfUpload={handlePdfUpload}
+        isSmallWebcamActive={isSmallWebcamActive}
         onToggleSmallWebcam={() => setIsSmallWebcamActive((prev) => !prev)}
-        onDownloadLast15={() => {
-          // Call the exposed function from the Recording component.
-          recordingRef.current?.downloadLast15Minutes();
-        }}
       />
 
       {/* Render PDF overlay */}
@@ -126,55 +88,27 @@ const AppContent: React.FC = () => {
       {/* Render Small Webcam overlay independently */}
       {smallWebcamVisible && (
         <div className="small-webcam-wrapper">
-          <SmallWebcam onClose={() => setIsSmallWebcamActive(false)} />
+          <SmallWebcam />
         </div>
       )}
 
-      {/* Render Meeting overlay */}
-      {meetingState.isActive && (
-        <MediaToggleProvider>
-          <div className={`meeting-overlay ${activeOverlay === "meeting" ? "" : "hidden"}`}>
-            <div className="meeting-header">
-              <span>Meeting in Progress</span>
-              <button
-                onClick={() => {
-                  overlayDispatch({ type: "POP_OVERLAY" });
-                }}
-              >
-                Minimize
-              </button>
-              <button
-                onClick={() => {
-                  meetingDispatch({ type: "CLOSE_MEETING" });
-                  overlayDispatch({ type: "POP_OVERLAY" });
-                }}
-              >
-                Close Meeting
-              </button>
+      {/* Render Meeting overlay if meeting is active.
+          MeetingApp remains mounted as long as meetingState.isActive is true.
+          Its container receives a "hidden" class when meeting is not the active overlay. */}
+      {/* Render Meeting overlay if meeting is active */}
+        {meetingState.isActive && (
+          <MediaToggleProvider>
+            <div
+              className={`meeting-overlay ${(meetingState.isMinimized || activeOverlay !== "meeting") ? "hidden" : ""}`}
+              style={{ zIndex: overlayState.overlayZIndices.overlay }}
+            >
+              <MeetingApp />
             </div>
-            <MeetingApp
-              isMeetingMinimized={isMeetingMinimized}
-              onMeetingStart={() => {
-                meetingDispatch({ type: "OPEN_MEETING" });
-                overlayDispatch({ type: "PUSH_OVERLAY", payload: "meeting" });
-              }}
-              onClose={() => {
-                meetingDispatch({ type: "CLOSE_MEETING" });
-                overlayDispatch({ type: "POP_OVERLAY" });
-              }}
-            />
-          </div>
-          {isMeetingMinimized && (
-            <MinimizedMeetingPanel
-              onMaximize={() =>
-                overlayDispatch({ type: "PUSH_OVERLAY", payload: "meeting" })
-              }
-            />
-          )}
-        </MediaToggleProvider>
-      )}
-
-      {/* ExcalidrawGeneral is always rendered */}
+          </MediaToggleProvider>
+        )}
+      {/* Always render ExcalidrawGeneral. 
+          ExcalidrawGeneral itself determines whether to hide via its internal logic
+          (based on pdf, realview, and meeting contexts). */}
       <ExcalidrawGeneral />
 
       {/* Optional: Floating Video Player */}
@@ -184,8 +118,8 @@ const AppContent: React.FC = () => {
         </div>
       )}
 
-      {/* Recording component is managed locally */}
-      <Recording ref={recordingRef} isRecording={isRecording} stream={recordingStream} />
+      {/* Recording component (uses recording module internally) */}
+      <Recording />
     </div>
   );
 };

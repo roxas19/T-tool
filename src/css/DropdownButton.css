@@ -1,9 +1,10 @@
-.record-button-container {
+/* DropdownButton.css */
+.dropdown-button-container {
   position: relative;
   display: inline-block;
 }
 
-.record-button {
+.dropdown-button {
   background-color: #ffffff; /* Default state */
   color: #000;
   border: 3px solid #414141;
@@ -12,11 +13,12 @@
   font-weight: bold;
   cursor: pointer;
   transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  display: inline-block; /* Ensure it doesn't expand unexpectedly */
 }
 
 /* Active (recording) state */
-.record-button.active {
-  background-color: #d20101; /* Red background when recording */
+.dropdown-button.active {
+  background-color: #d20101; /* Red background when active */
   animation: blink 1s infinite;
   color: #fff;
 }
@@ -27,8 +29,8 @@
   100% { opacity: 1; }
 }
 
-/* Download Dropdown Styles */
-.record-dropdown {
+/* Dropdown content style: hidden by default */
+.dropdown-content {
   position: absolute;
   top: 100%; /* Positioned just below the button */
   left: 50%;
@@ -43,29 +45,7 @@
   display: none;
 }
 
-/* Show dropdown when the container has the "recording-hover" class */
-.record-button-container.recording-hover .record-dropdown {
+/* Show dropdown only when container is hovered */
+.dropdown-button-container.hover .dropdown-content {
   display: block;
-}
-
-
-.processing-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.processing-message {
-  background: #fff;
-  padding: 20px 40px;
-  border-radius: 8px;
-  font-size: 20px;
-  font-weight: bold;
 }

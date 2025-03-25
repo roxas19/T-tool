@@ -1,0 +1,128 @@
+/* ControlPanel.css */
+
+.control-panel {
+    position: fixed;
+    background: blue;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: var(--z-index-controls, 1010); /* Fallback z-index if CSS variable is not set */
+    pointer-events: auto;
+    background: rgba(0, 0, 0, 0.85); /* Black background for a unified, elegant look */
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    padding: 0 20px;         /* Only horizontal padding */
+    height: 50px;            /* Fixed height */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 90%;
+    color: var(--text-light, #fff);
+    white-space: nowrap;     /* Prevent wrapping that could increase height */
+  }
+  
+  /* Left, center, and right sections */
+  .control-panel-left-box,
+  .control-panel-center-box,
+  .control-panel-right-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .page-info {
+    font-size: 14px;
+    color: #fff; /* White text */
+  }
+  
+  /* Zoom Area Styles */
+  .zoom-area {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .zoom-value {
+    padding-left: 5px;
+    color: #fff;
+  }
+  
+  .zoom-label {
+    font-size: 14px;
+    color: #fff;
+  }
+  
+  .zoom-range {
+    width: 100px;
+  }
+  
+  /* Button Base Styles for Controls */
+  .control-panel button {
+    background-color: #ffffff; /* White background for buttons */
+    color: #000;               /* Dark text for readability */
+    border: 3px solid transparent; 
+    border-color: #414141;     /* Matching accent border */
+    padding: 4px;         /* Fixed padding */
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    white-space: nowrap;
+  }
+  
+  /* Hover & Active States */
+  .control-panel button:hover {
+    background: linear-gradient(135deg, #FFA500, #FFD700); /* Orangish yellow gradient */
+    box-shadow: 0 0 8px #FFD700;
+    color: #000;
+  }
+  
+  .control-panel button:active {
+    background: var(--secondary-color);
+    box-shadow: 0 0 4px var(--accent-color);
+    color: #000;
+  }
+  
+  /* Icon Button Styles */
+  .control-panel .icon-button {
+    width: 32px;
+    height: 32px;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+  
+  .control-panel .icon-button:hover {
+    background: linear-gradient(135deg, #FFA500, #FFD700);
+    box-shadow: 0 0 8px #FFD700;
+  }
+  
+
+  .control-panel .draw-btn {
+    background-color: #ffffff;
+    color: #000;
+    padding: 16px;
+    cursor: pointer;
+    transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+  
+  .control-panel .draw-btn:hover,
+  .control-panel .exit-btn:hover {
+    background: linear-gradient(135deg, #FFA500, #FFD700);
+    box-shadow: 0 0 8px #FFD700;
+  }
+  
+  
+  .control-panel .draw-btn.active {
+    background: linear-gradient(135deg, #FFA500, #FFD700);
+    color: #000;
+  }
+  
+  /* Utility Class */
+  .pointer-none {
+    pointer-events: none;
+  }
+  

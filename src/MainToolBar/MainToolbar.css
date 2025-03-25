@@ -1,0 +1,93 @@
+/* --------------------------
+   Main Toolbar Container
+-------------------------- */
+.main-toolbar {
+  position: fixed;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85); /* Dark overlay for focus */
+  color: var(--text-light);
+  padding: 0 20px;             /* Only horizontal padding */
+  height: 58px;                /* Fixed height */
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  z-index: var(--z-index-extra);
+  display: flex;
+  align-items: center;         /* Vertical centering */
+  gap: 12px;
+  white-space: nowrap;         /* Prevent buttons from wrapping */
+}
+
+/* --------------------------
+   Main Toolbar Button Base Styles
+-------------------------- */
+.main-toolbar button {
+  background-color: #ffffff;   /* White background for buttons */
+  color: #000;                 /* Dark text for readability */
+  border: 3px solid transparent;
+  border-color: #414141;       /* Accent border */
+  padding: 8px 16px;           /* Standard padding (width can adjust) */
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+/* --------------------------
+   Hover & Active States
+-------------------------- */
+.main-toolbar button:hover {
+  background: linear-gradient(135deg, #FFA500, #FFD700);
+  box-shadow: 0 0 8px #FFD700;
+  color: #000;
+}
+
+.main-toolbar-button.btn-active {
+  background: linear-gradient(to right, #d20101, #f22d2d);
+  color: #fff;
+}
+
+.main-toolbar-button.btn-active:hover {
+  background: linear-gradient(to right, #d20101, #f22d2d);
+  box-shadow: 0 0 0 4px rgb(243, 206, 206);
+}
+
+/* --------------------------
+   Optional: Utility Classes for Button Tiers
+-------------------------- */
+.btn-primary {
+  background-color: #ffffff;
+  border-color: var(--accent-color);
+  color: #000;
+}
+
+.btn-secondary {
+  background-color: var(--secondary-color);
+  border-color: var(--accent-color);
+  color: #000;
+}
+
+/* --------------------------
+   Special Switch Mode Active State
+-------------------------- */
+.main-toolbar button.switch-active {
+  background: radial-gradient(#FFD700, #FFA500);
+  color: #000000;
+}
+
+/* --------------------------
+   Responsive Adjustments
+-------------------------- */
+@media (max-width: 480px) {
+  .main-toolbar {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    height: auto; /* For small screens, you might allow more height if needed */
+  }
+
+  .main-toolbar button {
+    padding: 6px 12px;
+  }
+}
