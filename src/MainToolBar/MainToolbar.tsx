@@ -1,10 +1,10 @@
-// src/components/MainToolbar/MainToolbar.tsx
 import React, { useRef, ChangeEvent } from "react";
 import { usePdfContext } from "../context/PdfContext";
 import { useRealViewContext } from "../context/RealViewContext";
 import { useMeetingContext } from "../context/MeetingContext";
 import { useOverlayManager } from "../context/OverlayManagerContext";
 import { useRecording } from "../Recorder/useRecording";
+import { useMeetingControls } from "../MeetingApp";
 import DropdownButton from "../utils/DropdownButton";
 import MainToolbarButton from "./MainToolbarButton";
 import "./MainToolbar.css";
@@ -22,9 +22,11 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
 }) => {
   const { pdfState, pdfDispatch } = usePdfContext();
   const { realViewState, realViewDispatch } = useRealViewContext();
-  const { meetingDispatch } = useMeetingContext();
+  const { meetingState, meetingDispatch } = useMeetingContext();
   const { overlayState, overlayDispatch } = useOverlayManager();
   const { isRecording, toggleRecording, downloadLast15Minutes } = useRecording();
+
+  const { handleStopMeeting } = useMeetingControls();
 
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const activeOverlay = overlayState.activeStack.at(-1);
@@ -35,6 +37,9 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
   // For RealView:
   const isRealOpen = realViewState.on && realViewState.isStreamMode;
   const isRealActive = activeOverlay === "realview";
+  // For Meeting:
+  const isMeetingActive = activeOverlay === "meeting";
+  const isMeetingMinimized = meetingState.isActive && !isMeetingActive;
 
   const triggerFileUpload = () => pdfInputRef.current?.click();
 
@@ -71,9 +76,19 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     }
   };
 
-  const handleMeetingStart = () => {
-    meetingDispatch({ type: "OPEN_MEETING" });
-    overlayDispatch({ type: "PUSH_OVERLAY", payload: "meeting" });
+  const handleMeetingToggle = async () => {
+    // When meeting is active and the "meeting" overlay is on top,
+    // the button label shows "Exit Meeting" so we call the shared stop handler.
+    if (meetingState.isActive && isMeetingActive) {
+      await handleStopMeeting();
+    } else if (meetingState.isActive && !isMeetingActive) {
+      // Meeting is running but minimized so bring the overlay to the front.
+      overlayDispatch({ type: "PUSH_OVERLAY", payload: "meeting" });
+    } else {
+      // Otherwise, starting a new meeting.
+      meetingDispatch({ type: "OPEN_MEETING" });
+      overlayDispatch({ type: "PUSH_OVERLAY", payload: "meeting" });
+    }
   };
 
   return (
@@ -121,8 +136,16 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
       </DropdownButton>
 
       {/* Meeting Button */}
-      <MainToolbarButton onClick={handleMeetingStart}>
-        Start Meeting
+      <MainToolbarButton
+        active={isMeetingActive}
+        className={!isMeetingActive && isMeetingMinimized ? "switch-active" : ""}
+        onClick={handleMeetingToggle}
+      >
+        {isMeetingActive
+          ? "Exit Meeting"
+          : isMeetingMinimized
+          ? "Switch to Meeting"
+          : "Start Meeting"}
       </MainToolbarButton>
     </div>
   );

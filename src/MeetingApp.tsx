@@ -1,67 +1,64 @@
-import React, { useState } from "react";
+import React from "react";
 import { DailyProvider } from "@daily-co/daily-react";
 import { startMeeting, stopMeeting } from "./Meeting/meetingFunctions";
 import MeetingUI from "./Meeting/MeetingUI";
 import { useOverlayManager } from "./context/OverlayManagerContext";
 import { useMeetingContext } from "./context/MeetingContext";
 import ModalOverlay from "./utils/ModalOverlay";
-import HeaderPanel from "./utils/HeaderPanel";
-
-// Import SVG icons
-import MinimiseIcon from "./icons/minimise.svg";
-import ExitIcon from "./icons/exit.svg";
 import "./css/MeetingApp.css";
+import "./css/ModalOverlay.css";
 
 const MeetingApp: React.FC = () => {
-  const [meetingName, setMeetingName] = useState("default-meeting");
-  const [roomUrl, setRoomUrl] = useState<string | null>(null);
-
   const { overlayState, overlayDispatch } = useOverlayManager();
   const { meetingState, meetingDispatch } = useMeetingContext();
   const meetingZIndex = overlayState.overlayZIndices.overlay;
 
   const handleStartMeeting = async () => {
+    const meetingName = meetingState.meetingName;
     const url = await startMeeting(meetingName);
     if (url) {
-      setRoomUrl(url);
+      // Open the meeting and set meeting details (name and room URL)
       meetingDispatch({ type: "OPEN_MEETING" });
+      meetingDispatch({
+        type: "SET_MEETING_DETAILS",
+        payload: { meetingName, roomUrl: url },
+      });
       overlayDispatch({ type: "PUSH_OVERLAY", payload: "meeting" });
     } else {
       alert("Failed to start the meeting.");
     }
   };
 
-  const handleMinimize = () => {
-    if (overlayState.activeStack.length > 1) {
-      overlayDispatch({ type: "POP_OVERLAY" });
-    }
-    meetingDispatch({ type: "SET_MINIMIZED", payload: true });
-  };
-
-  const handleRestore = () => {
-    meetingDispatch({ type: "SET_MINIMIZED", payload: false });
-  };
-
-  const handleStopMeeting = async () => {
-    try {
-      await stopMeeting(meetingName);
-    } catch (error) {
-      console.error("Error stopping meeting:", error);
-    }
-    setRoomUrl(null);
+  const handleClosePreMeeting = () => {
     meetingDispatch({ type: "CLOSE_MEETING" });
     overlayDispatch({ type: "POP_OVERLAY" });
   };
 
-  if (!roomUrl) {
+  const handleStopMeeting = async () => {
+    try {
+      await stopMeeting(meetingState.meetingName);
+    } catch (error) {
+      console.error("Error stopping meeting:", error);
+    }
+    meetingDispatch({ type: "CLOSE_MEETING" });
+    overlayDispatch({ type: "POP_OVERLAY" });
+  };
+
+  if (!meetingState.roomUrl) {
     return (
-      <ModalOverlay isVisible={true} zIndex={meetingZIndex}>
+      <ModalOverlay
+        isVisible={meetingState.isActive}
+        zIndex={meetingZIndex}
+        onClose={handleClosePreMeeting}
+      >
         <h2>Enter Meeting Name</h2>
         <input
           type="text"
-          placeholder="Meeting Name"
-          value={meetingName}
-          onChange={(e) => setMeetingName(e.target.value)}
+          placeholder="Meeting Title"
+          value={meetingState.meetingName}
+          onChange={(e) =>
+            meetingDispatch({ type: "SET_MEETING_NAME", payload: e.target.value })
+          }
         />
         <button onClick={handleStartMeeting}>Start Meeting</button>
       </ModalOverlay>
@@ -71,37 +68,33 @@ const MeetingApp: React.FC = () => {
   return (
     <DailyProvider>
       <>
-        <HeaderPanel
-          leftContent={
-            meetingState.isMinimized ? (
-              <img
-                src={MinimiseIcon}
-                alt="Restore"
-                onClick={handleRestore}
-                className="header-panel-icon"
-              />
-            ) : (
-              <img
-                src={MinimiseIcon}
-                alt="Minimize"
-                onClick={handleMinimize}
-                className="header-panel-icon"
-              />
-            )
-          }
-          rightContent={
-            <img
-              src={ExitIcon}
-              alt="Close Meeting"
-              onClick={handleStopMeeting}
-              className="header-panel-icon"
-            />
-          }
+        {/* Removed HeaderPanel with minimize/exit buttons */}
+        <MeetingUI
+          roomUrl={meetingState.roomUrl!}
+          onStop={handleStopMeeting}
+          meetingName={meetingState.meetingName}
         />
-        <MeetingUI roomUrl={roomUrl} onStop={handleStopMeeting} meetingName={meetingName} />
       </>
     </DailyProvider>
   );
+};
+
+// Custom hook to expose meeting control logic (stop meeting)
+export const useMeetingControls = () => {
+  const { meetingState, meetingDispatch } = useMeetingContext();
+  const { overlayDispatch } = useOverlayManager();
+
+  const handleStopMeeting = async () => {
+    try {
+      await stopMeeting(meetingState.meetingName);
+    } catch (error) {
+      console.error("Error stopping meeting:", error);
+    }
+    meetingDispatch({ type: "CLOSE_MEETING" });
+    overlayDispatch({ type: "POP_OVERLAY" });
+  };
+
+  return { handleStopMeeting };
 };
 
 export default MeetingApp;

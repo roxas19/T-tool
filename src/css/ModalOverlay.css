@@ -1,82 +1,102 @@
-/* ModalOverlay.css */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7); /* Slightly transparent overlay */
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: var(--z-index-modal, 1000);
+    pointer-events: auto;
+  }
+  
+  .modal-content {
+    position: relative;
+    background: rgb(0, 0, 0);
+    padding: 40px 38px;
+    margin: 0;
+    border-radius: 16px;
+    width: 400px;
+    min-height: 300px;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 24px #FFD700;
+    color: var(--text-light, #fff);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+  }
+  
+  .modal-content input[type="text"] {
+    background-color: rgb(50, 50, 50);
+    color: rgb(255, 255, 255);
+    padding: 18px;
+    border-radius: 12px;
+    border: none;
+    box-shadow: rgba(0, 0, 0, 0.3) 0px 2px 5px;
+    width: 80%;
+    font-size: 1.2em;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .modal-content input[type="text"]:focus {
+    outline: none;
+    box-shadow: 0 0 8px #FFD700;
+  }
+  
+  .modal-content button:not(.modal-close-button) {
+    background: linear-gradient(135deg, #FFA500, #FFD700);
+    color: rgb(0, 0, 0);
+    padding: 18px 36px;
+    border-radius: 16px;
+    border: black;
+    box-shadow: 0 0 8px #FFD700;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    font-size: 1.2em;
+    font-weight: bold;
+    width: 60%;
+  }
+  
+  .modal-content button:not(.modal-close-button):hover {
+    box-shadow: 0 0 16px #FFD700;
+    transform: translateY(-2px);
+  }
+  
+  .modal-content button:not(.modal-close-button):active {
+    background: var(--secondary-color);
+    box-shadow: 0 0 4px var(--accent-color);
+    transform: translateY(1px);
+  }
+  
+  .modal-close-button {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 44px;
+    height: 44px;
+    padding: 4px;
+    margin: 0;
+    border: 3px solid #414141;
+    border-radius: 32px;
+    background-color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: var(--z-index-overlay, 1100);
   }
   
-  .modal-overlay-content {
-    background: #121212; /* Dark gray background (less stark than pure black) */
-    color: #fff;
-    padding: 24px;
-    border-radius: 8px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
-    max-width: 400px;
-    width: 90%;
-    font-family: sans-serif;
-    text-align: center;
-    position: relative;
+  .modal-close-button:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.05);
   }
   
-  /* Heading */
-  .modal-overlay-content h2 {
-    margin: 0 0 16px;
-    font-size: 22px;
-    line-height: 1.2;
-    font-weight: 600;
-  }
-  
-  /* Input Field */
-  .modal-overlay-content input {
-    width: 100%;
-    padding: 12px;
-    margin: 12px 0;
-    border: 2px solid #414141;
-    border-radius: 8px;
-    font-size: 15px;
-    background: #f7f7f7; /* Subtle off-white */
-    color: #000;
-    box-sizing: border-box;
-  }
-  
-  /* Button */
-  .modal-overlay-content button {
-    display: inline-block;
-    width: 100%;
-    padding: 12px;
-    margin-top: 8px;
-    border: 2px solid #414141;
-    border-radius: 8px;
-    background: #fff;
-    font-size: 15px;
-    font-weight: 600;
-    color: #000;
-    cursor: pointer;
-    transition: background 0.2s ease, box-shadow 0.2s ease;
-  }
-  
-  .modal-overlay-content button:hover {
-    background: linear-gradient(135deg, #FFB347, #FFCC80);
-    box-shadow: 0 0 8px rgba(255, 204, 128, 0.8);
-    color: #000;
-  }
-  
-  /* Close Button */
-  .modal-overlay-close-button {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    background: transparent;
-    border: none;
+  .close-icon {
     font-size: 28px;
-    color: #fff;
-    cursor: pointer;
+    color: #000;
+    font-weight: bold;
   }
-  

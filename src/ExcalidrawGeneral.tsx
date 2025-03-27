@@ -35,25 +35,23 @@ const ExcalidrawGeneral: React.FC = () => {
 
   // Recompute isAnyOverlayActive whenever relevant states change
   useEffect(() => {
-    const isMeetingActive = meetingState.isActive && !meetingState.isMinimized;
+    const isMeetingActive = meetingState.isActive;
     const newIsAnyOverlayActive = pdfViewerActive || realViewActive || isMeetingActive;
 
     console.log("Recomputing isAnyOverlayActive:");
     console.log("  pdfViewerActive:", pdfViewerActive);
     console.log("  realViewActive:", realViewActive);
     console.log("  meetingState.isActive:", meetingState.isActive);
-    console.log("  meetingState.isMinimized:", meetingState.isMinimized); // Log isMinimized
     console.log("  isMeetingActive:", isMeetingActive);
     console.log("  newIsAnyOverlayActive:", newIsAnyOverlayActive);
 
     setIsAnyOverlayActive(newIsAnyOverlayActive);
-  }, [pdfViewerActive, realViewActive, meetingState.isActive, meetingState.isMinimized]);
+  }, [pdfViewerActive, realViewActive, meetingState.isActive]);
 
   // We hide ExcalidrawGeneral when any overlay is active and we're not in draw mode.
   const shouldHideExcalidraw = isAnyOverlayActive && displayMode !== "draw";
 
   console.log("Rendering ExcalidrawGeneral:");
-  console.log("  meetingState.isMinimized:", meetingState.isMinimized); // Log isMinimized during render
   console.log("  displayMode:", displayMode);
   console.log("  isAnyOverlayActive:", isAnyOverlayActive);
   console.log("  shouldHideExcalidraw:", shouldHideExcalidraw);

@@ -1,4 +1,3 @@
-// App.tsx
 import React, { useState } from "react";
 import { AppProviders } from "./context/AppProviders";
 import MainToolbar from "./MainToolBar/MainToolbar";
@@ -94,18 +93,18 @@ const AppContent: React.FC = () => {
 
       {/* Render Meeting overlay if meeting is active.
           MeetingApp remains mounted as long as meetingState.isActive is true.
-          Its container receives a "hidden" class when meeting is not the active overlay. */}
-      {/* Render Meeting overlay if meeting is active */}
-        {meetingState.isActive && (
-          <MediaToggleProvider>
-            <div
-              className={`meeting-overlay ${(meetingState.isMinimized || activeOverlay !== "meeting") ? "hidden" : ""}`}
-              style={{ zIndex: overlayState.overlayZIndices.overlay }}
-            >
-              <MeetingApp />
-            </div>
-          </MediaToggleProvider>
-        )}
+          Its container receives the "hidden" class when meeting is not the active overlay. */}
+      {meetingState.isActive && (
+        <MediaToggleProvider>
+          <div
+            className={`meeting-overlay ${activeOverlay !== "meeting" ? "hidden" : ""}`}
+            style={{ zIndex: overlayState.overlayZIndices.overlay }}
+          >
+            <MeetingApp />
+          </div>
+        </MediaToggleProvider>
+      )}
+
       {/* Always render ExcalidrawGeneral. 
           ExcalidrawGeneral itself determines whether to hide via its internal logic
           (based on pdf, realview, and meeting contexts). */}

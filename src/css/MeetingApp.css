@@ -1,14 +1,12 @@
-
 /*************************************************************
- * Meeting Overlay & Content
- *************************************************************/
- .meeting-overlay {
+Meeting Overlay & Content *************************************************************/
+.meeting-overlay {
   position: fixed;
+  background-color: #ffffff;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #ffffff;
   z-index: var(--z-index-background);
   display: flex;
   flex-direction: column;
@@ -16,45 +14,98 @@
 
 .meeting-content {
   position: absolute;
+  background: #ffffff;
+  border-radius: 20px;
   top: var(--maintoolbar-height);
   bottom: var(--maintoolbar-height);
   left: 10px;
   right: 10px;
-  background-color: #ffffff;
-  overflow: hidden; /* Prevent scrollbars on the meeting area */
+  overflow: hidden;
+  /* Prevent scrollbars on the meeting area */
   z-index: var(--z-index-overlay);
 }
 
 /*************************************************************
- * Video Grid & Participant Grid
- *************************************************************/
+Video Grid & Participant Grid *************************************************************/
 /* Container for the video grid (green background) */
 .video-grid-container {
   width: 100%;
   height: 100%;
-  background-color: #ffffff;
-  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   box-sizing: border-box;
   padding: 10px;
-  /* Add this to ensure proper sizing */
   position: relative;
+  /* Add these properties for the golden border effect */
 }
 
 /* The participant grid itself */
-.participant-grid {
-  background-color: #ffffff;
+.participant-grid.ai-style-change-2 {
+  background-color: #000000;
   display: grid;
   gap: 10px;
   /* Change to these dimensions */
   width: 100%;
   height: 100%;
-  max-width: 1200px; /* Add a max-width */
+  max-width: 1200px;
+  /* Add a max-width */
   margin: 0 auto;
-  aspect-ratio: 16 / 9; /* Maintain video aspect ratio */
+  aspect-ratio: 16 / 9;
+  /* Maintain video aspect ratio */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-auto-rows: 1fr;
+}
+
+.grid-slot {
+  background-color: #000;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  /* Update border properties */
+  background-origin: border-box;
+  background-clip: content-box, border-box;
+  /* Update box shadow to include both gold glow and white border glow */
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3),
+              0 0 5px rgba(255, 255, 255, 0.2);
+}
+
+/* Update the ai-style-change-1 variant as well */
+.grid-slot.ai-style-change-1 {
+  background-color: transparent;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  /* Add white border */
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  /* Add subtle glow effect */
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3),
+              0 0 5px rgba(255, 255, 255, 0.2);
+}
+
+.grid-slot.ai-style-change-1 video {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background-color: #000;
 }
 
 /* Layout Variations for the Participant Grid */
@@ -85,6 +136,10 @@
   height: 100%;
   /* Add this to ensure proper sizing */
   position: relative;
+  border: 5px solid transparent;
+  background-origin: border-box;
+  background-clip: content-box, border-box;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
 }
 
 .grid-slot video {
@@ -94,8 +149,6 @@
   background-color: #000;
   /* Add this to ensure video respects container */
   position: absolute;
-  top: 0;
-  left: 0;
 }
 
 /* For screen sharing adjustments */
@@ -116,8 +169,7 @@
 }
 
 /*************************************************************
- * Meeting Controls
- *************************************************************/
+Meeting Controls *************************************************************/
 .control-button {
   padding: 12px 20px;
   font-size: 16px;
@@ -148,54 +200,10 @@
   color: #fff;
 }
 
-/*************************************************************
- * Modal (Meeting Setup)
- *************************************************************/
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: var(--z-index-extra);
-}
 
-.modal-content {
-  background-color: #fff;
-  padding: 20px;
-  width: 300px;
-  border-radius: 10px;
-  text-align: center;
-}
-
-.modal-content h2 {
-  margin-bottom: 15px;
-}
-
-.modal-content input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-.modal-content button {
-  padding: 10px 15px;
-  background-color: #007bff;
-  border: none;
-  border-radius: 5px;
-  color: #fff;
-  cursor: pointer;
-}
 
 /*************************************************************
- * Minimized / Hidden States
- *************************************************************/
+Minimized / Hidden States *************************************************************/
 .hidden {
   display: none;
 }
@@ -214,8 +222,7 @@
 }
 
 /*************************************************************
- * Minimized Panel
- *************************************************************/
+Minimized Panel *************************************************************/
 .minimized-panel {
   position: fixed;
   bottom: 10px;
@@ -236,8 +243,7 @@
 }
 
 /*************************************************************
- * Additional Controls & UI
- *************************************************************/
+Additional Controls & UI *************************************************************/
 .meeting-status {
   font-size: 1.5rem;
   color: #6c757d;
@@ -275,8 +281,7 @@
 }
 
 /*************************************************************
- * Participant List & Controls
- *************************************************************/
+Participant List & Controls *************************************************************/
 .participant-list {
   position: absolute;
   top: 20px;
@@ -331,43 +336,97 @@
 }
 
 /*************************************************************
- * Expanded Video Overlay
- *************************************************************/
+Expanded Video Overlay *************************************************************/
+/* Expanded Video Styles */
 .expanded-video-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: var(--z-index-extra);
-}
-
-.close-button {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: rgba(255, 255, 255, 0.8);
-  border: none;
-  padding: 10px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  z-index: calc(var(--z-index-extra) + 1);
-}
-
-.expanded-video-overlay.fullscreen {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: #000;
+  background-color: rgba(0, 0, 0, 0.9);
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  z-index: calc(var(--z-index-extra) + 1);
+  justify-content: center;
+  z-index: var(--z-index-modal);
+}
+
+.expanded-video-container {
+  position: relative;
+  width: 90%;
+  max-width: 1600px;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5),
+              0 0 30px #FFD700;
+}
+
+.expanded-video-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.expanded-video-wrapper video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.close-expanded {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  min-width: 120px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  color: white;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 1;
+  padding: 0 16px;
+}
+
+.close-expanded::before {
+  content: '×';
+  font-size: 24px;
+}
+
+.close-expanded::after {
+  content: 'Minimize';
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.close-expanded:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.05);
+  border-color: rgba(255, 215, 0, 0.4);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.expanded-video-overlay.fullscreen .expanded-video-container {
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  border-radius: 0;
+}
+
+@media (max-width: 768px) {
+  .expanded-video-container {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
 }

@@ -1,4 +1,3 @@
-// ModalOverlay.tsx
 import React from "react";
 import "../css/ModalOverlay.css";
 
@@ -18,10 +17,10 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({
   if (!isVisible) return null;
   return (
     <div className="modal-overlay" style={{ zIndex }}>
-      <div className="modal-overlay-content">
+      <div className="modal-content">
         {onClose && (
-          <button className="modal-overlay-close-button" onClick={onClose}>
-            &times;
+          <button className="modal-close-button ai-style-change-1" onClick={onClose}>
+            <span className="close-icon">×</span>
           </button>
         )}
         {children}

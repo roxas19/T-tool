@@ -2,7 +2,7 @@
 
 .control-panel {
     position: fixed;
-    background: blue;
+    background: rgb(0, 0, 0);
     bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
@@ -10,7 +10,8 @@
     pointer-events: auto;
     background: rgba(0, 0, 0, 0.85); /* Black background for a unified, elegant look */
     border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5),
+              0 0 16px #FFD700;
     padding: 0 20px;         /* Only horizontal padding */
     height: 50px;            /* Fixed height */
     display: flex;
