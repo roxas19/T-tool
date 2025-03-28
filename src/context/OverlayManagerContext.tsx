@@ -1,5 +1,4 @@
-// src/context/OverlayManagerContext.tsx
-import React, { createContext, useContext, useReducer } from "react";
+import React, { createContext, useContext, useReducer, useMemo } from "react";
 
 export type OverlayType = "pdf" | "realview" | "excalidraw" | "meeting";
 
@@ -57,10 +56,38 @@ function overlayManagerReducer(
   }
 }
 
-type OverlayManagerContextType = {
+export interface OverlayStatus {
+  isActive: boolean;
+  isCurrent: boolean;
+  zIndex: number;
+}
+
+export const overlayUtils = {
+  isOverlayActive: (
+    state: OverlayManagerState,
+    type: OverlayType
+  ): boolean => state.activeStack.includes(type),
+
+  isCurrentOverlay: (
+    state: OverlayManagerState,
+    type: OverlayType
+  ): boolean => state.activeStack[state.activeStack.length - 1] === type,
+
+  getOverlayStatus: (
+    state: OverlayManagerState,
+    type: OverlayType
+  ): OverlayStatus => ({
+    isActive: state.activeStack.includes(type),
+    isCurrent: state.activeStack[state.activeStack.length - 1] === type,
+    // Calculate z-index relative to the overlay base plus the type's position
+    zIndex: state.overlayZIndices.overlay + state.activeStack.indexOf(type),
+  }),
+};
+
+interface OverlayManagerContextType {
   overlayState: OverlayManagerState;
   overlayDispatch: React.Dispatch<OverlayManagerAction>;
-};
+}
 
 const OverlayManagerContext = createContext<OverlayManagerContextType | undefined>(undefined);
 
@@ -78,5 +105,14 @@ export const useOverlayManager = () => {
   if (!context) {
     throw new Error("useOverlayManager must be used within an OverlayManagerProvider");
   }
-  return context;
+  const { overlayState, overlayDispatch } = context;
+  const utils = useMemo(
+    () => ({
+      isOverlayActive: (type: OverlayType) => overlayUtils.isOverlayActive(overlayState, type),
+      isCurrentOverlay: (type: OverlayType) => overlayUtils.isCurrentOverlay(overlayState, type),
+      getOverlayStatus: (type: OverlayType) => overlayUtils.getOverlayStatus(overlayState, type),
+    }),
+    [overlayState]
+  );
+  return { overlayState, overlayDispatch, utils };
 };

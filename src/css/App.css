@@ -1,24 +1,50 @@
-
-
 /*************************************************************
- * Root Variables
- *************************************************************/
+Global Styles & Variables
+*************************************************************/
 :root {
+  /* Color Palette (Customizable) */
   --z-index-background: 1000;
   --z-index-overlay: 1002;
   --z-index-toolbar: 1050;
   --z-index-controls: 1010;
   --z-index-extra: 1100;
 
-  --sidebar-bg: #0a0a0a;
+  /* Colors & Backgrounds */
+  --background-color: #121212;    /* Main meeting container background */
+  --sidebar-bg: #0a0a0a;            /* Sidebar / custom toolbar background */
   --primary-color: #8B0000;
   --secondary-color: #FF4500;
   --accent-color: #FFD700;
+  --text-color: #f0f0f0;
   --button-bg-default: transparent;
   --border-color: rgba(255, 165, 0, 0.5);
-  --text-color: #f0f0f0;
-  --maintoolbar-height: 70px;
 
-  /* Button sizing */
+  --font-family: 'Roboto', sans-serif;
+  /* Component Sizes */
+  --maintoolbar-height: 70px;  /* Example: Adjust as needed */
+  --side-panel-width: 250px;   /* More responsive now */
 }
 
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* System font stack for better performance */
+  color: var(--text-color);
+  line-height: 1.6;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;  /* Better text rendering on macOS */
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3 {
+  margin-top: 0;
+  font-weight: 600;
+}
+
+/* Updated link styles for better consistency */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}

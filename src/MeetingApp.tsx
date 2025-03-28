@@ -44,6 +44,7 @@ const MeetingApp: React.FC = () => {
     overlayDispatch({ type: "POP_OVERLAY" });
   };
 
+  // If no roomUrl is set, show the pre-meeting modal overlay
   if (!meetingState.roomUrl) {
     return (
       <ModalOverlay
@@ -65,21 +66,19 @@ const MeetingApp: React.FC = () => {
     );
   }
 
+  // Once a meeting is started, render the meeting UI inside the DailyProvider
   return (
     <DailyProvider>
-      <>
-        {/* Removed HeaderPanel with minimize/exit buttons */}
-        <MeetingUI
-          roomUrl={meetingState.roomUrl!}
-          onStop={handleStopMeeting}
-          meetingName={meetingState.meetingName}
-        />
-      </>
+      <MeetingUI
+        roomUrl={meetingState.roomUrl}
+        onStop={handleStopMeeting}
+        meetingName={meetingState.meetingName}
+      />
     </DailyProvider>
   );
 };
 
-// Custom hook to expose meeting control logic (stop meeting)
+// Expose a custom hook for meeting control logic if needed
 export const useMeetingControls = () => {
   const { meetingState, meetingDispatch } = useMeetingContext();
   const { overlayDispatch } = useOverlayManager();

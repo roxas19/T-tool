@@ -97,7 +97,7 @@ const AppContent: React.FC = () => {
       {meetingState.isActive && (
         <MediaToggleProvider>
           <div
-            className={`meeting-overlay ${activeOverlay !== "meeting" ? "hidden" : ""}`}
+            className={`meeting-overlay ${activeOverlay === "meeting" ? "" : "hidden"}`}
             style={{ zIndex: overlayState.overlayZIndices.overlay }}
           >
             <MeetingApp />

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   useDaily,
@@ -23,28 +22,26 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) =
   const { isSharingScreen, startScreenShare, stopScreenShare } = useScreenShare();
   const { overlayState } = useOverlayManager();
 
-  // State management
+  // Manage granted permissions without a cap
   const [grantedPermissions, setGrantedPermissions] = useState<Record<string, ParticipantPermission>>({});
-  const [showParticipants, setShowParticipants] = useState(false);
-  const [expandedParticipantId, setExpandedParticipantId] = useState<string | null>(null);
-  const [isFullScreen, setIsFullScreen] = useState(false);
 
-  // Memoized values
+  // List of participant IDs with granted audio/video permissions
   const grantedParticipantIds = useMemo(() => {
     return Object.entries(grantedPermissions)
       .filter(([_, permission]) => permission.audio || permission.video)
       .map(([id]) => id);
   }, [grantedPermissions]);
 
+  // Active participants include the local participant plus granted ones
   const activeParticipants = useMemo(() => {
-    if (!localSessionId) return grantedParticipantIds.slice(0, 4);
-    return [localSessionId, ...grantedParticipantIds].slice(0, 4);
+    return localSessionId
+      ? Array.from(new Set([localSessionId, ...grantedParticipantIds]))
+      : grantedParticipantIds;
   }, [localSessionId, grantedParticipantIds]);
 
   // Meeting initialization
   useEffect(() => {
     if (!daily || !roomUrl) return;
-    
     let cancelled = false;
     const initializeMeeting = async () => {
       try {
@@ -52,115 +49,84 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) =
         if (!cancelled) {
           await Promise.all([
             daily.setLocalAudio(true),
-            daily.setLocalVideo(true)
+            daily.setLocalVideo(true),
           ]);
         }
       } catch (error) {
         console.error("Failed to join meeting:", error);
       }
     };
-
     initializeMeeting();
     return () => { cancelled = true; };
   }, [daily, roomUrl]);
 
-  // Callbacks
-  const handlePermissionChange = useCallback((
-    participantId: string,
-    permission: ParticipantPermission
-  ) => {
-    setGrantedPermissions(prev => {
-      const currentGrantedCount = Object.keys(prev).length;
-      const isAlreadyGranted = participantId in prev;
-      
-      if (!isAlreadyGranted && currentGrantedCount >= 3) return prev;
+  // Permission change handler
+  const handlePermissionChange = useCallback(
+    (participantId: string, permission: ParticipantPermission) => {
+      setGrantedPermissions((prev) => {
+        const newPermissions = {
+          ...prev,
+          [participantId]: permission,
+        };
 
-      const newPermissions = {
-        ...prev,
-        [participantId]: permission
-      };
+        daily?.sendAppMessage(
+          {
+            type: "PERMISSION_UPDATE",
+            participantId,
+            ...permission,
+          },
+          "*"
+        );
+        return newPermissions;
+      });
+    },
+    [daily]
+  );
 
-      daily?.sendAppMessage({
-        type: "PERMISSION_UPDATE",
-        participantId,
-        ...permission
-      }, "*");
-
-      return newPermissions;
-    });
-  }, [daily]);
-
-  const renderTile = useCallback((participantId: string, tileClass: string) => {
-    return (
-        <div key={participantId} className={tileClass} onClick={() => { setExpandedParticipantId(participantId); setIsFullScreen(true); }} style={{ cursor: "pointer" }} >
-            <DailyVideo
-                sessionId={participantId}
-                type={isSharingScreen && participantId === localSessionId ? "screenVideo" : "video"}
-                autoPlay
-                muted={participantId === localSessionId}
-            />
-        </div>
-    );
-  }, [localSessionId, isSharingScreen]);
-
-  const handleCloseExpanded = useCallback((e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    setExpandedParticipantId(null);
-    setIsFullScreen(false);
-  }, []);
+  // Render a participant tile
+  const renderTile = useCallback(
+    (participantId: string, tileClass: string) => (
+      <div key={participantId} className={tileClass}>
+        <DailyVideo
+          sessionId={participantId}
+          type={isSharingScreen && participantId === localSessionId ? "screenVideo" : "video"}
+          autoPlay
+          muted={participantId === localSessionId}
+        />
+      </div>
+    ),
+    [localSessionId, isSharingScreen]
+  );
 
   return (
     <>
-      <div className="meeting-content" style={{ zIndex: overlayState.overlayZIndices.overlay }}>
+      <div className="meeting-container">
         <div className="video-grid-container">
-            <div className="participant-grid ai-style-change-2">
-                {activeParticipants.map((participantId) => {
-                    const isLocal = participantId === localSessionId;
-                    const tileClass = isSharingScreen && isLocal ? "grid-slot screen-share-adjust ai-style-change-1" : "grid-slot ai-style-change-1";
-                    return renderTile(participantId, tileClass)
-                })}
-            </div>
+          <div className="participant-grid ai-style-change-2">
+            {activeParticipants.map((participantId) => {
+              const isLocal = participantId === localSessionId;
+              const tileClass =
+                isSharingScreen && isLocal
+                  ? "grid-slot screen-share-adjust ai-style-change-1"
+                  : "grid-slot ai-style-change-1";
+              return renderTile(participantId, tileClass);
+            })}
+          </div>
         </div>
-
         <MeetingControls
           onStopMeeting={onStop}
           isSharingScreen={isSharingScreen}
-          onToggleShare={() => isSharingScreen ? stopScreenShare() : startScreenShare()}
-          showParticipants={showParticipants}
-          onToggleParticipants={() => setShowParticipants(prev => !prev)}
+          onToggleShare={() =>
+            isSharingScreen ? stopScreenShare() : startScreenShare()
+          }
         />
-
-        {showParticipants && (
-          <ParticipantList 
-            onPermissionChange={handlePermissionChange} 
-            grantedPermissions={grantedPermissions} 
-          />
-        )}
       </div>
-
-      {expandedParticipantId && (
-        <div 
-          className={`expanded-video-overlay ${isFullScreen ? "fullscreen" : ""}`}
-          style={{ zIndex: overlayState.overlayZIndices.overlay }}
-          onClick={handleCloseExpanded}
-        >
-          <div className="expanded-video-container" onClick={e => e.stopPropagation()}>
-            <div className="expanded-video-wrapper">
-              <DailyVideo
-                sessionId={expandedParticipantId}
-                type={isSharingScreen && expandedParticipantId === localSessionId ? "screenVideo" : "video"}
-                autoPlay
-                muted={expandedParticipantId === localSessionId}
-              />
-            </div>
-            <button
-              className="close-expanded"
-              onClick={handleCloseExpanded}
-              aria-label="Minimize expanded view"
-            />
-          </div>
-        </div>
-      )}
+      <div className="side-panel">
+        <ParticipantList
+          onPermissionChange={handlePermissionChange}
+          grantedPermissions={grantedPermissions}
+        />
+      </div>
     </>
   );
 };
