@@ -99,7 +99,7 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) =
   );
 
   return (
-    <>
+    <div className="meeting-wrapper">
       <div className="meeting-container">
         <div className="video-grid-container">
           <div className="participant-grid ai-style-change-2">
@@ -113,13 +113,7 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) =
             })}
           </div>
         </div>
-        <MeetingControls
-          onStopMeeting={onStop}
-          isSharingScreen={isSharingScreen}
-          onToggleShare={() =>
-            isSharingScreen ? stopScreenShare() : startScreenShare()
-          }
-        />
+        
       </div>
       <div className="side-panel">
         <ParticipantList
@@ -127,7 +121,14 @@ const MeetingUI: React.FC<MeetingUIProps> = ({ roomUrl, onStop, meetingName }) =
           grantedPermissions={grantedPermissions}
         />
       </div>
-    </>
+      <MeetingControls
+          onStopMeeting={onStop}
+          isSharingScreen={isSharingScreen}
+          onToggleShare={() =>
+            isSharingScreen ? stopScreenShare() : startScreenShare()
+          }
+        />
+    </div>
   );
 };
 
